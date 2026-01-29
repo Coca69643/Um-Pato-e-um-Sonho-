@@ -1,0 +1,63 @@
+/* Importando uma fonte estilo Pixel */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+html, body {
+    margin: 0; padding: 0; 
+    width: 100%; height: 100%;
+    overflow: hidden; touch-action: none;
+    background-color: #2d5a27;
+    display: flex; justify-content: center; align-items: center;
+    font-family: 'VT323', monospace;
+}
+
+canvas {
+    display: block;
+    image-rendering: pixelated;
+}
+
+#hud {
+    position: absolute; top: 30px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px 20px; border-radius: 8px;
+    border: 3px solid #dbad32;
+    color: #fff; font-size: 24px;
+    z-index: 10; pointer-events: none;
+    white-space: nowrap;
+}
+
+#menu {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle, #3a8f3a, #1e3d1a);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    z-index: 20; color: #FFD700;
+}
+
+#btnPlay {
+    padding: 15px 40px; font-size: 28px;
+    font-family: 'VT323', monospace;
+    background: #FFD700; border: none; border-radius: 5px;
+    cursor: pointer; box-shadow: 0 5px 0 #b8860b;
+}
+
+#controls {
+    position: absolute; bottom: 40px; left: 40px;
+    display: grid; grid-template-columns: repeat(3, 70px);
+    grid-template-rows: repeat(2, 70px); gap: 10px;
+}
+
+.btn {
+    width: 70px; height: 70px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 28px;
+    user-select: none;
+}
+
+#up { grid-column: 2; }
+#left { grid-column: 1; grid-row: 2; }
+#down { grid-column: 2; grid-row: 2; }
+#right { grid-column: 3; grid-row: 2; }
