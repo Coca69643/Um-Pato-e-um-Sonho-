@@ -1,0 +1,13 @@
+{
+  "short_name": "PatoSurvival",
+  "name": "Pato Survival 2.0",
+  "icons": [
+    { "src": "assets/idle_001.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon_game.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#2d6e32",
+  "theme_color": "#2d6e32"
+}

@@ -1,31 +1,25 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Um Pato e um Sonho</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2d6e32">
+    <title>Pato Survival Mobile</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <canvas id="gameCanvas"></canvas>
 
-    <div id="hud">
-        🦆 Madeira: <span id="count">0</span>
+    <div id="ui-layer" style="display:none;">
+        <div id="inv-toggle">INV</div>
+        <div id="joystick-base">
+            <div id="joystick-pino"></div>
+        </div>
     </div>
 
-    <div id="menu">
-        <h1>UM PATO E<br>UM SONHO</h1>
-        <button id="btnPlay">INICIAR JORNADA</button>
-    </div>
-
-    <canvas id="game"></canvas>
-
-    <div id="controls">
-        <div class="btn" id="up">▲</div>
-        <div class="btn" id="left">◀</div>
-        <div class="btn" id="down">▼</div>
-        <div class="btn" id="right">▶</div>
-    </div>
-
-    <script src="game.js"></script>
+    <script src="core.js"></script>
+    <script src="updates.js"></script>
 </body>
 </html>
