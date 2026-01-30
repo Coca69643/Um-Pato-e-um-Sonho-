@@ -11,10 +11,10 @@ window.G = {
 };
 
 const imgList = {
-    'p-idle': 'assets/idle_001.png',
-    'p-walk1': 'assets/Walking 001.png',
-    'p-walk2': 'assets/Walking 002.png',
-    'rabbit': 'assets/rabbit_sheet.png'
+    'p-idle': 'idle_001.png',
+    'p-walk1': 'Walking 001.png',
+    'p-walk2': 'Walking 002.png',
+    'rabbit': 'rabbit_sheet.png'
 };
 
 let loaded = 0;
