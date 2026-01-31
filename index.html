@@ -3,41 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pato Survival: Python World Gen</title>
+    <title>Pato Survival: World Gen</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython_stdlib.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #050a05; font-family: sans-serif; }
+        body { margin: 0; overflow: hidden; background: #050a05; font-family: 'Segoe UI', sans-serif; }
         canvas { display: block; touch-action: none; }
-        #loading { position: absolute; width: 100%; height: 100%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle, #1a3c15 0%, #050a05 100%);
+            z-index: 100; color: white;
+        }
+
+        .menu-box { background: rgba(0,0,0,0.7); padding: 30px; border-radius: 15px; border: 2px solid #3a6b32; text-align: center; }
+        h1 { color: #ffcc00; text-shadow: 3px 3px #000; margin-bottom: 5px; }
+        .btn {
+            width: 250px; padding: 15px; margin: 10px; font-size: 1rem; font-weight: bold;
+            color: white; border: 2px solid #fff; border-radius: 8px; cursor: pointer; transition: 0.3s;
+        }
+        .btn-green { background: #2d5a27; }
+        .btn-gold { background: #b8860b; }
+        .btn:active { transform: scale(0.95); }
+
+        #loader { display: none; margin-top: 20px; font-style: italic; color: #ffcc00; }
     </style>
 </head>
 <body onload="brython()">
-    <div id="loading">Gerando Mundo com Python...</div>
-    
+    <div id="ui-layer">
+        <div class="menu-box" id="menu-content">
+            <h1>Um Pato e um Sonho</h1>
+            <p>Escolha como seu mundo será gerado:</p>
+            <button class="btn btn-green" onclick="prepararMundo('random')">Gerar Mundo Aleatório</button>
+            <button class="btn btn-gold" onclick="prepararMundo('custom')">Gerar Mundo Personalizado</button>
+            <div id="loader">O Python está esculpindo o mundo...</div>
+        </div>
+    </div>
+
     <canvas id="gameCanvas" style="display:none;"></canvas>
 
     <script type="text/python">
-        from browser import window, document
+        from browser import window, timer
         import random
 
-        def gerar_mundo(tamanho, qtd_recursos):
-            mapa = []
-            for _ in range(qtd_recursos):
-                # Python decide a raridade e posição
-                tipo = "tree" if random.random() > 0.3 else "stone"
-                x = random.randint(0, tamanho)
-                y = random.randint(0, tamanho)
-                mapa.append({"x": x, "y": y, "type": tipo, "hp": 10})
-            return mapa
+        def gerar_mundo_python(tipo_gen, tamanho):
+            recursos = []
+            qtd = 120 if tipo_gen == "custom" else 80 # Exemplo de diferença
+            
+            for _ in range(qtd):
+                tipo = "tree" if random.random() > 0.4 else "stone"
+                x = random.randint(50, tamanho - 50)
+                y = random.randint(50, tamanho - 50)
+                recursos.append({"x": x, "y": y, "type": tipo, "hp": 10})
+            
+            return recursos
 
-        # Exporta para o JavaScript
-        window.gerarMundoPython = gerar_mundo
-        document["loading"].style.display = "none"
-        document["gameCanvas"].style.display = "block"
-        window.initGame() 
+        window.py_gerar = gerar_mundo_python
     </script>
-
     <script src="core.js"></script>
 </body>
 </html>
