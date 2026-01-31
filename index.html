@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pato Engine v3</title>
+    <title>Pato Engine v4 - Imagens</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython_stdlib.min.js"></script>
     <style>
@@ -15,36 +15,22 @@
             background: radial-gradient(circle, #1a3c15 0%, #050a05 100%); z-index: 100; color: white;
         }
         .menu-box { background: rgba(0,0,0,0.85); padding: 30px; border-radius: 15px; border: 2px solid #3a6b32; text-align: center; width: 85%; max-width: 400px; }
-        .btn { width: 100%; padding: 15px; margin: 8px 0; font-size: 1rem; font-weight: bold; color: white; border: 2px solid #fff; border-radius: 8px; cursor: pointer; }
-        .btn-green { background: #2d5a27; }
-        .btn-gold { background: #b8860b; }
-        #custom-panel { display: none; }
+        .btn { width: 100%; padding: 15px; margin: 8px 0; font-size: 1rem; font-weight: bold; color: white; border: 2px solid #fff; border-radius: 8px; cursor: pointer; background: #2d5a27; }
         #loader-container { display: none; width: 100%; margin-top: 20px; }
         #progress-bg { width: 100%; height: 12px; background: #222; border-radius: 6px; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: #ffcc00; transition: width 0.1s; }
+        #progress-bar { width: 0%; height: 100%; background: #ffcc00; }
     </style>
 </head>
 <body onload="brython()">
     <div id="ui-layer">
         <div class="menu-box">
-            <div id="main-options">
-                <h1>Pato Engine</h1>
-                <p id="status-py" style="color: #ff4444; font-size: 0.8rem;">Aguardando Python...</p>
-                <button class="btn btn-green" onclick="iniciarFluxo('random')">Mundo Aleatório</button>
-                <button class="btn btn-gold" onclick="abrirCustom()">Personalizar Mundo</button>
-            </div>
-
-            <div id="custom-panel">
-                <label>Tamanho: <span id="v-size">3000</span></label>
-                <input type="range" id="in-size" min="2000" max="5000" step="500" value="3000" oninput="document.getElementById('v-size').innerText=this.value">
-                <label>Árvores: <span id="v-trees">80</span></label>
-                <input type="range" id="in-trees" min="20" max="250" value="80" oninput="document.getElementById('v-trees').innerText=this.value">
-                <button class="btn btn-green" onclick="iniciarFluxo('custom')">GERAR</button>
-            </div>
-
+            <h1>Pato Engine</h1>
+            <p id="status-py" style="color: #ff4444;">Carregando Python...</p>
+            <button class="btn" onclick="iniciarFluxo()">JOGAR</button>
+            
             <div id="loader-container">
                 <div id="progress-bg"><div id="progress-bar"></div></div>
-                <div id="loader-text" style="margin-top:10px">Processando...</div>
+                <div id="loader-text" style="margin-top:10px">Removendo fundos brancos...</div>
             </div>
         </div>
     </div>
@@ -56,17 +42,14 @@
         import random
 
         def python_world_gen(size, tree_count):
-            # Função que o JS vai chamar
             world_data = []
             for i in range(int(tree_count)):
                 t = "tree" if random.random() > 0.4 else "stone"
                 x = random.randint(100, int(size) - 100)
                 y = random.randint(100, int(size) - 100)
-                # Criamos um dicionário que o JS entende como objeto
                 world_data.append({"x": x, "y": y, "type": t, "hp": 10})
             return world_data
 
-        # VINCULANDO AO WINDOW PARA O JS ENXERGAR
         window.py_gen = python_world_gen
         document["status-py"].innerText = "Python Pronto!"
         document["status-py"].style.color = "#44ff44"
@@ -74,5 +57,6 @@
     <script src="core.js"></script>
 </body>
 </html>
+
 
 
