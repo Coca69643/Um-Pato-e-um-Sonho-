@@ -3,30 +3,29 @@ const ctx = canvas.getContext('2d');
 
 const G = {
     assets: {},
-    pato: { x: 1500, y: 1500, speed: 7, moving: false, angle: 0 },
+    pato: { x: 1500, y: 1500, speed: 7, moving: false, angle: 0, inv: { wood: 0, stone: 0 } },
     camera: { x: 0, y: 0 },
     joy: { active: false, x: 120, y: 0 },
     resources: [], worldSize: 3000, loaded: false
 };
 
-// Seus links diretos do Imgur
+// Configuração dos arquivos (usando os nomes que estão no seu GitHub)
 const manifest = {
-    'pato': 'https://i.imgur.com/r8kX998.png', // Substitua pelo seu pato se tiver o link
-    'tree': 'https://i.imgur.com/0XNH1Nd.jpeg',
-    'stone': 'https://i.imgur.com/vDYoKAg.jpeg'
+    'pato': 'idle_001.png',
+    'tree': 'arvore.png',
+    'stone': 'rocha.png'
 };
 
-// Função para remover o fundo branco das imagens do Imgur
-function removerFundo(img) {
+// Função para remover o fundo branco (essencial para imagens do Pinterest)
+function limparFundo(img) {
     const tempCanvas = document.createElement('canvas');
     const tCtx = tempCanvas.getContext('2d');
     tempCanvas.width = img.width; tempCanvas.height = img.height;
     tCtx.drawImage(img, 0, 0);
-    
     const imgData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
     const d = imgData.data;
     for (let i = 0; i < d.length; i += 4) {
-        // Se for muito perto do branco, torna transparente
+        // Se o pixel for muito claro (branco), fica transparente
         if (d[i] > 220 && d[i+1] > 220 && d[i+2] > 220) d[i+3] = 0;
     }
     tCtx.putImageData(imgData, 0, 0);
@@ -35,40 +34,39 @@ function removerFundo(img) {
     return finalImg;
 }
 
-async function iniciarMundo() {
+async function iniciarFluxo() {
     const bar = document.getElementById('progress-bar');
     const status = document.getElementById('status-text');
 
+    // 1. Python gera o mapa (80 itens como planejado)
     if (window.py_gen) {
-        G.resources = Array.from(window.py_gen(G.worldSize, 75));
+        G.resources = Array.from(window.py_gen(G.worldSize, 80));
     }
 
+    // 2. Carrega as imagens do seu repositório
     let carregadas = 0;
-    const keys = Object.keys(manifest);
+    const chaves = Object.keys(manifest);
 
-    for (let key of keys) {
+    for (let key of chaves) {
         await new Promise(res => {
             let img = new Image();
-            img.crossOrigin = "anonymous"; // Permite editar a imagem do Imgur
-            img.src = manifest[key];
-            
+            // O "?v=" + Date.now() força o navegador a baixar a versão nova do GitHub
+            img.src = manifest[key] + "?v=" + Date.now();
             img.onload = () => {
-                // Remove o fundo da árvore e da rocha
-                if (key === 'tree' || key === 'stone') {
-                    G.assets[key] = removerFundo(img);
-                } else {
-                    G.assets[key] = img;
-                }
+                G.assets[key] = (key === 'pato') ? img : limparFundo(img);
                 carregadas++;
-                bar.style.width = (carregadas / keys.length * 100) + "%";
+                bar.style.width = (carregadas / chaves.length * 100) + "%";
                 res();
             };
-            img.onerror = () => { res(); };
+            img.onerror = () => {
+                console.warn("Erro ao carregar: " + manifest[key]);
+                res(); 
+            };
         });
     }
 
+    status.innerText = "Mundo Gerado!";
     document.getElementById('start-btn').style.display = "block";
-    status.innerText = "Mundo Gerado com Sucesso!";
 }
 
 function entrarNoJogo() {
@@ -78,32 +76,7 @@ function entrarNoJogo() {
     canvas.height = window.innerHeight;
     G.joy.y = canvas.height - 120;
     G.loaded = true;
-    gameLoop();
-}
-
-function draw() {
-    ctx.fillStyle = '#1e3d1a'; 
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.save();
-    ctx.translate(-G.camera.x, -G.camera.y);
-
-    G.resources.forEach(res => {
-        const img = G.assets[res.type];
-        if (img) {
-            ctx.drawImage(img, res.x, res.y, 100, 100);
-        }
-    });
-
-    if (G.assets['pato']) {
-        ctx.drawImage(G.assets['pato'], G.pato.x, G.pato.y, 65, 65);
-    }
-
-    ctx.restore();
-    
-    // Joystick Visual
-    ctx.strokeStyle = "rgba(255,255,255,0.3)";
-    ctx.beginPath(); ctx.arc(G.joy.x, G.joy.y, 50, 0, Math.PI*2); ctx.stroke();
+    loopPrincipal();
 }
 
 function update() {
@@ -111,14 +84,57 @@ function update() {
         G.pato.x += Math.cos(G.angle) * G.pato.speed;
         G.pato.y += Math.sin(G.angle) * G.pato.speed;
     }
+    
+    // Sistema de Coleta (o pato coleta ao encostar)
+    G.resources.forEach((res, i) => {
+        let dist = Math.hypot(G.pato.x - res.x, G.pato.y - res.y);
+        if (dist < 40) {
+            res.type === 'tree' ? G.pato.inv.wood++ : G.pato.inv.stone++;
+            G.resources.splice(i, 1); // Remove do mapa
+        }
+    });
+
     G.camera.x = G.pato.x - canvas.width / 2;
     G.camera.y = G.pato.y - canvas.height / 2;
 }
 
-function gameLoop() {
-    if (G.loaded) { update(); draw(); requestAnimationFrame(gameLoop); }
+function draw() {
+    ctx.fillStyle = '#1e3d1a'; // Grama
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(-G.camera.x, -G.camera.y);
+
+    // Desenha Árvores e Pedras
+    G.resources.forEach(res => {
+        const img = G.assets[res.type];
+        if (img) ctx.drawImage(img, res.x, res.y, 100, 100);
+    });
+
+    // Desenha o Pato
+    const pImg = G.assets['pato'];
+    if (pImg) ctx.drawImage(pImg, G.pato.x, G.pato.y, 65, 65);
+
+    ctx.restore();
+
+    // Interface (Inventário)
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillRect(10, 10, 150, 40);
+    ctx.fillStyle = "white";
+    ctx.font = "16px Arial";
+    ctx.fillText(`🌲 ${G.pato.inv.wood} | 🪨 ${G.pato.inv.stone}`, 20, 35);
+
+    // Joystick Visual
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(G.joy.x, G.joy.y, 50, 0, Math.PI*2); ctx.stroke();
 }
 
+function loopPrincipal() {
+    if (G.loaded) { update(); draw(); requestAnimationFrame(loopPrincipal); }
+}
+
+// Controles de Toque
 canvas.addEventListener('touchstart', e => {
     const t = e.touches[0];
     if (Math.hypot(t.clientX - G.joy.x, t.clientY - G.joy.y) < 100) G.joy.active = true;
@@ -130,4 +146,5 @@ canvas.addEventListener('touchmove', e => {
 });
 canvas.addEventListener('touchend', () => { G.joy.active = false; });
 
-iniciarMundo();
+// Inicia o processo de carregamento
+iniciarFluxo();
