@@ -3,29 +3,24 @@ const ctx = canvas.getContext('2d');
 
 const G = {
     assets: {},
-    pato: { x: 1500, y: 1500, speed: 5, moving: false, angle: 0, facingLeft: false, hp: 100, inv: { wood: 0, stone: 0 }, canAtk: true, atkCooldown: 400 },
+    pato: { x: 1500, y: 1500, speed: 6, moving: false, angle: 0, facingLeft: false, inv: { wood: 0, stone: 0 }, canAtk: true },
     camera: { x: 0, y: 0 },
     joy: { x: 90, y: 0, curX: 90, curY: 0, active: false, rad: 50 },
     btn: { x: 0, y: 0, rad: 55 },
     resources: [], patches: [], gameStarted: false, worldSize: 3000
 };
 
-// FUNÇÃO MÁGICA: Remove o fundo branco da imagem
-function removeWhiteBackground(img) {
+// Remove fundo branco das imagens do Pinterest
+function cleanImage(img) {
     const tempCanvas = document.createElement('canvas');
     const tCtx = tempCanvas.getContext('2d');
     tempCanvas.width = img.width;
     tempCanvas.height = img.height;
     tCtx.drawImage(img, 0, 0);
-    
     const imageData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
     const data = imageData.data;
-    
     for (let i = 0; i < data.length; i += 4) {
-        // Se o pixel for quase branco (R, G e B acima de 240)
-        if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) {
-            data[i+3] = 0; // Torna transparente
-        }
+        if (data[i] > 230 && data[i+1] > 230 && data[i+2] > 230) data[i+3] = 0;
     }
     tCtx.putImageData(imageData, 0, 0);
     const newImg = new Image();
@@ -34,40 +29,35 @@ function removeWhiteBackground(img) {
 }
 
 function iniciarFluxo() {
-    if (typeof py_gen !== "function") return;
+    document.getElementById('start-btn').style.display = "none";
     document.getElementById('loader-container').style.display = "block";
-    let prog = 0;
-    const interval = setInterval(() => {
-        prog += 10;
-        document.getElementById('progress-bar').style.width = prog + "%";
-        if (prog >= 100) {
-            clearInterval(interval);
-            const data = window.py_gen(G.worldSize, 80);
-            G.resources = Array.from(data);
-            carregarImagens();
-        }
-    }, 50);
-}
+    const bar = document.getElementById('progress-bar');
+    
+    // Passo 1: Gerar dados no Python
+    const rawData = window.py_gen(G.worldSize, 60);
+    G.resources = Array.from(rawData);
+    bar.style.width = "40%";
 
-function carregarImagens() {
+    // Passo 2: Carregar e Limpar Imagens
     const imgList = { 'pato': 'idle_001.png', 'tree': 'arvore.png', 'stone': 'rocha.png' };
-    let carregadas = 0;
+    let loaded = 0;
     const total = Object.keys(imgList).length;
 
     for (let k in imgList) {
-        let tempImg = new Image();
-        tempImg.src = imgList[k];
-        tempImg.onload = () => {
-            // Aplica a remoção de fundo nas árvores e rochas
-            if (k === 'tree' || k === 'stone') {
-                G.assets[k] = removeWhiteBackground(tempImg);
-            } else {
-                G.assets[k] = tempImg;
-            }
-            carregadas++;
-            if (carregadas === total) finalizarSetup();
+        let temp = new Image();
+        temp.src = imgList[k] + "?v=" + Date.now(); // Força atualização do cache
+        temp.onload = () => {
+            if (k === 'tree' || k === 'stone') G.assets[k] = cleanImage(temp);
+            else G.assets[k] = temp;
+            loaded++;
+            bar.style.width = (40 + (loaded/total)*60) + "%";
+            if (loaded === total) setTimeout(finalizarSetup, 500);
         };
-        tempImg.onerror = () => { carregadas++; if (carregadas === total) finalizarSetup(); };
+        temp.onerror = () => {
+            console.error("Falha ao carregar: " + imgList[k]);
+            loaded++; 
+            if (loaded === total) finalizarSetup();
+        };
     }
 }
 
@@ -76,37 +66,32 @@ function finalizarSetup() {
     canvas.style.display = "block";
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    G.joy.y = canvas.height - 90; G.joy.curY = G.joy.y;
-    G.btn.x = canvas.width - 90; G.btn.y = canvas.height - 90;
+    G.joy.y = canvas.height - 100; G.joy.curY = G.joy.y;
+    G.btn.x = canvas.width - 100; G.btn.y = canvas.height - 100;
     
-    for(let i=0; i<60; i++) {
-        G.patches.push({ x: Math.random()*G.worldSize, y: Math.random()*G.worldSize, w: 300, h: 200, color: '#2d5a27' });
-    }
+    // Grama decorativa
+    for(let i=0; i<40; i++) G.patches.push({x: Math.random()*G.worldSize, y: Math.random()*G.worldSize, w: 400, h: 250});
+    
     G.gameStarted = true;
     gameLoop();
 }
 
 function atacar() {
     if (!G.pato.canAtk) return;
-    let alvo = null;
     G.resources.forEach(res => {
-        const d = Math.hypot(res.x - G.pato.x, res.y - G.pato.y);
-        if (d < 120) alvo = res;
-    });
-    if (alvo) {
-        alvo.hp -= 1;
-        G.pato.canAtk = false;
-        setTimeout(() => G.pato.canAtk = true, G.pato.atkCooldown);
-        if (alvo.hp <= 0) G.resources = G.resources.filter(r => r !== alvo);
-        // Ganhar recurso
-        if (alvo.hp <= 0) {
-            alvo.type === 'tree' ? G.pato.inv.wood++ : G.pato.inv.stone++;
+        if (Math.hypot(res.x - G.pato.x, res.y - G.pato.y) < 100) {
+            res.hp -= 2;
+            if (res.hp <= 0) {
+                res.type === 'tree' ? G.pato.inv.wood++ : G.pato.inv.stone++;
+                G.resources = G.resources.filter(r => r !== res);
+            }
         }
-    }
+    });
+    G.pato.canAtk = false;
+    setTimeout(() => G.pato.canAtk = true, 400);
 }
 
 function update() {
-    if (!G.gameStarted) return;
     if (G.pato.moving) {
         G.pato.x += Math.cos(G.pato.angle) * G.pato.speed;
         G.pato.y += Math.sin(G.pato.angle) * G.pato.speed;
@@ -116,55 +101,69 @@ function update() {
 }
 
 function draw() {
-    if (!G.gameStarted) return;
-    ctx.fillStyle = '#1e3d1a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.save(); ctx.translate(-G.camera.x, -G.camera.y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(-G.camera.x, -G.camera.y);
 
-    G.patches.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.w, p.h); });
+    // Chão
+    ctx.fillStyle = "#2d5a27";
+    G.patches.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
 
+    // RECURSOS (Árvores e Rochas)
     G.resources.forEach(res => {
         const img = G.assets[res.type];
-        if (img) ctx.drawImage(img, res.x, res.y, 100, 100);
-        ctx.fillStyle = 'red'; ctx.fillRect(res.x+10, res.y-10, res.hp*8, 6);
+        if (img && img.complete) {
+            ctx.drawImage(img, res.x, res.y, 110, 110);
+        } else {
+            // Reserva caso a imagem suma
+            ctx.fillStyle = res.type === 'tree' ? 'brown' : 'gray';
+            ctx.fillRect(res.x, res.y, 40, 40);
+        }
     });
 
+    // PATO
     const pImg = G.assets['pato'];
-    ctx.save(); ctx.translate(G.pato.x+35, G.pato.y+35);
+    ctx.save();
+    ctx.translate(G.pato.x + 35, G.pato.y + 35);
     if (G.pato.facingLeft) ctx.scale(-1, 1);
     if (pImg) ctx.drawImage(pImg, -35, -35, 70, 70);
     ctx.restore();
+
     ctx.restore();
 
-    // Controles
-    ctx.globalAlpha = 0.5;
-    ctx.beginPath(); ctx.arc(G.joy.x, G.joy.y, G.joy.rad, 0, Math.PI*2); ctx.strokeStyle="#fff"; ctx.stroke();
-    ctx.beginPath(); ctx.arc(G.joy.curX, G.joy.curY, 20, 0, Math.PI*2); ctx.fillStyle="#fff"; ctx.fill();
+    // Interface
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillRect(20, 20, 120, 40);
+    ctx.fillStyle = "white";
+    ctx.fillText(`🌲 ${G.pato.inv.wood} | 🪨 ${G.pato.inv.stone}`, 35, 45);
+
+    // Joystick e Botão
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath(); ctx.arc(G.joy.x, G.joy.y, G.joy.rad, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(G.joy.curX, G.joy.curY, 20, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(G.btn.x, G.btn.y, G.btn.rad, 0, Math.PI*2); ctx.fillStyle="red"; ctx.fill();
     ctx.globalAlpha = 1;
-    ctx.fillStyle = "white"; ctx.fillText(`🌲 ${G.pato.inv.wood} | 🪨 ${G.pato.inv.stone}`, 20, 30);
 }
 
 function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
 
-canvas.addEventListener('touchstart', e => handleTouch(e), {passive: false});
-canvas.addEventListener('touchmove', e => handleTouch(e), {passive: false});
+// Eventos de Toque
+canvas.addEventListener('touchstart', e => {
+    for (let t of e.touches) {
+        if (Math.hypot(t.clientX - G.joy.x, t.clientY - G.joy.y) < 100) G.joy.active = true;
+        if (Math.hypot(t.clientX - G.btn.x, t.clientY - G.btn.y) < G.btn.rad) atacar();
+    }
+});
+canvas.addEventListener('touchmove', e => {
+    if (!G.joy.active) return;
+    const t = e.touches[0];
+    G.pato.angle = Math.atan2(t.clientY - G.joy.y, t.clientX - G.joy.x);
+    G.joy.curX = G.joy.x + Math.cos(G.pato.angle) * 40;
+    G.joy.curY = G.joy.y + Math.sin(G.pato.angle) * 40;
+    G.pato.moving = true; G.pato.facingLeft = Math.cos(G.pato.angle) < 0;
+});
 canvas.addEventListener('touchend', () => { G.joy.active = false; G.joy.curX = G.joy.x; G.joy.curY = G.joy.y; G.pato.moving = false; });
 
-function handleTouch(e) {
-    e.preventDefault();
-    for (let t of e.touches) {
-        const dJ = Math.hypot(t.clientX - G.joy.x, t.clientY - G.joy.y);
-        const dB = Math.hypot(t.clientX - G.btn.x, t.clientY - G.btn.y);
-        if (dJ < 110) {
-            G.joy.active = true;
-            G.pato.angle = Math.atan2(t.clientY - G.joy.y, t.clientX - G.joy.x);
-            G.joy.curX = G.joy.x + Math.cos(G.pato.angle) * Math.min(dJ, G.joy.rad);
-            G.joy.curY = G.joy.y + Math.sin(G.pato.angle) * Math.min(dJ, G.joy.rad);
-            G.pato.moving = true; G.pato.facingLeft = Math.cos(G.pato.angle) < 0;
-        }
-        if (dB < G.btn.rad) atacar();
-    }
-}
 
 
 
