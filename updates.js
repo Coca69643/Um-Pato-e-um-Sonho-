@@ -1,5 +1,5 @@
 const AppControl = {
-    version: "1.0.7", // Aumente esse número se as imagens não aparecerem
+    version: "1.0.8", // Aumente esse número se as imagens não aparecerem
     
     // Gera um link único para burlar o cache do navegador
     fixPath: function(path) {
