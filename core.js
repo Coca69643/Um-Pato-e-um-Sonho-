@@ -1,86 +1,88 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    G.joy.y = canvas.height - 120;
-    G.btnAtk.x = canvas.width - 100;
-    G.btnAtk.y = canvas.height - 100;
-}
-window.addEventListener('resize', resize);
-
 const G = {
-    state: 'playing',
+    state: 'loading',
     assets: {},
     pato: {
-        x: 200, y: 200, w: 80, h: 80,
-        speed: 5,
-        moving: false,
-        angle: 0,
-        facingLeft: false,
-        // STATUS DE SOBREVIVÊNCIA
-        hp: 100, maxHp: 100,
-        energy: 100, maxEnergy: 100,
-        hunger: 100, maxHunger: 100,
-        isAttacking: false,
-        atkTimer: 0
+        x: 0, y: 0, w: 70, h: 70,
+        speed: 5, moving: false, angle: 0, facingLeft: false,
+        hp: 100, energy: 100, hunger: 100,
+        isAtk: false, atkTimer: 0
     },
-    joy: { x: 120, y: 0, active: false, curX: 120, curY: 0, rad: 50 },
-    btnAtk: { x: 0, y: 0, rad: 40, active: false }
+    joy: { x: 120, y: 0, curX: 120, curY: 0, active: false, rad: 50 },
+    btn: { x: 0, y: 0, rad: 45 }
 };
+
+function initSize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    G.pato.x = canvas.width / 2;
+    G.pato.y = canvas.height / 2;
+    G.joy.y = canvas.height - 120;
+    G.joy.curY = G.joy.y;
+    G.btn.x = canvas.width - 100;
+    G.btn.y = canvas.height - 100;
+}
 
 const imgList = {
-    'p-idle': 'idle_001.png',
-    'p-walk1': 'Walking 001.png',
-    'p-walk2': 'Walking 002.png'
+    'idle': 'idle_001.png',
+    'w1': 'Walking 001.png',
+    'w2': 'Walking 002.png'
 };
 
-let loaded = 0;
+let loadedCount = 0;
+const totalImgs = Object.keys(imgList).length;
+
 for (let key in imgList) {
     const img = new Image();
     img.src = imgList[key];
-    img.onload = () => { if (++loaded === Object.keys(imgList).length) gameLoop(); };
+    img.onload = () => {
+        G.assets[key] = img;
+        if (++loadedCount === totalImgs) {
+            G.state = 'playing';
+            gameLoop();
+        }
+    };
+    img.onerror = () => console.error("Falha na imagem: " + key);
 }
 
-// CONTROLES TOUCH ADAPTADOS
-canvas.addEventListener('touchstart', e => {
-    for (let i = 0; i < e.touches.length; i++) {
-        const t = e.touches[i];
-        // Joystick
-        const distJoy = Math.hypot(t.clientX - G.joy.x, t.clientY - G.joy.y);
-        if (distJoy < G.joy.rad * 2) G.joy.active = true;
-        
-        // Botão de Ataque
-        const distAtk = Math.hypot(t.clientX - G.btnAtk.x, t.clientY - G.btnAtk.y);
-        if (distAtk < G.btnAtk.rad) {
-            G.pato.isAttacking = true;
-            G.pato.atkTimer = 10;
-        }
+// Sistema de Toque Multitouch (Mover e Atacar ao mesmo tempo)
+canvas.addEventListener('touchstart', handleTouch, {passive: false});
+canvas.addEventListener('touchmove', handleTouch, {passive: false});
+canvas.addEventListener('touchend', e => {
+    if (e.touches.length === 0) {
+        G.joy.active = false;
+        G.joy.curX = G.joy.x;
+        G.joy.curY = G.joy.y;
+        G.pato.moving = false;
     }
 });
 
-canvas.addEventListener('touchmove', e => {
-    if (!G.joy.active) return;
+function handleTouch(e) {
     e.preventDefault();
-    const t = e.touches[0];
-    const dx = t.clientX - G.joy.x;
-    const dy = t.clientY - G.joy.y;
-    const angle = Math.atan2(dy, dx);
-    const dist = Math.min(Math.hypot(dx, dy), G.joy.rad);
-    
-    G.joy.curX = G.joy.x + Math.cos(angle) * dist;
-    G.joy.curY = G.joy.y + Math.sin(angle) * dist;
-    G.pato.angle = angle;
-    G.pato.moving = true;
-    G.pato.facingLeft = Math.cos(angle) < 0;
-}, { passive: false });
-
-canvas.addEventListener('touchend', () => {
-    G.joy.active = false;
-    G.joy.curX = G.joy.x; G.joy.curY = G.joy.y;
-    G.pato.moving = false;
-});
+    for (let t of e.touches) {
+        const dxJ = t.clientX - G.joy.x;
+        const dyJ = t.clientY - G.joy.y;
+        if (Math.hypot(dxJ, dyJ) < 100) {
+            G.joy.active = true;
+            const angle = Math.atan2(dyJ, dxJ);
+            const dist = Math.min(Math.hypot(dxJ, dyJ), G.joy.rad);
+            G.joy.curX = G.joy.x + Math.cos(angle) * dist;
+            G.joy.curY = G.joy.y + Math.sin(angle) * dist;
+            G.pato.angle = angle;
+            G.pato.moving = true;
+            G.pato.facingLeft = Math.cos(angle) < 0;
+        }
+        
+        const dxB = t.clientX - G.btn.x;
+        const dyB = t.clientY - G.btn.y;
+        if (Math.hypot(dxB, dyB) < G.btn.rad && G.pato.atkTimer <= 0) {
+            G.pato.isAtk = true;
+            G.pato.atkTimer = 15;
+        }
+    }
+}
 
 function gameLoop() {
     update();
@@ -89,96 +91,63 @@ function gameLoop() {
 }
 
 function update() {
-    // Lógica de Movimento e Energia
-    if (G.pato.moving && G.pato.energy > 0) {
-        let currentSpeed = G.pato.speed;
-        if (G.pato.energy < 20) currentSpeed *= 0.5; // Cansaço
-        
-        G.pato.x += Math.cos(G.pato.angle) * currentSpeed;
-        G.pato.y += Math.sin(G.pato.angle) * currentSpeed;
-        G.pato.energy -= 0.1; // Gasta energia ao andar
+    if (G.state !== 'playing') return;
+
+    if (G.pato.moving) {
+        G.pato.x += Math.cos(G.pato.angle) * G.pato.speed;
+        G.pato.y += Math.sin(G.pato.angle) * G.pato.speed;
+        G.pato.energy = Math.max(0, G.pato.energy - 0.1);
     } else {
-        if (G.pato.energy < G.pato.maxEnergy) G.pato.energy += 0.05; // Recupera parado
+        G.pato.energy = Math.min(100, G.pato.energy + 0.05);
     }
 
-    // Lógica de Fome
-    G.pato.hunger -= 0.02; 
-    if (G.pato.hunger <= 0) {
-        G.pato.hunger = 0;
-        G.pato.hp -= 0.05; // Começa a morrer de fome
-    }
-
-    // Lógica de Ataque
+    G.pato.hunger = Math.max(0, G.pato.hunger - 0.01);
+    if (G.pato.hunger <= 0) G.pato.hp -= 0.02;
     if (G.pato.atkTimer > 0) G.pato.atkTimer--;
-    else G.pato.isAttacking = false;
+    else G.pato.isAtk = false;
 
-    // Limites da Tela
     G.pato.x = Math.max(0, Math.min(canvas.width - G.pato.w, G.pato.x));
     G.pato.y = Math.max(0, Math.min(canvas.height - G.pato.h, G.pato.y));
 }
 
-function drawBar(x, y, val, max, color, label) {
-    const w = 150;
-    const h = 15;
-    ctx.fillStyle = "#000";
-    ctx.fillRect(x, y, w, h); // Fundo preto
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, (val / max) * w, h); // Barra colorida
-    ctx.strokeStyle = "#fff";
-    ctx.strokeRect(x, y, w, h); // Borda branca
-    ctx.fillStyle = "#fff";
-    ctx.font = "12px Arial";
-    ctx.fillText(label, x, y - 5);
-}
-
 function draw() {
-    ctx.fillStyle = '#2d5a27';
+    ctx.fillStyle = '#2d5a27'; // Grama
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Desenha o Pato
-    let frame = G.pato.moving ? (Math.floor(Date.now() / 150) % 2 === 0 ? G.assets['p-walk1'] : G.assets['p-walk2']) : G.assets['p-idle'];
-    if (frame) {
-        ctx.save();
-        if (G.pato.facingLeft) {
-            ctx.scale(-1, 1);
-            ctx.drawImage(frame, -G.pato.x - G.pato.w, G.pato.y, G.pato.w, G.pato.h);
-        } else {
-            ctx.drawImage(frame, G.pato.x, G.pato.y, G.pato.w, G.pato.h);
+    if (G.state === 'playing') {
+        // Desenha Pato
+        const frame = G.pato.moving ? (Math.floor(Date.now()/150)%2==0 ? G.assets['w1'] : G.assets['w2']) : G.assets['idle'];
+        if (frame) {
+            ctx.save();
+            ctx.translate(G.pato.x + G.pato.w/2, G.pato.y + G.pato.h/2);
+            if (G.pato.facingLeft) ctx.scale(-1, 1);
+            if (G.pato.isAtk) ctx.filter = "brightness(2) sepia(1)";
+            ctx.drawImage(frame, -G.pato.w/2, -G.pato.h/2, G.pato.w, G.pato.h);
+            ctx.restore();
         }
-        // Efeito visual de ataque
-        if (G.pato.isAttacking) {
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 5;
-            ctx.strokeRect(G.pato.facingLeft ? -G.pato.x - G.pato.w : G.pato.x, G.pato.y, G.pato.w, G.pato.h);
-        }
-        ctx.restore();
+
+        // HUD (Barras)
+        const drawBar = (y, val, color, txt) => {
+            ctx.fillStyle = "#000"; ctx.fillRect(20, y, 150, 15);
+            ctx.fillStyle = color; ctx.fillRect(20, y, (val/100)*150, 15);
+            ctx.strokeStyle = "#fff"; ctx.strokeRect(20, y, 150, 15);
+            ctx.fillStyle = "#fff"; ctx.font = "bold 12px Arial"; ctx.fillText(txt, 20, y-5);
+        };
+        drawBar(30, G.pato.hp, "#f44", "VIDA");
+        drawBar(65, G.pato.energy, "#ff0", "ENERGIA");
+        drawBar(100, G.pato.hunger, "#f80", "FOME");
+
+        // Joystick e Botão
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath(); ctx.arc(G.joy.x, G.joy.y, G.joy.rad, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(G.joy.curX, G.joy.curY, 20, 0, Math.PI*2); ctx.fillStyle = "yellow"; ctx.fill();
+        ctx.beginPath(); ctx.arc(G.btn.x, G.btn.y, G.btn.rad, 0, Math.PI*2); ctx.fillStyle = "red"; ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.fillStyle = "#fff"; ctx.fillText("ATK", G.btn.x-12, G.btn.y+5);
     }
-
-    // Desenha Status (Barras)
-    drawBar(20, 30, G.pato.hp, G.pato.maxHp, "#ff4444", "VIDA");
-    drawBar(20, 65, G.pato.energy, G.pato.maxEnergy, "#ffdd00", "ENERGIA");
-    drawBar(20, 100, G.pato.hunger, G.pato.maxHunger, "#ff8800", "FOME");
-
-    // Interface (Joystick e Botão Atk)
-    ctx.beginPath(); // Base Joy
-    ctx.arc(G.joy.x, G.joy.y, G.joy.rad, 0, Math.PI*2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-    ctx.stroke();
-    ctx.beginPath(); // Centro Joy
-    ctx.arc(G.joy.curX, G.joy.curY, 25, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(255,255,0,0.5)';
-    ctx.fill();
-
-    // Botão de Ataque
-    ctx.beginPath();
-    ctx.arc(G.btnAtk.x, G.btnAtk.y, G.btnAtk.rad, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(255,0,0,0.6)';
-    ctx.fill();
-    ctx.fillStyle = "white";
-    ctx.fillText("ATK", G.btnAtk.x - 12, G.btnAtk.y + 5);
 }
 
-resize();
+initSize();
 
 
 
