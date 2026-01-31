@@ -3,103 +3,72 @@ const ctx = canvas.getContext('2d');
 
 const G = {
     assets: {},
-    pato: { x: 1500, y: 1500, speed: 7, moving: false, angle: 0 },
+    pato: { x: 500, y: 500, speed: 5, moving: false, angle: 0 },
     camera: { x: 0, y: 0 },
-    joy: { active: false, x: 100, y: 0, curX: 100, curY: 0 },
-    resources: [], worldSize: 3000, loaded: false
+    joy: { active: false, x: 120, y: 0 },
+    resources: [], worldSize: 2000, loaded: false
 };
 
-// Se a imagem falhar, essa função desenha uma árvore ou pedra usando código puro
-function drawFallback(type, x, y) {
-    if (type === 'tree') {
-        // Tronco
-        ctx.fillStyle = '#4d3319';
-        ctx.fillRect(x + 35, y + 60, 20, 30);
-        // Folhas (Círculos verdes)
-        ctx.fillStyle = '#2d5a27';
-        ctx.beginPath(); ctx.arc(x + 45, y + 40, 35, 0, Math.PI * 2); ctx.fill();
-    } else {
-        // Pedra (Polígono cinza)
-        ctx.fillStyle = '#777';
-        ctx.beginPath();
-        ctx.moveTo(x+20, y+80); ctx.lineTo(x+80, y+80);
-        ctx.lineTo(x+70, y+30); ctx.lineTo(x+30, y+40);
-        ctx.closePath(); ctx.fill();
-    }
-}
-
-async function carregarMundo() {
-    const bar = document.getElementById('progress-bar');
-    
-    // 1. Python gera as coordenadas
+// Carregamento direto sem frescura
+async function carregarTudo() {
+    // 1. Coordenadas do Python
     if (window.py_gen) {
-        G.resources = Array.from(window.py_gen(G.worldSize, 80));
+        G.resources = Array.from(window.py_gen(G.worldSize, 60));
     }
 
-    // 2. Tenta carregar as imagens do GitHub
-    const imgs = { 'pato': 'idle_001.png', 'tree': 'arvore.png', 'stone': 'rocha.png' };
-    
-    for (let key in imgs) {
-        await new Promise(res => {
-            let img = new Image();
-            img.crossOrigin = "anonymous";
-            img.src = imgs[key] + "?v=" + Date.now();
-            img.onload = () => { 
-                G.assets[key] = img; 
-                res(); 
-            };
-            img.onerror = () => { 
-                console.log("Falha na imagem, usando fallback visual.");
-                res(); 
-            };
-        });
-        bar.style.width = "100%";
+    // 2. Tenta carregar imagens
+    const manifest = { 'pato': 'idle_001.png', 'tree': 'arvore.png', 'stone': 'rocha.png' };
+    for (let key in manifest) {
+        let img = new Image();
+        img.src = manifest[key] + "?v=" + Date.now();
+        img.onload = () => { G.assets[key] = img; };
     }
-    
-    document.getElementById('start-btn').style.display = "block";
-    document.getElementById('status-text').innerText = "Mundo Gerado com Sucesso!";
-}
 
-function entrarNoJogo() {
-    document.getElementById('loading-screen').style.display = "none";
-    canvas.style.display = "block";
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    G.joy.y = canvas.height - 100; G.joy.curY = G.joy.y;
-    G.loaded = true;
-    loop();
+    // Libera o jogo em 1 segundo, mesmo que as imagens falhem
+    setTimeout(() => {
+        document.getElementById('loading-screen').style.display = "none";
+        canvas.style.display = "block";
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        G.joy.y = canvas.height - 120;
+        G.loaded = true;
+        gameLoop();
+    }, 1000);
 }
 
 function draw() {
-    // Fundo Verde Escuro
-    ctx.fillStyle = '#1a3317';
+    ctx.fillStyle = '#1e3d1a'; // Grama
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
     ctx.translate(-G.camera.x, -G.camera.y);
 
-    // Desenha Recursos
+    // Desenha Recursos (Árvores e Pedras)
     G.resources.forEach(res => {
         if (G.assets[res.type] && G.assets[res.type].complete) {
-            ctx.drawImage(G.assets[res.type], res.x, res.y, 90, 90);
+            ctx.drawImage(G.assets[res.type], res.x, res.y, 80, 80);
         } else {
-            drawFallback(res.type, res.x, res.y);
+            // Se a imagem falhar, desenha um círculo colorido (verde pra árvore, cinza pra pedra)
+            ctx.fillStyle = res.type === 'tree' ? '#2d5a27' : '#555';
+            ctx.beginPath();
+            ctx.arc(res.x + 40, res.y + 40, 30, 0, Math.PI * 2);
+            ctx.fill();
         }
     });
 
-    // Pato
-    if (G.assets['pato']) {
+    // Desenha o Pato
+    if (G.assets['pato'] && G.assets['pato'].complete) {
         ctx.drawImage(G.assets['pato'], G.pato.x, G.pato.y, 60, 60);
     } else {
-        ctx.fillStyle = "yellow";
+        // Pato de emergência (quadrado branco)
+        ctx.fillStyle = "white";
         ctx.fillRect(G.pato.x, G.pato.y, 40, 40);
     }
 
     ctx.restore();
 
-    // Joystick Visual (Pra você saber onde tocar)
-    ctx.strokeStyle = "rgba(255,255,255,0.3)";
-    ctx.lineWidth = 3;
+    // Guia do Joystick (círculo na tela)
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
     ctx.beginPath(); ctx.arc(G.joy.x, G.joy.y, 50, 0, Math.PI*2); ctx.stroke();
 }
 
@@ -112,11 +81,11 @@ function update() {
     G.camera.y = G.pato.y - canvas.height / 2;
 }
 
-function loop() {
-    if (G.loaded) { update(); draw(); requestAnimationFrame(loop); }
+function gameLoop() {
+    if (G.loaded) { update(); draw(); requestAnimationFrame(gameLoop); }
 }
 
-// Controles de toque
+// Controles corrigidos para Mobile
 canvas.addEventListener('touchstart', e => {
     const t = e.touches[0];
     if (Math.hypot(t.clientX - G.joy.x, t.clientY - G.joy.y) < 100) G.joy.active = true;
@@ -128,7 +97,8 @@ canvas.addEventListener('touchmove', e => {
 });
 canvas.addEventListener('touchend', () => { G.joy.active = false; });
 
-setTimeout(carregarMundo, 500);
+carregarTudo();
+
 
 
 
