@@ -2,24 +2,23 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#2d6e32">
-    <title>Pato Survival Mobile</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Um Pato e um Sonho - Python Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython_stdlib.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; }
+        canvas { display: block; }
+    </style>
 </head>
-<body>
+<body onload="brython()">
     <canvas id="gameCanvas"></canvas>
-
-    <div id="ui-layer" style="display:none;">
-        <div id="inv-toggle">INV</div>
-        <div id="joystick-base">
-            <div id="joystick-pino"></div>
-        </div>
-    </div>
-
     <script src="core.js"></script>
-    <script src="updates.js"></script>
+
+    <script type="text/python">
+        from browser import window
+        print("Cérebro Python do Pato Ativado!")
+    </script>
 </body>
 </html>
+
