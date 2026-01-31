@@ -3,57 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pato e um Sonho - Engine</title>
+    <title>Pato Journey</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython_stdlib.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #050a05; font-family: sans-serif; }
-        canvas { display: block; touch-action: none; background: #1e3d1a; }
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(5, 10, 5, 0.9); z-index: 100; color: white;
+        body { margin: 0; background: #050a05; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        #loading-screen {
+            position: absolute; width: 100%; height: 100%; background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000;
         }
-        .menu-box { background: #000; padding: 30px; border-radius: 15px; border: 2px solid #3a6b32; text-align: center; width: 80%; }
-        .btn { width: 100%; padding: 15px; margin-top: 20px; font-size: 1.2rem; font-weight: bold; color: white; border: none; border-radius: 8px; cursor: pointer; background: #2d5a27; }
-        #loader-container { display: none; width: 100%; margin-top: 20px; }
-        #progress-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: #ffcc00; transition: width 0.2s; }
+        .progress-container { width: 70%; height: 20px; border: 2px solid #3a6b32; margin-top: 20px; border-radius: 10px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: #44ff44; transition: width 0.3s; }
+        #status-text { margin-top: 10px; font-size: 14px; color: #aaa; }
+        canvas { display: none; touch-action: none; }
+        #start-btn { display: none; padding: 15px 40px; background: #2d5a27; color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
     </style>
 </head>
 <body onload="brython()">
-    <div id="ui-layer">
-        <div class="menu-box">
-            <h1>Um Pato e um Sonho</h1>
-            <p id="py-status" style="color: #ff4444;">Aguardando Motor Python...</p>
-            <button class="btn" id="start-btn" onclick="iniciarFluxo()" style="display:none;">INICIAR JORNADA</button>
-            
-            <div id="loader-container">
-                <div id="progress-bg"><div id="progress-bar"></div></div>
-                <p id="loader-text" style="font-size: 0.8rem; margin-top: 10px;">Carregando recursos...</p>
-            </div>
-        </div>
+    <div id="loading-screen">
+        <h2 id="main-title">GERANDO MUNDO...</h2>
+        <div class="progress-container"><div id="progress-bar"></div></div>
+        <p id="status-text">Iniciando sementes do solo...</p>
+        <button id="start-btn" onclick="entrarNoJogo()">ENTRAR NO MUNDO</button>
     </div>
 
-    <canvas id="gameCanvas" style="display:none;"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
     <script type="text/python">
         from browser import window, document
         import random
 
-        def python_world_gen(size, tree_count):
-            world_data = []
-            for i in range(int(tree_count)):
+        def python_world_gen(size, count):
+            # Gera os dados mas não inicia o desenho ainda
+            data = []
+            for i in range(int(count)):
                 t = "tree" if random.random() > 0.4 else "stone"
-                x = random.randint(200, int(size) - 200)
-                y = random.randint(200, int(size) - 200)
-                world_data.append({"x": x, "y": y, "type": t, "hp": 10})
-            return world_data
+                data.append({
+                    "x": random.randint(200, int(size)-200),
+                    "y": random.randint(200, int(size)-200),
+                    "type": t, "hp": 10
+                })
+            return data
 
         window.py_gen = python_world_gen
-        document["py-status"].innerText = "Motor Pronto!"
-        document["py-status"].style.color = "#44ff44"
-        document["start-btn"].style.display = "block"
+        document["status-text"].innerText = "Python carregado. Aguardando texturas..."
     </script>
     <script src="core.js"></script>
 </body>
