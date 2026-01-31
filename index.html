@@ -3,50 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pato Journey</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <title>Pato Survival</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython_stdlib.min.js"></script>
-    <style>
-        body { margin: 0; background: #050a05; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
-        #loading-screen {
-            position: absolute; width: 100%; height: 100%; background: #000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000;
-        }
-        .progress-container { width: 70%; height: 20px; border: 2px solid #3a6b32; margin-top: 20px; border-radius: 10px; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: #44ff44; transition: width 0.3s; }
-        #status-text { margin-top: 10px; font-size: 14px; color: #aaa; }
-        canvas { display: none; touch-action: none; }
-        #start-btn { display: none; padding: 15px 40px; background: #2d5a27; color: white; border: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
-    </style>
+    <script src="updates.js"></script>
 </head>
 <body onload="brython()">
     <div id="loading-screen">
-        <h2 id="main-title">GERANDO MUNDO...</h2>
+        <h1 style="color: #ffcc00; text-shadow: 2px 2px #000;">GERANDO MUNDO</h1>
         <div class="progress-container"><div id="progress-bar"></div></div>
-        <p id="status-text">Iniciando sementes do solo...</p>
-        <button id="start-btn" onclick="entrarNoJogo()">ENTRAR NO MUNDO</button>
+        <p id="status-text">Iniciando motor de biomas...</p>
+        <button id="start-btn" style="display:none;" onclick="entrarNoJogo()">ENTRAR</button>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <canvas id="gameCanvas" style="display:none;"></canvas>
 
     <script type="text/python">
         from browser import window, document
         import random
 
         def python_world_gen(size, count):
-            # Gera os dados mas não inicia o desenho ainda
-            data = []
+            world = []
             for i in range(int(count)):
                 t = "tree" if random.random() > 0.4 else "stone"
-                data.append({
-                    "x": random.randint(200, int(size)-200),
-                    "y": random.randint(200, int(size)-200),
+                world.append({
+                    "x": random.randint(150, int(size)-150),
+                    "y": random.randint(150, int(size)-150),
                     "type": t, "hp": 10
                 })
-            return data
+            return world
 
         window.py_gen = python_world_gen
-        document["status-text"].innerText = "Python carregado. Aguardando texturas..."
+        document["status-text"].innerText = "Mundo calculado. Limpando texturas..."
     </script>
     <script src="core.js"></script>
 </body>

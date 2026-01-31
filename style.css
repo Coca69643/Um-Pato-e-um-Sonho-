@@ -1,25 +1,67 @@
 * {
-    margin: 0; padding: 0; box-sizing: border-box;
-    user-select: none; -webkit-user-select: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
-body, html { width: 100%; height: 100%; overflow: hidden; background: #000; }
-#gameCanvas { display: block; width: 100vw; height: 100vh; }
-#ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 
-#inv-toggle {
-    position: absolute; top: 20px; right: 20px;
-    width: 60px; height: 50px; background: rgba(0,0,0,0.7);
-    color: white; border: 2px solid #fff; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: auto; z-index: 10;
+body {
+    background: #050a05;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
 }
 
-#joystick-base {
-    position: absolute; bottom: 50px; left: 50px;
-    width: 120px; height: 120px; background: rgba(255,255,255,0.1);
-    border: 3px solid rgba(255,255,255,0.3); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: auto; z-index: 10;
+#loading-screen {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, #1a3c15 0%, #000 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
 }
-#joystick-pino { width: 50px; height: 50px; background: #ffcc00; border-radius: 50%; }
+
+.progress-container {
+    width: 60%;
+    height: 15px;
+    background: #111;
+    border: 2px solid #3a6b32;
+    border-radius: 10px;
+    margin: 20px 0;
+    overflow: hidden;
+}
+
+#progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #2d5a27, #44ff44);
+    transition: width 0.2s;
+}
+
+#start-btn {
+    padding: 15px 40px;
+    background: #ffcc00;
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #b8860b;
+}
+
+#start-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #b8860b;
+}
+
+canvas {
+    display: block;
+}
+

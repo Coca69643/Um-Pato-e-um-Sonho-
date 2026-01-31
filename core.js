@@ -10,7 +10,6 @@ const G = {
     resources: [], patches: [], worldSize: 3000, loaded: false
 };
 
-// Função para remover o fundo branco (Chroma Key)
 function cleanTexture(img) {
     const tempCanvas = document.createElement('canvas');
     const tCtx = tempCanvas.getContext('2d');
@@ -19,7 +18,7 @@ function cleanTexture(img) {
     const imgData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
     const d = imgData.data;
     for (let i = 0; i < d.length; i += 4) {
-        if (d[i] > 235 && d[i+1] > 235 && d[i+2] > 235) d[i+3] = 0; // Transparência
+        if (d[i] > 230 && d[i+1] > 230 && d[i+2] > 230) d[i+3] = 0;
     }
     tCtx.putImageData(imgData, 0, 0);
     const finalImg = new Image();
@@ -27,86 +26,71 @@ function cleanTexture(img) {
     return finalImg;
 }
 
-// Lógica de Carregamento Estilo Terraria
-async function startWorldGen() {
-    const status = document.getElementById('status-text');
+async function carregarTudo() {
     const bar = document.getElementById('progress-bar');
-    
-    // 1. Gerar Recursos via Python
-    status.innerText = "Calculando biomas...";
-    bar.style.width = "30%";
-    const data = window.py_gen(G.worldSize, 80);
-    G.resources = Array.from(data);
-    
-    // 2. Carregar Imagens
-    status.innerText = "Assentando blocos e texturas...";
-    const manifest = { 'pato': 'idle_001.png', 'tree': 'arvore.png', 'stone': 'rocha.png' };
-    let count = 0;
-    const total = Object.keys(manifest).length;
+    const status = document.getElementById('status-text');
 
-    for (let key in manifest) {
-        await new Promise(resolve => {
+    // 1. Dados do Python
+    const raw = window.py_gen(G.worldSize, 85);
+    G.resources = Array.from(raw);
+    bar.style.width = "40%";
+
+    // 2. Imagens
+    const imgs = { 'pato': 'idle_001.png', 'tree': 'arvore.png', 'stone': 'rocha.png' };
+    let loadedCount = 0;
+    
+    for (let key in imgs) {
+        await new Promise(res => {
             let img = new Image();
-            img.src = manifest[key] + "?v=" + Date.now(); // Anti-cache
+            img.src = window.AppControl.fixPath(imgs[key]);
             img.onload = () => {
-                if (key !== 'pato') G.assets[key] = cleanTexture(img);
-                else G.assets[key] = img;
-                count++;
-                bar.style.width = (30 + (count / total) * 70) + "%";
-                resolve();
+                G.assets[key] = (key === 'pato') ? img : cleanTexture(img);
+                loadedCount++;
+                bar.style.width = (40 + (loadedCount/3)*60) + "%";
+                res();
             };
-            img.onerror = () => {
-                console.warn("Erro no arquivo: " + manifest[key]);
-                resolve(); 
-            };
+            img.onerror = () => { res(); };
         });
     }
 
-    status.innerText = "Mundo pronto!";
+    status.innerText = "Mundo Pronto para Exploração!";
     document.getElementById('start-btn').style.display = "block";
 }
 
 function entrarNoJogo() {
     document.getElementById('loading-screen').style.display = "none";
     canvas.style.display = "block";
-    setupCanvas();
-    G.loaded = true;
-    gameLoop();
-}
-
-function setupCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     G.joy.y = canvas.height - 100; G.joy.curY = G.joy.y;
     G.btn.x = canvas.width - 100; G.btn.y = canvas.height - 100;
-    for(let i=0; i<50; i++) G.patches.push({x: Math.random()*G.worldSize, y: Math.random()*G.worldSize, w: 300, h: 200});
+    for(let i=0; i<40; i++) G.patches.push({x: Math.random()*G.worldSize, y: Math.random()*G.worldSize, w: 400, h: 250});
+    G.loaded = true;
+    gameLoop();
 }
 
 function draw() {
     ctx.fillStyle = '#1e3d1a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.save(); ctx.translate(-G.camera.x, -G.camera.y);
-
-    // Recursos (Árvores e Pedras)
+    
+    // Desenha as árvores e rochas
     G.resources.forEach(res => {
         const img = G.assets[res.type];
-        if (img) ctx.drawImage(img, res.x, res.y, 100, 100);
-        ctx.fillStyle = "red"; ctx.fillRect(res.x, res.y - 10, res.hp * 10, 5);
+        if (img) ctx.drawImage(img, res.x, res.y, 110, 110);
     });
 
     // Pato
     const pImg = G.assets['pato'];
-    ctx.save(); ctx.translate(G.pato.x + 35, G.pato.y + 35);
-    if (G.pato.facingLeft) ctx.scale(-1, 1);
-    if (pImg) ctx.drawImage(pImg, -35, -35, 70, 70);
+    ctx.save(); ctx.translate(G.pato.x+35, G.pato.y+35);
+    if(G.pato.facingLeft) ctx.scale(-1,1);
+    if(pImg) ctx.drawImage(pImg, -35, -35, 70, 70);
     ctx.restore();
 
     ctx.restore();
-    // HUD
-    ctx.fillStyle = "white"; ctx.font = "20px Arial";
-    ctx.fillText(`🌲: ${G.pato.inv.wood}  🪨: ${G.pato.inv.stone}`, 20, 40);
+    // HUD básica
+    ctx.fillStyle = "white"; ctx.fillText(`Mundo Gerado: ${G.worldSize}px`, 20, 30);
 }
 
-// ... (Mantenha suas funções de update, gameLoop e touch dos arquivos anteriores)
 function update() {
     if (G.pato.moving) {
         G.pato.x += Math.cos(G.pato.angle) * G.pato.speed;
@@ -118,8 +102,20 @@ function update() {
 
 function gameLoop() { if(G.loaded) { update(); draw(); requestAnimationFrame(gameLoop); } }
 
-// Chamar o carregador ao iniciar
-setTimeout(startWorldGen, 1000);
+// Eventos de toque simplificados para o teste
+canvas.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    if (Math.hypot(t.clientX - G.joy.x, t.clientY - G.joy.y) < 100) G.joy.active = true;
+});
+canvas.addEventListener('touchmove', e => {
+    if (!G.joy.active) return;
+    const t = e.touches[0];
+    G.pato.angle = Math.atan2(t.clientY - G.joy.y, t.clientX - G.joy.x);
+    G.pato.moving = true; G.pato.facingLeft = Math.cos(G.pato.angle) < 0;
+});
+canvas.addEventListener('touchend', () => { G.joy.active = false; G.pato.moving = false; });
+
+setTimeout(carregarTudo, 1500);
 
 
 
