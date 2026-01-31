@@ -2,45 +2,47 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
-    <title>Pato Survival</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.7/brython_stdlib.min.js"></script>
-    <script src="updates.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Um Pato e um Sonho</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; touch-action: none; }
+        canvas { display: block; }
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Permite tocar no jogo através da UI */
+        }
+        #loading {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff; font-family: monospace; font-size: 20px;
+            text-align: center;
+        }
+    </style>
 </head>
-<body onload="brython()">
-    <div id="loading-screen">
-        <h1 style="color: #ffcc00; text-shadow: 2px 2px #000;">GERANDO MUNDO</h1>
-        <div class="progress-container"><div id="progress-bar"></div></div>
-        <p id="status-text">Iniciando motor de biomas...</p>
-        <button id="start-btn" style="display:none;" onclick="entrarNoJogo()">ENTRAR</button>
-    </div>
-
-    <canvas id="gameCanvas" style="display:none;"></canvas>
-
-    <script type="text/python">
-        from browser import window, document
-        import random
-
-        def python_world_gen(size, count):
-            world = []
-            for i in range(int(count)):
-                t = "tree" if random.random() > 0.4 else "stone"
-                world.append({
-                    "x": random.randint(150, int(size)-150),
-                    "y": random.randint(150, int(size)-150),
-                    "type": t, "hp": 10
-                })
-            return world
-
-        window.py_gen = python_world_gen
-        document["status-text"].innerText = "Mundo calculado. Limpando texturas..."
-    </script>
+<body>
+    <div id="loading">CARREGANDO RECURSOS...</div>
+    <canvas id="gameCanvas"></canvas>
+    
     <script src="core.js"></script>
+    
+    <script>
+        if (!window.py_gen) {
+            window.py_gen = (size, count) => {
+                let res = [];
+                for(let i=0; i<count; i++) {
+                    res.push({
+                        type: Math.random() > 0.5 ? 'tree' : 'stone',
+                        x: Math.random() * size,
+                        y: Math.random() * size
+                    });
+                }
+                return res;
+            };
+        }
+    </script>
 </body>
 </html>
+
 
 
 
