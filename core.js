@@ -24,10 +24,8 @@ const sources = {
 };
 
 window.iniciarJogo = function() {
-    const menu = document.getElementById('main-menu');
-    if (menu) menu.style.display = 'none';
-    const loader = document.getElementById('loading-txt');
-    if (loader) loader.style.display = 'block';
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('loading-screen').style.display = 'flex';
     canvas.style.display = 'block';
     boot();
 };
@@ -36,31 +34,67 @@ async function boot() {
     resize();
     window.addEventListener('resize', resize);
 
-    // Distribuição de recursos pelo mapa 4k
-    if (G.world.items.length === 0) {
-        for (let i = 0; i < 180; i++) {
+    // SISTEMA DE GERAÇÃO PROCEDURAL (Estilo Mine/Terraria)
+    const totalSteps = 4;
+    let currentStep = 0;
+
+    function updateProgress(msg) {
+        currentStep++;
+        document.getElementById('load-status').innerText = msg;
+        document.getElementById('progress-fill').style.width = (currentStep / totalSteps * 100) + "%";
+    }
+
+    // Passo 1: Gerar Florestas (Agrupamentos de árvores)
+    updateProgress("PLANTANDO FLORESTAS...");
+    for (let f = 0; f < 15; f++) { // 15 núcleos de floresta
+        let baseRelX = Math.random() * G.world.size;
+        let baseRelY = Math.random() * G.world.size;
+        for (let i = 0; i < 10; i++) {
             G.world.items.push({
-                type: Math.random() > 0.4 ? 'tree' : 'stone',
-                x: Math.random() * G.world.size,
-                y: Math.random() * G.world.size
+                type: 'tree',
+                x: baseRelX + (Math.random() - 0.5) * 400,
+                y: baseRelY + (Math.random() - 0.5) * 400
             });
         }
     }
 
+    // Passo 2: Gerar Jazidas de Pedra
+    updateProgress("ESCULPINDO MONTANHAS...");
+    for (let r = 0; r < 10; r++) {
+        let baseRelX = Math.random() * G.world.size;
+        let baseRelY = Math.random() * G.world.size;
+        for (let i = 0; i < 6; i++) {
+            G.world.items.push({
+                type: 'stone',
+                x: baseRelX + (Math.random() - 0.5) * 300,
+                y: baseRelY + (Math.random() - 0.5) * 300
+            });
+        }
+    }
+
+    // Passo 3: Limpeza de bordas
+    updateProgress("LIMPANDO TEXTURAS...");
+    G.world.items = G.world.items.filter(it => 
+        it.x > 100 && it.x < G.world.size - 100 && 
+        it.y > 100 && it.y < G.world.size - 100
+    );
+
+    // Passo 4: Carregar Assets
+    updateProgress("ENTRANDO NO MUNDO...");
     let loadedCount = 0;
     const keys = Object.keys(sources);
-    
     for (let key of keys) {
         G.assets[key] = new Image();
         G.assets[key].src = sources[key] + "?v=" + Date.now();
         G.assets[key].onload = () => {
             loadedCount++;
             if (loadedCount === keys.length) {
-                const loader = document.getElementById('loading-txt');
-                if (loader) loader.style.display = 'none';
-                G.loaded = true;
-                G.running = true;
-                gameLoop();
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    G.loaded = true;
+                    G.running = true;
+                    gameLoop();
+                }, 800); // Delay suave para ver a barra cheia
             }
         };
     }
@@ -74,29 +108,21 @@ function resize() {
 
 function update() {
     if (!G.running) return;
-
     if (G.joy.active) {
         G.pato.x += Math.cos(G.pato.angle) * G.pato.speed;
         G.pato.y += Math.sin(G.pato.angle) * G.pato.speed;
-
         G.pato.animTimer++;
         if (G.pato.animTimer > 8) {
             G.pato.frame = (G.pato.frame === 1) ? 2 : 1;
             G.pato.animTimer = 0;
         }
-    } else {
-        G.pato.frame = 0;
-    }
+    } else { G.pato.frame = 0; }
 
-    // Colisão com bordas do mapa
     G.pato.x = Math.max(50, Math.min(G.world.size - 50, G.pato.x));
     G.pato.y = Math.max(50, Math.min(G.world.size - 50, G.pato.y));
-
-    // Câmera dinâmica
     G.cam.x = G.pato.x - canvas.width / 2;
     G.cam.y = G.pato.y - canvas.height / 2;
 
-    // Detecção de coleta (aproximação)
     for (let i = G.world.items.length - 1; i >= 0; i--) {
         let it = G.world.items[i];
         if (Math.hypot(G.pato.x - it.x, G.pato.y - it.y) < 60) {
@@ -107,23 +133,17 @@ function update() {
 }
 
 function draw() {
-    ctx.fillStyle = '#1e3d1a'; // Fundo grama
+    ctx.fillStyle = '#1e3d1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     ctx.save();
     ctx.translate(-G.cam.x, -G.cam.y);
 
-    // Desenhar Árvores e Pedras
     G.world.items.forEach(it => {
         let img = G.assets[it.type];
         if (img && img.complete) ctx.drawImage(img, it.x - 50, it.y - 50, 100, 100);
     });
 
-    // Pato com animação e inversão horizontal
-    let pKey = 'pato_idle';
-    if (G.pato.frame === 1) pKey = 'pato_walk1';
-    if (G.pato.frame === 2) pKey = 'pato_walk2';
-    
+    let pKey = (G.pato.frame === 0) ? 'pato_idle' : (G.pato.frame === 1 ? 'pato_walk1' : 'pato_walk2');
     let pImg = G.assets[pKey];
     if (pImg) {
         ctx.save();
@@ -132,17 +152,16 @@ function draw() {
         ctx.drawImage(pImg, -35, -35, 70, 70);
         ctx.restore();
     }
-
     ctx.restore();
 
-    // HUD do Inventário
+    // HUD
     ctx.fillStyle = "rgba(0,0,0,0.8)";
-    ctx.beginPath(); ctx.roundRect(20, 20, 230, 45, 8); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(20, 20, 240, 45, 8); ctx.fill();
     ctx.fillStyle = "#fff";
     ctx.font = "bold 12px Arial";
     ctx.fillText(`MADEIRA: ${G.pato.inv.wood} | PEDRA: ${G.pato.inv.stone}`, 35, 48);
 
-    // Desenho do Joystick
+    // Joystick
     ctx.strokeStyle = "rgba(255,255,255,0.2)";
     ctx.lineWidth = 4;
     ctx.beginPath(); ctx.arc(G.joy.x, G.joy.y, 55, 0, Math.PI * 2); ctx.stroke();
@@ -158,7 +177,6 @@ function gameLoop() {
     if (G.running) { update(); draw(); requestAnimationFrame(gameLoop); }
 }
 
-// Controles de Toque
 canvas.addEventListener('touchstart', e => {
     let t = e.touches[0];
     if (Math.hypot(t.clientX - G.joy.x, t.clientY - G.joy.y) < 100) G.joy.active = true;
@@ -169,6 +187,7 @@ canvas.addEventListener('touchmove', e => {
     G.pato.angle = Math.atan2(t.clientY - G.joy.y, t.clientX - G.joy.x);
 });
 canvas.addEventListener('touchend', () => G.joy.active = false);
+
 
 
 

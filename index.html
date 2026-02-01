@@ -25,9 +25,9 @@
         .game-title {
             font-size: 28px; color: #ffeb3b; z-index: 2;
             text-shadow: 0 0 15px rgba(255, 235, 59, 0.5), 4px 4px 0 #000;
-            margin-bottom: 25px; letter-spacing: 2px;
-            /* Título posicionado para melhor visibilidade */
-            margin-top: 20px; 
+            margin-bottom: 30px; letter-spacing: 2px;
+            /* Posição ajustada para fugir da escuridão total */
+            margin-top: 60px; 
         }
 
         .button-container {
@@ -46,13 +46,13 @@
         .secondary { background: #444; border-bottom: 5px solid #222; opacity: 0.8; cursor: not-allowed; }
         .lock::after { content: " 🔒"; font-size: 8px; }
 
-        /* Changelog Reduzido */
+        /* Changelog v2 - Menor e mais limpo */
         .side-changelog {
             position: absolute; left: 15px; bottom: 15px; z-index: 2;
             background: rgba(0,0,0,0.8); border: 1px solid #444;
-            padding: 10px; border-radius: 6px; width: 170px;
+            padding: 8px; border-radius: 6px; width: 160px;
         }
-        .side-changelog h3 { font-size: 8px; color: #ffeb3b; margin: 0 0 6px 0; }
+        .side-changelog h3 { font-size: 8px; color: #ffeb3b; margin: 0 0 5px 0; }
         .side-changelog ul { list-style: none; padding: 0; margin: 0; font-size: 6px; line-height: 1.4; color: #ccc; }
 
         .version-tag {
@@ -61,7 +61,13 @@
         }
 
         #gameCanvas { display: none; background: #1e3d1a; }
-        #loading-txt { color: white; position: absolute; top: 10px; width: 100%; text-align: center; display: none; font-size: 8px; z-index: 20; }
+        #loading-screen { 
+            display: none; position: absolute; width: 100%; height: 100%; 
+            background: #000; color: #fff; z-index: 100;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        .progress-bar { width: 200px; height: 10px; background: #333; border-radius: 5px; margin-top: 15px; }
+        .progress-fill { width: 0%; height: 100%; background: #4caf50; border-radius: 5px; transition: 0.3s; }
     </style>
 </head>
 <body>
@@ -80,22 +86,27 @@
         <div class="side-changelog">
             <h3>LOG v1.2.0</h3>
             <ul>
+                <li>✨ Geração Procedural</li>
                 <li>✨ Pato Animado</li>
+                <li>✨ Interface Final</li>
                 <li>✨ Mapa 4000px</li>
-                <li>✨ Transparência HD</li>
-                <li>✨ Menu v2</li>
             </ul>
         </div>
 
-        <div class="version-tag">v1.2.0 Alpha</div>
+        <div class="version-tag">Alpha v1.2.0</div>
     </div>
 
-    <div id="loading-txt">CARREGANDO...</div>
+    <div id="loading-screen">
+        <div id="load-status" style="font-size: 10px;">GERANDO MUNDO...</div>
+        <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+    </div>
+
     <canvas id="gameCanvas"></canvas>
 
     <script src="core.js"></script>
 </body>
 </html>
+
 
 
 
