@@ -20,26 +20,57 @@
     </style>
 </head>
 <body>
-    <div id="loading">CARREGANDO RECURSOS...</div>
-    <canvas id="gameCanvas"></canvas>
-    
-    <script src="core.js"></script>
-    
-    <script>
-        if (!window.py_gen) {
-            window.py_gen = (size, count) => {
-                let res = [];
-                for(let i=0; i<count; i++) {
-                    res.push({
-                        type: Math.random() > 0.5 ? 'tree' : 'stone',
-                        x: Math.random() * size,
-                        y: Math.random() * size
-                    });
-                }
-                return res;
-            };
+    <div id="main-menu">
+        <h1>PATO SURVIVAL</h1>
+        <p class="version">v1.2.0 - The Alpha Update</p>
+        
+        <div class="changelog">
+            <h3>📝 Novidades da Versão:</h3>
+            <ul>
+                <li>✅ <b>Gráficos Limpos:</b> Fundo transparente em árvores e pedras.</li>
+                <li>✅ <b>Animação de Caminhada:</b> Pato agora mexe as patas!</li>
+                <li>✅ <b>Sistema de Coleta:</b> Inventário 100% funcional.</li>
+                <li>✅ <b>Mundo Vasto:</b> Mapa expandido para 4000px.</li>
+                <li>✅ <b>Espelhamento:</b> Pato vira para a esquerda/direita.</li>
+            </ul>
+        </div>
+
+        <button id="start-btn" onclick="iniciarJogo()">COMEÇAR JORNADA</button>
+    </div>
+
+    <canvas id="gameCanvas" style="display:none;"></canvas>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        body { margin: 0; background: #1a1a1a; font-family: 'Press Start 2P', cursive; overflow: hidden; }
+        
+        #main-menu {
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('arvore.png'); 
+            background-size: 100px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: white; text-align: center;
         }
-    </script>
+
+        h1 { font-size: 28px; color: #ffeb3b; text-shadow: 4px 4px #000; margin-bottom: 10px; }
+        .version { font-size: 10px; color: #aaa; margin-bottom: 30px; }
+
+        .changelog {
+            background: rgba(0, 0, 0, 0.8); padding: 20px; border: 2px solid #ffeb3b;
+            border-radius: 10px; max-width: 80%; text-align: left; margin-bottom: 30px;
+        }
+
+        .changelog h3 { font-size: 12px; color: #ffeb3b; margin-top: 0; }
+        .changelog ul { list-style: none; padding: 0; font-size: 9px; line-height: 1.8; }
+        
+        #start-btn {
+            padding: 15px 30px; font-family: 'Press Start 2P', cursive;
+            background: #4caf50; color: white; border: none; border-bottom: 5px solid #2e7d32;
+            cursor: pointer; transition: 0.2s;
+        }
+
+        #start-btn:active { transform: translateY(4px); border-bottom-width: 1px; }
+    </style>
 </body>
 </html>
 
