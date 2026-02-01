@@ -1,4 +1,5 @@
 👀 Um Pato e um Sonho
+   
    ✅ Este é um novo jogo de sobrevivência que eu estou criando sozinho, direto pelo celular. Não é um jogo pronto e está MUITO longe de ser 100% completo, mas a ideia é evoluir ele junto com quem quiser acompanhar.
    
    🛠️ Como eu faço (0% mentiras):
