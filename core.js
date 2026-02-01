@@ -24,8 +24,10 @@ const sources = {
 };
 
 window.iniciarJogo = function() {
-    document.getElementById('main-menu').style.display = 'none';
-    document.getElementById('loading-txt').style.display = 'block';
+    const menu = document.getElementById('main-menu');
+    if (menu) menu.style.display = 'none';
+    const loader = document.getElementById('loading-txt');
+    if (loader) loader.style.display = 'block';
     canvas.style.display = 'block';
     boot();
 };
@@ -34,8 +36,9 @@ async function boot() {
     resize();
     window.addEventListener('resize', resize);
 
+    // Distribuição de recursos pelo mapa 4k
     if (G.world.items.length === 0) {
-        for (let i = 0; i < 180; i++) { // Um pouco mais de itens para o mapa 4k
+        for (let i = 0; i < 180; i++) {
             G.world.items.push({
                 type: Math.random() > 0.4 ? 'tree' : 'stone',
                 x: Math.random() * G.world.size,
@@ -53,7 +56,8 @@ async function boot() {
         G.assets[key].onload = () => {
             loadedCount++;
             if (loadedCount === keys.length) {
-                document.getElementById('loading-txt').style.display = 'none';
+                const loader = document.getElementById('loading-txt');
+                if (loader) loader.style.display = 'none';
                 G.loaded = true;
                 G.running = true;
                 gameLoop();
@@ -65,7 +69,7 @@ async function boot() {
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    G.joy.y = canvas.height - 130; // Posicionamento fixo do joystick
+    G.joy.y = canvas.height - 130;
 }
 
 function update() {
@@ -84,12 +88,15 @@ function update() {
         G.pato.frame = 0;
     }
 
+    // Colisão com bordas do mapa
     G.pato.x = Math.max(50, Math.min(G.world.size - 50, G.pato.x));
     G.pato.y = Math.max(50, Math.min(G.world.size - 50, G.pato.y));
 
+    // Câmera dinâmica
     G.cam.x = G.pato.x - canvas.width / 2;
     G.cam.y = G.pato.y - canvas.height / 2;
 
+    // Detecção de coleta (aproximação)
     for (let i = G.world.items.length - 1; i >= 0; i--) {
         let it = G.world.items[i];
         if (Math.hypot(G.pato.x - it.x, G.pato.y - it.y) < 60) {
@@ -100,17 +107,19 @@ function update() {
 }
 
 function draw() {
-    ctx.fillStyle = '#1e3d1a';
+    ctx.fillStyle = '#1e3d1a'; // Fundo grama
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
     ctx.translate(-G.cam.x, -G.cam.y);
 
+    // Desenhar Árvores e Pedras
     G.world.items.forEach(it => {
         let img = G.assets[it.type];
         if (img && img.complete) ctx.drawImage(img, it.x - 50, it.y - 50, 100, 100);
     });
 
+    // Pato com animação e inversão horizontal
     let pKey = 'pato_idle';
     if (G.pato.frame === 1) pKey = 'pato_walk1';
     if (G.pato.frame === 2) pKey = 'pato_walk2';
@@ -126,14 +135,14 @@ function draw() {
 
     ctx.restore();
 
-    // Interface
+    // HUD do Inventário
     ctx.fillStyle = "rgba(0,0,0,0.8)";
-    ctx.beginPath(); ctx.roundRect(20, 20, 250, 50, 8); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(20, 20, 230, 45, 8); ctx.fill();
     ctx.fillStyle = "#fff";
     ctx.font = "bold 12px Arial";
-    ctx.fillText(`MADEIRA: ${G.pato.inv.wood} | PEDRA: ${G.pato.inv.stone}`, 40, 50);
+    ctx.fillText(`MADEIRA: ${G.pato.inv.wood} | PEDRA: ${G.pato.inv.stone}`, 35, 48);
 
-    // Joystick
+    // Desenho do Joystick
     ctx.strokeStyle = "rgba(255,255,255,0.2)";
     ctx.lineWidth = 4;
     ctx.beginPath(); ctx.arc(G.joy.x, G.joy.y, 55, 0, Math.PI * 2); ctx.stroke();
@@ -149,6 +158,7 @@ function gameLoop() {
     if (G.running) { update(); draw(); requestAnimationFrame(gameLoop); }
 }
 
+// Controles de Toque
 canvas.addEventListener('touchstart', e => {
     let t = e.touches[0];
     if (Math.hypot(t.clientX - G.joy.x, t.clientY - G.joy.y) < 100) G.joy.active = true;
@@ -159,6 +169,7 @@ canvas.addEventListener('touchmove', e => {
     G.pato.angle = Math.atan2(t.clientY - G.joy.y, t.clientX - G.joy.x);
 });
 canvas.addEventListener('touchend', () => G.joy.active = false);
+
 
 
 
