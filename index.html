@@ -18,87 +18,102 @@
 
         .menu-overlay {
             position: absolute; width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.9) 100%);
+            /* Ajustado: Centro mais claro e bordas escuras menos agressivas no centro */
+            background: radial-gradient(circle, rgba(0,0,0,0.2) 20%, rgba(0,0,0,0.95) 90%);
             pointer-events: none;
         }
 
+        .content-wrapper {
+            z-index: 5;
+            display: flex; flex-direction: column; align-items: center;
+            /* Truque para subir visualmente todo o bloco */
+            transform: translateY(-30px);
+        }
+
         .game-title {
-            font-size: 28px; color: #ffeb3b; z-index: 2;
-            text-shadow: 0 0 15px rgba(255, 235, 59, 0.5), 4px 4px 0 #000;
-            margin-bottom: 30px; letter-spacing: 2px;
-            /* Posição ajustada para fugir da escuridão total */
-            margin-top: 60px; 
+            font-size: 32px; color: #ffeb3b;
+            text-shadow: 0 0 20px rgba(255, 235, 59, 0.6), 4px 4px 0 #000;
+            margin-bottom: 40px; letter-spacing: 2px;
+            text-align: center; line-height: 1.5;
         }
 
         .button-container {
-            display: flex; flex-direction: column; gap: 12px; z-index: 2;
+            display: flex; flex-direction: column; gap: 15px;
         }
 
         .menu-btn {
-            width: 250px; padding: 12px; font-family: 'Press Start 2P', cursive;
-            border: none; cursor: pointer; font-size: 10px; transition: 0.2s;
+            width: 260px; padding: 15px; font-family: 'Press Start 2P', cursive;
+            border: none; cursor: pointer; font-size: 11px; transition: 0.2s;
             border-radius: 4px; color: white;
+            box-shadow: 0 4px 0 #000;
         }
 
-        .primary { background: #4caf50; border-bottom: 5px solid #2e7d32; }
-        .primary:active { transform: translateY(4px); border-bottom-width: 1px; }
+        .primary { background: #4caf50; border: 2px solid #2e7d32; border-bottom: 4px solid #1b5e20; }
+        .primary:active { transform: translateY(4px); border-bottom-width: 0px; box-shadow: 0 0 0; }
 
-        .secondary { background: #444; border-bottom: 5px solid #222; opacity: 0.8; cursor: not-allowed; }
+        .secondary { background: #444; border: 2px solid #222; border-bottom: 4px solid #111; opacity: 0.8; cursor: not-allowed; }
         .lock::after { content: " 🔒"; font-size: 8px; }
 
-        /* Changelog v2 - Menor e mais limpo */
         .side-changelog {
             position: absolute; left: 15px; bottom: 15px; z-index: 2;
             background: rgba(0,0,0,0.8); border: 1px solid #444;
-            padding: 8px; border-radius: 6px; width: 160px;
+            padding: 10px; border-radius: 6px; width: 180px;
         }
-        .side-changelog h3 { font-size: 8px; color: #ffeb3b; margin: 0 0 5px 0; }
-        .side-changelog ul { list-style: none; padding: 0; margin: 0; font-size: 6px; line-height: 1.4; color: #ccc; }
+        .side-changelog h3 { font-size: 9px; color: #ffeb3b; margin: 0 0 8px 0; }
+        .side-changelog ul { list-style: none; padding: 0; margin: 0; font-size: 7px; line-height: 1.5; color: #ccc; }
 
         .version-tag {
             position: absolute; right: 15px; bottom: 15px; z-index: 2;
-            font-size: 8px; color: #555;
+            font-size: 9px; color: #777;
         }
 
         #gameCanvas { display: none; background: #1e3d1a; }
+        
+        /* TELA DE LOADING PROFISSIONAL */
         #loading-screen { 
             display: none; position: absolute; width: 100%; height: 100%; 
-            background: #000; color: #fff; z-index: 100;
+            background: #111; color: #fff; z-index: 100;
             flex-direction: column; align-items: center; justify-content: center;
         }
-        .progress-bar { width: 200px; height: 10px; background: #333; border-radius: 5px; margin-top: 15px; }
-        .progress-fill { width: 0%; height: 100%; background: #4caf50; border-radius: 5px; transition: 0.3s; }
+        .loading-title { color: #ffeb3b; margin-bottom: 20px; font-size: 14px; text-shadow: 2px 2px 0 #000; }
+        .progress-container { width: 220px; height: 12px; background: #222; border: 2px solid #444; border-radius: 6px; padding: 2px; }
+        .progress-fill { width: 0%; height: 100%; background: #4caf50; border-radius: 4px; transition: width 0.3s ease-out; }
+        #load-status { margin-top: 15px; font-size: 8px; color: #888; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
     <div id="main-menu">
         <div class="menu-overlay"></div>
-        <h1 class="game-title">PATO SURVIVAL</h1>
+        
+        <div class="content-wrapper">
+            <h1 class="game-title">PATO<br>SURVIVAL</h1>
 
-        <div class="button-container">
-            <button class="menu-btn primary" onclick="iniciarJogo()">COMEÇAR NOVO</button>
-            <button class="menu-btn secondary lock">CONTINUAR</button>
-            <button class="menu-btn secondary lock">MULTIPLAYER</button>
-            <button class="menu-btn secondary lock">CONFIGURAÇÕES</button>
+            <div class="button-container">
+                <button class="menu-btn primary" onclick="iniciarJogo()">CRIAR MUNDO</button>
+                <button class="menu-btn secondary lock">CONTINUAR</button>
+                <button class="menu-btn secondary lock">MULTIPLAYER</button>
+                <button class="menu-btn secondary lock">OPÇÕES</button>
+            </div>
         </div>
 
         <div class="side-changelog">
-            <h3>LOG v1.2.0</h3>
+            <h3>PATCH v1.3.0</h3>
             <ul>
-                <li>✨ Geração Procedural</li>
-                <li>✨ Pato Animado</li>
-                <li>✨ Interface Final</li>
-                <li>✨ Mapa 4000px</li>
+                <li>✨ Biomas de Floresta</li>
+                <li>✨ Pedreiras Naturais</li>
+                <li>✨ Menu Iluminado</li>
+                <li>✨ Zona Segura</li>
             </ul>
         </div>
 
-        <div class="version-tag">Alpha v1.2.0</div>
+        <div class="version-tag">Alpha v1.3.0</div>
     </div>
 
     <div id="loading-screen">
-        <div id="load-status" style="font-size: 10px;">GERANDO MUNDO...</div>
-        <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+        <div class="loading-title">GERANDO TERRENO</div>
+        <div class="progress-container"><div id="progress-fill" class="progress-fill"></div></div>
+        <div id="load-status">INICIALIZANDO...</div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -106,6 +121,7 @@
     <script src="core.js"></script>
 </body>
 </html>
+
 
 
 
