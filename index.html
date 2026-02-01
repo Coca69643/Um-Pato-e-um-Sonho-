@@ -3,76 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Um Pato e um Sonho</title>
-    <style>
-        body { margin: 0; overflow: hidden; background-color: #000; touch-action: none; }
-        canvas { display: block; }
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Permite tocar no jogo através da UI */
-        }
-        #loading {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff; font-family: monospace; font-size: 20px;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <div id="main-menu">
-        <h1>PATO SURVIVAL</h1>
-        <p class="version">v1.2.0 - The Alpha Update</p>
-        
-        <div class="changelog">
-            <h3>📝 Novidades da Versão:</h3>
-            <ul>
-                <li>✅ <b>Gráficos Limpos:</b> Fundo transparente em árvores e pedras.</li>
-                <li>✅ <b>Animação de Caminhada:</b> Pato agora mexe as patas!</li>
-                <li>✅ <b>Sistema de Coleta:</b> Inventário 100% funcional.</li>
-                <li>✅ <b>Mundo Vasto:</b> Mapa expandido para 4000px.</li>
-                <li>✅ <b>Espelhamento:</b> Pato vira para a esquerda/direita.</li>
-            </ul>
-        </div>
-
-        <button id="start-btn" onclick="iniciarJogo()">COMEÇAR JORNADA</button>
-    </div>
-
-    <canvas id="gameCanvas" style="display:none;"></canvas>
-
+    <title>Pato Survival - Alpha</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-        body { margin: 0; background: #1a1a1a; font-family: 'Press Start 2P', cursive; overflow: hidden; }
+        body { margin: 0; background: #0a0a0a; font-family: 'Press Start 2P', cursive; overflow: hidden; touch-action: none; }
         
         #main-menu {
             position: absolute; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('arvore.png'); 
-            background-size: 100px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; color: white; text-align: center;
+            background: url('arvore.png') repeat; background-size: 80px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 10;
         }
 
-        h1 { font-size: 28px; color: #ffeb3b; text-shadow: 4px 4px #000; margin-bottom: 10px; }
-        .version { font-size: 10px; color: #aaa; margin-bottom: 30px; }
-
-        .changelog {
-            background: rgba(0, 0, 0, 0.8); padding: 20px; border: 2px solid #ffeb3b;
-            border-radius: 10px; max-width: 80%; text-align: left; margin-bottom: 30px;
+        .menu-overlay {
+            position: absolute; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.9) 100%);
+            pointer-events: none;
         }
 
-        .changelog h3 { font-size: 12px; color: #ffeb3b; margin-top: 0; }
-        .changelog ul { list-style: none; padding: 0; font-size: 9px; line-height: 1.8; }
-        
-        #start-btn {
-            padding: 15px 30px; font-family: 'Press Start 2P', cursive;
-            background: #4caf50; color: white; border: none; border-bottom: 5px solid #2e7d32;
-            cursor: pointer; transition: 0.2s;
+        .game-title {
+            font-size: 32px; color: #ffeb3b; z-index: 2;
+            text-shadow: 0 0 15px rgba(255, 235, 59, 0.6), 4px 4px 0 #000;
+            margin-bottom: 40px; letter-spacing: 2px;
         }
 
-        #start-btn:active { transform: translateY(4px); border-bottom-width: 1px; }
+        .button-container {
+            display: flex; flex-direction: column; gap: 15px; z-index: 2;
+        }
+
+        .menu-btn {
+            width: 280px; padding: 15px; font-family: 'Press Start 2P', cursive;
+            border: none; cursor: pointer; font-size: 11px; transition: 0.2s;
+            border-radius: 4px; color: white;
+        }
+
+        .primary { background: #4caf50; border-bottom: 5px solid #2e7d32; }
+        .primary:active { transform: translateY(4px); border-bottom-width: 1px; }
+
+        .secondary { background: #444; border-bottom: 5px solid #222; opacity: 0.8; cursor: not-allowed; }
+        .lock::after { content: " 🔒"; font-size: 9px; }
+
+        .side-changelog {
+            position: absolute; left: 20px; bottom: 20px; z-index: 2;
+            background: rgba(0,0,0,0.85); border: 2px solid #555;
+            padding: 15px; border-radius: 8px; width: 220px;
+        }
+        .side-changelog h3 { font-size: 10px; color: #ffeb3b; margin: 0 0 10px 0; }
+        .side-changelog ul { list-style: none; padding: 0; margin: 0; font-size: 8px; line-height: 1.6; color: #ddd; }
+
+        .version-tag {
+            position: absolute; right: 20px; bottom: 20px; z-index: 2;
+            font-size: 10px; color: #666;
+        }
+
+        #gameCanvas { display: none; background: #1e3d1a; }
+        #loading-txt { color: white; position: absolute; top: 10px; width: 100%; text-align: center; display: none; font-size: 10px; }
     </style>
+</head>
+<body>
+
+    <div id="main-menu">
+        <div class="menu-overlay"></div>
+        <h1 class="game-title">PATO SURVIVAL</h1>
+
+        <div class="button-container">
+            <button class="menu-btn primary" onclick="iniciarJogo()">COMEÇAR NOVO</button>
+            <button class="menu-btn secondary lock">CONTINUAR</button>
+            <button class="menu-btn secondary lock">MULTIPLAYER</button>
+            <button class="menu-btn secondary lock">CONFIGURAÇÕES</button>
+        </div>
+
+        <div class="side-changelog">
+            <h3>NEWS v1.2.0</h3>
+            <ul>
+                <li>✨ Animação de caminhada</li>
+                <li>✨ Mundo vasto (4000px)</li>
+                <li>✨ Transparência HD</li>
+                <li>✨ Interface moderna</li>
+            </ul>
+        </div>
+
+        <div class="version-tag">Alpha v1.2.0</div>
+    </div>
+
+    <div id="loading-txt">CARREGANDO MUNDO...</div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script src="core.js"></script>
 </body>
 </html>
+
 
 
 
