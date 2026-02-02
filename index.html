@@ -1,106 +1,131 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pato Survival - Alpha 1.5</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/* DUCK DREAM STUDIOS - UPDATE v0.0.1 
+   Sistema de Configurações Completo
+*/
 
-        body { margin: 0; background: #0a0a0a; font-family: 'Press Start 2P', cursive; overflow: hidden; touch-action: none; }
-        
-        #main-menu {
-            position: absolute; width: 100%; height: 100%;
-            background: url('arvore.png') repeat; background-size: 60px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 10;
-        }
+// 1. GESTÃO DE ESTADO E PERSISTÊNCIA
+const DEFAULT_SETTINGS = {
+    graficos: { sombras: true, particulas: true, brilho: 100 },
+    audio: { master: 0.7, musica: true, sfx: true },
+    interface: { escalaHUD: 1, opacidade: 0.8 },
+    jogabilidade: { canhoto: false, sensibilidade: 0.5 }
+};
 
-        .menu-overlay {
-            position: absolute; width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(0,0,0,0.4) 30%, rgba(0,0,0,0.95) 95%);
-            pointer-events: none;
-        }
+let Configs = JSON.parse(localStorage.getItem('duckDreamSettings')) || DEFAULT_SETTINGS;
 
-        .content-wrapper { z-index: 5; display: flex; flex-direction: column; align-items: center; transform: translateY(-20px); }
+function salvarConfigs() {
+    localStorage.setItem('duckDreamSettings', JSON.stringify(Configs));
+    aplicarAlteracoes();
+}
 
-        .game-title {
-            font-size: 22px; color: #ffeb3b;
-            text-shadow: 0 0 10px rgba(255, 235, 59, 0.6), 3px 3px 0 #000;
-            margin-bottom: 25px; letter-spacing: 1px; text-align: center; line-height: 1.4;
-        }
+// 2. APLICAÇÃO DAS MUDANÇAS NO JOGO
+function aplicarAlteracoes() {
+    // Interface - Lado do Joystick e Opacidade
+    const joystick = document.getElementById('joystick-ui'); // Mude para a ID do seu joystick
+    const botoesAcao = document.getElementById('botoes-acao'); // Mude para a ID dos seus botões
+    const hud = document.querySelector('.game-hud');
 
-        .button-container { display: flex; flex-direction: column; gap: 10px; }
+    if (joystick && botoesAcao) {
+        joystick.style.left = Configs.jogabilidade.canhoto ? 'auto' : '30px';
+        joystick.style.right = Configs.jogabilidade.canhoto ? '30px' : 'auto';
+        botoesAcao.style.right = Configs.jogabilidade.canhoto ? 'auto' : '30px';
+        botoesAcao.style.left = Configs.jogabilidade.canhoto ? '30px' : 'auto';
+    }
 
-        .menu-btn {
-            width: 200px; padding: 10px; font-family: 'Press Start 2P', cursive;
-            border: none; cursor: pointer; font-size: 9px; transition: 0.2s;
-            border-radius: 4px; color: white; box-shadow: 0 3px 0 #000;
-        }
+    if (hud) {
+        hud.style.opacity = Configs.interface.opacidade;
+        hud.style.transform = `scale(${Configs.interface.escalaHUD})`;
+    }
 
-        .primary { background: #4caf50; border: 2px solid #2e7d32; border-bottom: 4px solid #1b5e20; }
-        .primary:active { transform: translateY(3px); border-bottom-width: 0px; box-shadow: 0 0 0; }
-        .secondary { background: #444; border: 2px solid #222; border-bottom: 4px solid #111; opacity: 0.8; }
-        .lock::after { content: " 🔒"; font-size: 8px; }
+    // Áudio (Exemplo para controle global)
+    if (window.bgMusic) {
+        window.bgMusic.volume = Configs.audio.musica ? Configs.audio.master : 0;
+    }
 
-        .side-changelog {
-            position: absolute; left: 10px; bottom: 10px; z-index: 2;
-            background: rgba(0,0,0,0.85); border: 1px solid #444;
-            padding: 8px; border-radius: 4px; width: 150px;
-        }
-        .side-changelog h3 { font-size: 7px; color: #ffeb3b; margin: 0 0 5px 0; }
-        .side-changelog ul { list-style: none; padding: 0; margin: 0; font-size: 6px; line-height: 1.4; color: #ccc; }
+    console.log("Update v0.0.1: Configurações Aplicadas!");
+}
 
-        .version-tag { position: absolute; right: 10px; bottom: 10px; z-index: 2; font-size: 7px; color: #666; }
+// 3. INTERFACE DO MENU (HTML/CSS)
+function abrirMenuConfig() {
+    // Criar Overlay se não existir
+    if (document.getElementById('modal-config')) return;
 
-        #gameCanvas { display: none; background: #2d5a27; }
+    const overlay = document.createElement('div');
+    overlay.id = 'modal-config';
+    overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; display:flex; align-items:center; justify-content:center; font-family:'Courier New', Courier, monospace;";
 
-        #loading-screen { 
-            display: none; position: absolute; width: 100%; height: 100%; 
-            background: #111; color: #fff; z-index: 100;
-            flex-direction: column; align-items: center; justify-content: center;
-        }
-        .loading-title { color: #ffeb3b; margin-bottom: 15px; font-size: 10px; text-shadow: 2px 2px 0 #000; }
-        .progress-container { width: 180px; height: 8px; background: #222; border: 1px solid #444; border-radius: 4px; padding: 1px; }
-        .progress-fill { width: 0%; height: 100%; background: #4caf50; border-radius: 2px; transition: width 0.2s; }
-        #load-status { margin-top: 10px; font-size: 6px; color: #888; text-transform: uppercase; font-family: monospace; }
-    </style>
-</head>
-<body>
-
-    <div id="main-menu">
-        <div class="menu-overlay"></div>
-        <div class="content-wrapper">
-            <h1 class="game-title">PATO<br>SURVIVAL</h1>
-            <div class="button-container">
-                <button class="menu-btn primary" onclick="iniciarJogo()">SOBREVIVER</button>
-                <button class="menu-btn secondary lock">CONTINUAR</button>
-                <button class="menu-btn secondary lock">MULTIPLAYER</button>
-                <button class="menu-btn secondary lock">OPÇÕES</button>
+    overlay.innerHTML = `
+        <div style="background:#333; border:4px solid #fff; width:90%; max-width:500px; padding:20px; color:white; position:relative;">
+            <h2 style="text-align:center; color:#ffff00; margin-top:0;">CONFIGURAÇÕES</h2>
+            
+            <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap; justify-content:center;">
+                <button onclick="renderAba('graficos')">GRÁFICOS</button>
+                <button onclick="renderAba('audio')">ÁUDIO</button>
+                <button onclick="renderAba('ui')">INTERFACE</button>
+                <button onclick="renderAba('jog')">JOGABILIDADE</button>
             </div>
-        </div>
-        <div class="side-changelog">
-            <h3>UPDATE v1.5.0</h3>
-            <ul>
-                <li>✨ Sistema de Fome/Vida</li>
-                <li>✨ Mineração Realista</li>
-                <li>✨ Balanceamento de Ouro</li>
-                <li>✨ Nova HUD Survival</li>
-            </ul>
-        </div>
-        <div class="version-tag">Alpha v1.5.0</div>
-    </div>
 
-    <div id="loading-screen">
-        <div class="loading-title">GERANDO BIOMAS</div>
-        <div class="progress-container"><div id="progress-fill" class="progress-fill"></div></div>
-        <div id="load-status">CALCULANDO FISICA...</div>
-    </div>
+            <div id="container-aba" style="background:#222; padding:15px; border:2px solid #555; min-height:180px;">
+                </div>
 
-    <canvas id="gameCanvas"></canvas>
-    <script src="core.js"></script>
-</body>
-</html>
+            <button onclick="fecharMenu()" style="width:100%; padding:10px; margin-top:15px; background:#e74c3c; color:white; font-weight:bold; border:none; cursor:pointer;">FECHAR E SALVAR</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    renderAba('graficos'); // Inicia na aba de gráficos
+}
+
+function renderAba(nome) {
+    const container = document.getElementById('container-aba');
+    let html = "";
+
+    switch(nome) {
+        case 'graficos':
+            html = `
+                <label>BRILHO: ${Configs.graficos.brilho}%</label><br>
+                <input type="range" min="50" max="150" value="${Configs.graficos.brilho}" oninput="Configs.graficos.brilho = this.value; salvarConfigs()"><br><br>
+                <label><input type="checkbox" ${Configs.graficos.sombras ? 'checked' : ''} onchange="Configs.graficos.sombras = this.checked; salvarConfigs()"> ATIVAR SOMBRAS</label>
+            `;
+            break;
+        case 'audio':
+            html = `
+                <label>VOLUME MASTER: ${Math.round(Configs.audio.master * 100)}%</label><br>
+                <input type="range" min="0" max="1" step="0.1" value="${Configs.audio.master}" oninput="Configs.audio.master = this.value; salvarConfigs()"><br><br>
+                <label><input type="checkbox" ${Configs.audio.musica ? 'checked' : ''} onchange="Configs.audio.musica = this.checked; salvarConfigs()"> MÚSICA</label><br>
+                <label><input type="checkbox" ${Configs.audio.sfx ? 'checked' : ''} onchange="Configs.audio.sfx = this.checked; salvarConfigs()"> EFEITOS (SFX)</label>
+            `;
+            break;
+        case 'ui':
+            html = `
+                <label>OPACIDADE HUD: ${Math.round(Configs.interface.opacidade * 100)}%</label><br>
+                <input type="range" min="0.2" max="1" step="0.1" value="${Configs.interface.opacidade}" oninput="Configs.interface.opacidade = this.value; salvarConfigs()"><br><br>
+                <label>TAMANHO DA HUD</label><br>
+                <select onchange="Configs.interface.escalaHUD = this.value; salvarConfigs()">
+                    <option value="0.8" ${Configs.interface.escalaHUD == 0.8 ? 'selected' : ''}>PEQUENA</option>
+                    <option value="1" ${Configs.interface.escalaHUD == 1 ? 'selected' : ''}>NORMAL</option>
+                    <option value="1.2" ${Configs.interface.escalaHUD == 1.2 ? 'selected' : ''}>GRANDE</option>
+                </select>
+            `;
+            break;
+        case 'jog':
+            html = `
+                <label><input type="checkbox" ${Configs.jogabilidade.canhoto ? 'checked' : ''} onchange="Configs.jogabilidade.canhoto = this.checked; salvarConfigs()"> MODO CANHOTO</label><br><br>
+                <label>SENSIBILIDADE</label><br>
+                <input type="range" min="0.1" max="1" step="0.1" value="${Configs.jogabilidade.sensibilidade}" oninput="Configs.jogabilidade.sensibilidade = this.value; salvarConfigs()">
+            `;
+            break;
+    }
+    container.innerHTML = html;
+}
+
+function fecharMenu() {
+    const modal = document.getElementById('modal-config');
+    if (modal) modal.remove();
+}
+
+// Inicializa o jogo aplicando as configs salvas
+document.addEventListener('DOMContentLoaded', aplicarAlteracoes);
+
 
 
 
