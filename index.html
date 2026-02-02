@@ -15,26 +15,17 @@
 
     
     <script>
+  // Registro forçado para PWA
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./updates.js')
-        .then(reg => {
-          console.log('SW ativo!');
-          // Se o PWA estiver pronto para instalar, ele avisa
-          window.addEventListener('beforeinstallprompt', (e) => {
-            alert("✅ O botão 'Instalar' deve aparecer agora no menu!");
-          });
-        })
-        .catch(err => {
-          alert("❌ Erro no Service Worker: " + err);
-        });
-    });
-  } else {
-    alert("❌ Seu navegador não suporta instalação de Apps.");
+    navigator.serviceWorker.register('./updates.js', { scope: './' })
+      .then(function(registration) {
+        console.log('Service Worker registrado com sucesso:', registration.scope);
+      })
+      .catch(function(error) {
+        console.log('Falha ao registrar o Service Worker:', error);
+      });
   }
-    </script>
-
-
+     </script>
 </head>
 <body>
 
