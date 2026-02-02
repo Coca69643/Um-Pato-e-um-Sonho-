@@ -1,130 +1,179 @@
-/* DUCK DREAM STUDIOS - UPDATE v0.0.1 
-   Sistema de Configurações Completo
-*/
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Um Pato e um Sonho - Update v0.0.1</title>
+    <style>
+        /* ESTILOS BÁSICOS DO JOGO */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #2e7d32; /* Cor de grama */
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+        }
 
-// 1. GESTÃO DE ESTADO E PERSISTÊNCIA
-const DEFAULT_SETTINGS = {
-    graficos: { sombras: true, particulas: true, brilho: 100 },
-    audio: { master: 0.7, musica: true, sfx: true },
-    interface: { escalaHUD: 1, opacidade: 0.8 },
-    jogabilidade: { canhoto: false, sensibilidade: 0.5 }
-};
+        #game-canvas {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
 
-let Configs = JSON.parse(localStorage.getItem('duckDreamSettings')) || DEFAULT_SETTINGS;
+        .btn-config-open {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #ffeb3b;
+            border: 3px solid #000;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 100;
+        }
 
-function salvarConfigs() {
-    localStorage.setItem('duckDreamSettings', JSON.stringify(Configs));
-    aplicarAlteracoes();
-}
+        /* ESTILO DO MENU DE CONFIGURAÇÕES (UPDATE 0.0.1) */
+        #pato-config-root {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            display: none; /* Começa escondido */
+            align-items: center;
+            justify-content: center;
+        }
 
-// 2. APLICAÇÃO DAS MUDANÇAS NO JOGO
-function aplicarAlteracoes() {
-    // Interface - Lado do Joystick e Opacidade
-    const joystick = document.getElementById('joystick-ui'); // Mude para a ID do seu joystick
-    const botoesAcao = document.getElementById('botoes-acao'); // Mude para a ID dos seus botões
-    const hud = document.querySelector('.game-hud');
+        .pato-box {
+            background: #333;
+            border: 5px solid #fff;
+            width: 85%;
+            max-width: 400px;
+            padding: 20px;
+            color: white;
+            box-shadow: 0 0 20px #000;
+        }
 
-    if (joystick && botoesAcao) {
-        joystick.style.left = Configs.jogabilidade.canhoto ? 'auto' : '30px';
-        joystick.style.right = Configs.jogabilidade.canhoto ? '30px' : 'auto';
-        botoesAcao.style.right = Configs.jogabilidade.canhoto ? 'auto' : '30px';
-        botoesAcao.style.left = Configs.jogabilidade.canhoto ? '30px' : 'auto';
-    }
+        .pato-tabs {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
 
-    if (hud) {
-        hud.style.opacity = Configs.interface.opacidade;
-        hud.style.transform = `scale(${Configs.interface.escalaHUD})`;
-    }
+        .pato-btn-tab {
+            background: #555;
+            color: white;
+            border: 2px solid #fff;
+            padding: 5px;
+            font-size: 10px;
+            cursor: pointer;
+        }
 
-    // Áudio (Exemplo para controle global)
-    if (window.bgMusic) {
-        window.bgMusic.volume = Configs.audio.musica ? Configs.audio.master : 0;
-    }
+        .pato-content {
+            background: #111;
+            border: 2px solid #444;
+            padding: 15px;
+            min-height: 150px;
+        }
 
-    console.log("Update v0.0.1: Configurações Aplicadas!");
-}
+        .pato-close {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
 
-// 3. INTERFACE DO MENU (HTML/CSS)
-function abrirMenuConfig() {
-    // Criar Overlay se não existir
-    if (document.getElementById('modal-config')) return;
+    <button class="btn-config-open" onclick="abrirMenu()">OPÇÕES</button>
 
-    const overlay = document.createElement('div');
-    overlay.id = 'modal-config';
-    overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; display:flex; align-items:center; justify-content:center; font-family:'Courier New', Courier, monospace;";
+    <div id="game-canvas">
+        <h1>Um Pato e um Sonho</h1>
+        <p>Versão Alpha v0.0.1</p>
+        <div id="status-pato">🦆 (O Pato está explorando...)</div>
+    </div>
 
-    overlay.innerHTML = `
-        <div style="background:#333; border:4px solid #fff; width:90%; max-width:500px; padding:20px; color:white; position:relative;">
-            <h2 style="text-align:center; color:#ffff00; margin-top:0;">CONFIGURAÇÕES</h2>
+    <div id="pato-config-root">
+        <div class="pato-box">
+            <h3 style="text-align:center; color:#ffeb3b; margin-top:0;">CONFIGURAÇÕES</h3>
             
-            <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap; justify-content:center;">
-                <button onclick="renderAba('graficos')">GRÁFICOS</button>
-                <button onclick="renderAba('audio')">ÁUDIO</button>
-                <button onclick="renderAba('ui')">INTERFACE</button>
-                <button onclick="renderAba('jog')">JOGABILIDADE</button>
+            <div class="pato-tabs">
+                <button class="pato-btn-tab" onclick="renderAba('graficos')">GRÁFICOS</button>
+                <button class="pato-btn-tab" onclick="renderAba('audio')">ÁUDIO</button>
+                <button class="pato-btn-tab" onclick="renderAba('ui')">INTERFACE</button>
+                <button class="pato-btn-tab" onclick="renderAba('jog')">GAMEPLAY</button>
             </div>
 
-            <div id="container-aba" style="background:#222; padding:15px; border:2px solid #555; min-height:180px;">
+            <div id="pato-body" class="pato-content">
                 </div>
 
-            <button onclick="fecharMenu()" style="width:100%; padding:10px; margin-top:15px; background:#e74c3c; color:white; font-weight:bold; border:none; cursor:pointer;">FECHAR E SALVAR</button>
+            <button class="pato-close" onclick="fecharMenu()">SALVAR E VOLTAR</button>
         </div>
-    `;
+    </div>
 
-    document.body.appendChild(overlay);
-    renderAba('graficos'); // Inicia na aba de gráficos
-}
+    <script>
+        // LÓGICA DO UPDATE 0.0.1
+        let Configs = JSON.parse(localStorage.getItem('duckSettings')) || {
+            brilho: 100,
+            musica: true,
+            opacidade: 1,
+            canhoto: false
+        };
 
-function renderAba(nome) {
-    const container = document.getElementById('container-aba');
-    let html = "";
+        function abrirMenu() {
+            document.getElementById('pato-config-root').style.display = 'flex';
+            renderAba('graficos');
+        }
 
-    switch(nome) {
-        case 'graficos':
-            html = `
-                <label>BRILHO: ${Configs.graficos.brilho}%</label><br>
-                <input type="range" min="50" max="150" value="${Configs.graficos.brilho}" oninput="Configs.graficos.brilho = this.value; salvarConfigs()"><br><br>
-                <label><input type="checkbox" ${Configs.graficos.sombras ? 'checked' : ''} onchange="Configs.graficos.sombras = this.checked; salvarConfigs()"> ATIVAR SOMBRAS</label>
-            `;
-            break;
-        case 'audio':
-            html = `
-                <label>VOLUME MASTER: ${Math.round(Configs.audio.master * 100)}%</label><br>
-                <input type="range" min="0" max="1" step="0.1" value="${Configs.audio.master}" oninput="Configs.audio.master = this.value; salvarConfigs()"><br><br>
-                <label><input type="checkbox" ${Configs.audio.musica ? 'checked' : ''} onchange="Configs.audio.musica = this.checked; salvarConfigs()"> MÚSICA</label><br>
-                <label><input type="checkbox" ${Configs.audio.sfx ? 'checked' : ''} onchange="Configs.audio.sfx = this.checked; salvarConfigs()"> EFEITOS (SFX)</label>
-            `;
-            break;
-        case 'ui':
-            html = `
-                <label>OPACIDADE HUD: ${Math.round(Configs.interface.opacidade * 100)}%</label><br>
-                <input type="range" min="0.2" max="1" step="0.1" value="${Configs.interface.opacidade}" oninput="Configs.interface.opacidade = this.value; salvarConfigs()"><br><br>
-                <label>TAMANHO DA HUD</label><br>
-                <select onchange="Configs.interface.escalaHUD = this.value; salvarConfigs()">
-                    <option value="0.8" ${Configs.interface.escalaHUD == 0.8 ? 'selected' : ''}>PEQUENA</option>
-                    <option value="1" ${Configs.interface.escalaHUD == 1 ? 'selected' : ''}>NORMAL</option>
-                    <option value="1.2" ${Configs.interface.escalaHUD == 1.2 ? 'selected' : ''}>GRANDE</option>
-                </select>
-            `;
-            break;
-        case 'jog':
-            html = `
-                <label><input type="checkbox" ${Configs.jogabilidade.canhoto ? 'checked' : ''} onchange="Configs.jogabilidade.canhoto = this.checked; salvarConfigs()"> MODO CANHOTO</label><br><br>
-                <label>SENSIBILIDADE</label><br>
-                <input type="range" min="0.1" max="1" step="0.1" value="${Configs.jogabilidade.sensibilidade}" oninput="Configs.jogabilidade.sensibilidade = this.value; salvarConfigs()">
-            `;
-            break;
-    }
-    container.innerHTML = html;
-}
+        function fecharMenu() {
+            document.getElementById('pato-config-root').style.display = 'none';
+            localStorage.setItem('duckSettings', JSON.stringify(Configs));
+            aplicar();
+        }
 
-function fecharMenu() {
-    const modal = document.getElementById('modal-config');
-    if (modal) modal.remove();
-}
+        function renderAba(aba) {
+            const body = document.getElementById('pato-body');
+            let html = "";
 
-// Inicializa o jogo aplicando as configs salvas
-document.addEventListener('DOMContentLoaded', aplicarAlteracoes);
+            if(aba === 'graficos') {
+                html = `Brilho: ${Configs.brilho}% <br>
+                        <input type="range" min="50" max="150" value="${Configs.brilho}" oninput="Configs.brilho=this.value; aplicar()">`;
+            } else if(aba === 'audio') {
+                html = `<label><input type="checkbox" ${Configs.musica ? 'checked' : ''} onchange="Configs.musica=this.checked"> Música Ativa</label>`;
+            } else if(aba === 'ui') {
+                html = `Opacidade HUD: <input type="range" min="0.2" max="1" step="0.1" value="${Configs.opacidade}" oninput="Configs.opacidade=this.value; aplicar()">`;
+            } else if(aba === 'jog') {
+                html = `<label><input type="checkbox" ${Configs.canhoto ? 'checked' : ''} onchange="Configs.canhoto=this.checked"> Modo Canhoto</label>`;
+            }
+
+            body.innerHTML = html;
+        }
+
+        function aplicar() {
+            // Aplica o brilho na tela toda
+            document.body.style.filter = `brightness(${Configs.brilho}%)`;
+            // Aplica opacidade no texto do jogo como exemplo
+            document.getElementById('game-canvas').style.opacity = Configs.opacidade;
+            console.log("Configs aplicadas!");
+        }
+
+        // Inicia aplicando o que estava salvo
+        aplicar();
+    </script>
+</body>
+</html>
+
 
 
 
