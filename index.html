@@ -14,14 +14,17 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./updates.js')
-                    .then(reg => console.log('PWA v0.0.8 Ativo com Sucesso!'))
-                    .catch(err => console.log('Falha ao registrar PWA:', err));
-            });
-        }
-    </script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./updates.js', { scope: './' })
+      .then(reg => {
+        console.log('SW Registrado!');
+        // Força a atualização se houver uma nova versão
+        reg.update();
+      })
+      .catch(err => console.log('Erro no SW:', err));
+  }
+     </script>
+
 </head>
 <body>
 

@@ -1,3 +1,12 @@
+self.addEventListener('fetch', (event) => {
+  // Isso é obrigatório para o botão "Instalar" aparecer
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
+  );
+});
+
 const CACHE_NAME = 'pato-survival-v0.0.8';
 const ASSETS = [
   './',
