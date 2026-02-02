@@ -1,19 +1,24 @@
 {
   "short_name": "PatoSurvival",
-  "name": "Pato Survival: Alpha",
-  "description": "Um Pato e um Sonho: Sobrevivência Alpha",
+  "name": "Pato Survival: Um Pato e um Sonho",
+  "description": "Ajude o pato a sobreviver e coletar recursos!",
   "icons": [
     {
       "src": "img/icongame.png",
       "sizes": "1024x1024",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "img/icongame.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "display": "standalone",
-  "theme_color": "#2d5a27",
   "background_color": "#2d5a27",
-  "orientation": "landscape",
-  "scope": "./"
+  "theme_color": "#2d5a27",
+  "orientation": "landscape"
 }
