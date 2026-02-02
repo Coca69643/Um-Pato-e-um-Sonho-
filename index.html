@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pato Survival - Alpha v0.0.2</title>
+    <title>Pato Survival - v0.0.2</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="ui-layer">
-        
         <button id="btn-log-toggle" onclick="UI.toggleLog()">📜</button>
 
         <div id="modal-log" class="log-modal">
             <h2>NOTAS DA VERSÃO</h2>
             <ul>
+                <li>✨ <b>Layout:</b> Botões Centralizados</li>
                 <li>✨ <b>Rendering:</b> Pixelated Ativo</li>
                 <li>✨ <b>Sistema:</b> Inventário de Recursos</li>
                 <li>✨ <b>Mundo:</b> Geração Dinâmica 60FPS</li>
-                <li>✨ <b>UX:</b> Menu Limpo e Moderno</li>
             </ul>
             <button class="btn-fechar-log" onclick="UI.toggleLog()">FECHAR</button>
         </div>
@@ -31,7 +30,7 @@
         <div id="menu-principal">
             <h1 class="titulo-jogo">PATO<br>SURVIVAL</h1>
             
-            <div class="btn-container">
+            <div class="btn-grid">
                 <button class="pato-btn" onclick="Game.init()">SOBREVIVER</button>
                 <button class="pato-btn btn-locked">CONTINUAR 🔒</button>
                 <button class="pato-btn btn-locked">MULTIPLAYER 🔒</button>

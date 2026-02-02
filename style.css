@@ -1,79 +1,71 @@
-/* RENDERIZAÇÃO PIXEL ART (OBRIGATÓRIO) */
+/* RENDERIZAÇÃO PIXEL ART */
 canvas {
     image-rendering: -moz-crisp-edges;
     image-rendering: -webkit-crisp-edges;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
-    display: block;
-    width: 100vw;
-    height: 100vh;
-    background-color: #2e7d32;
+    display: block; width: 100vw; height: 100vh;
+    background-color: #1a4a1c; /* Fundo verde escuro */
 }
 
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
 
-body, html { 
-    margin: 0; padding: 0; width: 100%; height: 100%; 
-    overflow: hidden; background: #000;
-    font-family: 'Courier New', monospace;
-}
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
 
 .hidden { display: none !important; }
 
-/* MENU PRINCIPAL (SEU ESQUELETO) */
+/* CENTRALIZAÇÃO DO MENU */
 #menu-principal {
     position: absolute; inset: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.6);
-    z-index: 100;
+    background: rgba(0,0,0,0.6); z-index: 100;
 }
 
-.titulo-jogo { color: #ffff00; font-size: 3rem; text-shadow: 4px 4px #000; text-align: center; margin-bottom: 25px; }
+.titulo-jogo { color: #ffff00; font-size: 2.5rem; text-shadow: 3px 3px #000; text-align: center; margin-bottom: 20px; }
+
+/* GRID DE BOTÕES NO CENTRO */
+.btn-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 colunas como na imagem 1000129666 */
+    gap: 15px;
+    justify-items: center;
+}
 
 .pato-btn {
-    width: 280px; padding: 16px; margin: 6px;
+    width: 240px; /* Tamanho reduzido para melhor estética */
+    padding: 14px;
     border: 4px solid #111; border-radius: 8px;
     background: linear-gradient(to bottom, #5cb85c, #4cae4c);
-    color: white; font-weight: bold; font-size: 1.2rem;
+    color: white; font-weight: bold; font-size: 1.1rem;
     text-shadow: 2px 2px #000; box-shadow: inset 0 -4px rgba(0,0,0,0.4);
     cursor: pointer;
 }
 
-.btn-locked { background: #444; color: #888; cursor: not-allowed; }
+.btn-locked { background: #444; color: #888; cursor: not-allowed; border-color: #222; }
 
 /* HUD */
 #game-hud {
     position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
     background: rgba(0,0,0,0.8); border: 2px solid #fff; border-radius: 25px;
-    padding: 10px 30px; color: #fff; display: flex; gap: 20px;
-    font-size: 1.2rem; font-weight: bold; z-index: 50;
+    padding: 8px 25px; color: #fff; display: flex; gap: 20px; z-index: 50;
 }
 
-/* SISTEMA DE LOG (MODAL) */
+/* LOG E MODAL */
 #btn-log-toggle {
     position: fixed; bottom: 20px; left: 20px;
-    width: 55px; height: 55px; background: rgba(0,0,0,0.8);
-    border: 2px solid #ffff00; border-radius: 12px;
-    font-size: 24px; z-index: 110; cursor: pointer;
+    width: 50px; height: 50px; background: rgba(0,0,0,0.8);
+    border: 2px solid #ffff00; border-radius: 10px; font-size: 20px; z-index: 110;
 }
 
 .log-modal {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-    width: 85%; max-width: 380px; background: rgba(0,0,0,0.95);
+    width: 80%; max-width: 350px; background: rgba(0,0,0,0.95);
     border: 3px solid #555; border-radius: 15px; padding: 20px;
-    color: #fff; z-index: 200; opacity: 0; pointer-events: none;
-    transition: 0.2s ease-out;
+    color: #fff; z-index: 200; opacity: 0; pointer-events: none; transition: 0.2s;
 }
 
 .log-modal.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
 
-.btn-fechar-log {
-    width: 100%; padding: 12px; background: #e74c3c; border: none;
-    color: white; font-weight: bold; border-radius: 8px; margin-top: 15px;
-}
+.btn-fechar-log { width: 100%; padding: 10px; background: #e74c3c; border: none; color: white; border-radius: 5px; margin-top: 10px; }
 
-.version-tag { position: fixed; bottom: 10px; right: 10px; color: #666; font-size: 0.8rem; }
+.version-tag { position: fixed; bottom: 10px; right: 10px; color: #555; font-size: 0.7rem; }

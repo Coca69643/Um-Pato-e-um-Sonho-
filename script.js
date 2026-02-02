@@ -1,7 +1,5 @@
 const Game = {
-    canvas: null,
-    ctx: null,
-    resources: [],
+    canvas: null, ctx: null, resources: [],
     inventory: { wood: 0, stone: 0 },
     isRunning: false,
 
@@ -9,10 +7,8 @@ const Game = {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.resize();
-        
         document.getElementById('menu-principal').classList.add('hidden');
         document.getElementById('game-hud').classList.remove('hidden');
-        
         this.isRunning = true;
         this.spawnResources();
         this.bindEvents();
@@ -27,32 +23,30 @@ const Game = {
 
     spawnResources() {
         const types = ['🌳', '🪨'];
-        for(let i = 0; i < 20; i++) {
+        for(let i = 0; i < 18; i++) {
             this.resources.push({
                 x: Math.random() * (this.canvas.width - 60) + 30,
                 y: Math.random() * (this.canvas.height - 60) + 30,
                 type: types[Math.floor(Math.random() * types.length)],
-                size: 45
+                size: 40
             });
         }
     },
 
     bindEvents() {
-        const handleInput = (e) => {
+        const handle = (e) => {
             const pos = e.touches ? e.touches[0] : e;
             this.checkClick(pos.clientX, pos.clientY);
         };
-        this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); });
-        this.canvas.addEventListener('mousedown', handleInput);
+        this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handle(e); });
+        this.canvas.addEventListener('mousedown', handle);
     },
 
     checkClick(tx, ty) {
         this.resources = this.resources.filter(res => {
-            const dist = Math.hypot(res.x - tx, res.y - ty);
-            if(dist < res.size) {
+            if(Math.hypot(res.x - tx, res.y - ty) < res.size) {
                 res.type === '🌳' ? this.inventory.wood++ : this.inventory.stone++;
-                this.updateHUD();
-                return false;
+                this.updateHUD(); return false;
             }
             return true;
         });
@@ -66,11 +60,9 @@ const Game = {
 
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.font = "35px Arial";
+        this.ctx.font = "30px Arial";
         this.ctx.textAlign = "center";
-        this.resources.forEach(res => {
-            this.ctx.fillText(res.type, res.x, res.y + 15);
-        });
+        this.resources.forEach(res => this.ctx.fillText(res.type, res.x, res.y + 10));
     },
 
     loop() {
@@ -81,12 +73,8 @@ const Game = {
 };
 
 const UI = {
-    toggleLog() {
-        document.getElementById('modal-log').classList.toggle('active');
-    },
-    openSettings() {
-        alert("Opções: Sistema de Brilho em breve!");
-    }
+    toggleLog() { document.getElementById('modal-log').classList.toggle('active'); },
+    openSettings() { alert("Update v0.0.1 Configurações: Brilho 100%"); }
 };
 
 window.addEventListener('resize', () => Game.resize());
