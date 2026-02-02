@@ -2,117 +2,45 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pato Survival - Alpha v0.0.2</title>
-    <style>
-        /* MANTENDO O ESQUELETO VISUAL DAS IMAGENS v0.0.2 */
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            background-color: #000;
-            /* O fundo de árvores que aparece nas versões v1.4.0 e v1.5.0 */
-            background-image: url('https://i.imgur.com/your-tree-pattern.png'); 
-            background-repeat: repeat; background-size: 64px;
-            font-family: 'Courier New', monospace; overflow: hidden;
-        }
-
-        #menu-principal {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; background: rgba(0,0,0,0.7);
-            z-index: 100; position: relative;
-        }
-
-        .titulo-jogo { color: #ffff00; font-size: 48px; text-shadow: 4px 4px #000; margin-bottom: 30px; text-align: center; }
-
-        .btn-container { display: flex; flex-direction: column; gap: 12px; }
-
-        .pato-btn {
-            width: 300px; padding: 15px; border: 4px solid #111; border-radius: 10px;
-            background: linear-gradient(to bottom, #5cb85c, #4cae4c); /* Verde das capturas */
-            color: white; font-weight: bold; font-size: 20px; cursor: pointer;
-            text-shadow: 2px 2px #000; box-shadow: inset 0 -4px rgba(0,0,0,0.4);
-        }
-
-        .btn-locked { background: #444; color: #888; cursor: not-allowed; border-color: #222; }
-
-        /* CHANGELOG - IGUAL À IMAGEM 1000129659 */
-        .changelog-box {
-            position: fixed; bottom: 20px; left: 20px;
-            background: rgba(0,0,0,0.8); border: 2px solid #555; border-radius: 15px;
-            padding: 15px; color: #ffff00; font-size: 13px; width: 240px;
-        }
-
-        /* HUD DE RECURSOS - IGUAL À IMAGEM 1000129660 */
-        #game-hud {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            display: none; background: rgba(0,0,0,0.9); padding: 12px 30px;
-            border: 2px solid #fff; color: #fff; border-radius: 30px; z-index: 1000;
-            font-size: 18px;
-        }
-
-        #game-world { display: none; width: 100vw; height: 100vh; position: relative; }
-        .recurso { position: absolute; font-size: 35px; cursor: pointer; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pato Survival - v0.0.2</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="menu-principal">
-        <h1 class="titulo-jogo">PATO<br>SURVIVAL</h1>
-        
-        <div class="btn-container">
-            <button class="pato-btn" onclick="comecarJogo()">SOBREVIVER</button>
-            <button class="pato-btn btn-locked">CONTINUAR 🔒</button>
-            <button class="pato-btn btn-locked">MULTIPLAYER 🔒</button>
-            <button class="pato-btn btn-locked">OPÇÕES 🔒</button>
+    <div id="ui-layer">
+        <div id="game-hud" class="hidden">
+            <div class="stat-item">🌳 <span id="m-count">0</span></div>
+            <div class="stat-item">🪨 <span id="p-count">0</span></div>
         </div>
 
-        <div class="changelog-box">
-            <b style="color: #fff;">UPDATE v0.0.2</b><br>
-            ✨ Geração de Mundo<br>
-            ✨ Sistema de Inventário<br>
-            ✨ HUD de Recursos
-        </div>
-        
-        <div style="position: fixed; bottom: 10px; right: 10px; color: #555; font-size: 12px;">Alpha v0.0.2</div>
-    </div>
-
-    <div id="game-hud">
-        🌳 Madeira: <span id="m-count">0</span> | 🪨 Pedra: <span id="p-count">0</span>
-    </div>
-    <div id="game-world"></div>
-
-    <script>
-        // LÓGICA DE PERSISTÊNCIA E ESTADO
-        let inv = { madeira: 0, pedra: 0 };
-
-        function comecarJogo() {
-            document.getElementById('menu-principal').style.display = 'none';
-            document.getElementById('game-world').style.display = 'block';
-            document.getElementById('game-hud').style.display = 'block';
-            gerarMundo();
-        }
-
-        function gerarMundo() {
-            const world = document.getElementById('game-world');
-            const tipos = [{icon: '🌳', id: 'madeira'}, {icon: '🪨', id: 'pedra'}];
+        <div id="menu-principal">
+            <h1 class="titulo-jogo">PATO<br>SURVIVAL</h1>
             
-            for(let i=0; i<30; i++) {
-                let r = tipos[Math.floor(Math.random()*tipos.length)];
-                let el = document.createElement('div');
-                el.className = 'recurso';
-                el.innerHTML = r.icon;
-                el.style.left = Math.random() * 90 + "vw";
-                el.style.top = Math.random() * 90 + "vh";
-                
-                el.onclick = () => {
-                    inv[r.id]++;
-                    document.getElementById(r.id[0] + '-count').innerText = inv[r.id];
-                    el.remove();
-                };
-                world.appendChild(el);
-            }
-        }
-    </script>
+            <div class="btn-container">
+                <button class="pato-btn" onclick="Game.init()">SOBREVIVER</button>
+                <button class="pato-btn btn-locked">CONTINUAR 🔒</button>
+                <button class="pato-btn btn-locked">MULTIPLAYER 🔒</button>
+                <button class="pato-btn" onclick="UI.openSettings()">OPÇÕES</button>
+            </div>
+
+            <div class="changelog-box">
+                <b style="color: #fff;">UPDATE v0.0.2</b><br>
+                ✨ Rendering: Pixelated Ativo<br>
+                ✨ Sistema de Inventário<br>
+                ✨ Geração de Mundo 60FPS
+            </div>
+            
+            <div class="version-tag">Alpha v0.0.2</div>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script src="script.js"></script>
 </body>
 </html>
+
+
 
 

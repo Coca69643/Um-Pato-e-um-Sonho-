@@ -1,67 +1,64 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-}
-
-body {
-    background: #050a05;
-    color: white;
-    font-family: 'Courier New', Courier, monospace;
-    overflow: hidden;
+/* REGRA DE OURO: RENDERIZAÇÃO PIXEL ART */
+canvas {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    display: block;
     width: 100vw;
     height: 100vh;
+    background-color: #2e7d32;
 }
 
-#loading-screen {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, #1a3c15 0%, #000 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
 }
 
-.progress-container {
-    width: 60%;
-    height: 15px;
-    background: #111;
-    border: 2px solid #3a6b32;
-    border-radius: 10px;
-    margin: 20px 0;
-    overflow: hidden;
+body, html { 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
+    overflow: hidden; background: #000;
+    font-family: 'Courier New', monospace;
 }
 
-#progress-bar {
-    width: 0%;
-    height: 100%;
-    background: linear-gradient(90deg, #2d5a27, #44ff44);
-    transition: width 0.2s;
+.hidden { display: none !important; }
+
+/* UI E MENU (ESQUELETO PROTEGIDO) */
+#ui-layer {
+    position: absolute; inset: 0; z-index: 10;
+    pointer-events: none;
 }
 
-#start-btn {
-    padding: 15px 40px;
-    background: #ffcc00;
-    color: #000;
-    border: none;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 1.2rem;
-    cursor: pointer;
-    box-shadow: 0 4px 0 #b8860b;
+#menu-principal {
+    pointer-events: auto;
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.6);
 }
 
-#start-btn:active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #b8860b;
+.pato-btn {
+    pointer-events: auto;
+    width: 280px; padding: 16px; margin: 6px;
+    border: 4px solid #111; border-radius: 8px;
+    background: linear-gradient(to bottom, #5cb85c, #4cae4c);
+    color: white; font-weight: bold; font-size: 1.2rem;
+    text-shadow: 2px 2px #000; box-shadow: inset 0 -4px rgba(0,0,0,0.4);
 }
 
-canvas {
-    display: block;
+.btn-locked { background: #444; color: #888; cursor: not-allowed; }
+
+.titulo-jogo { color: #ffff00; font-size: 3rem; text-shadow: 4px 4px #000; text-align: center; }
+
+#game-hud {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.8); border: 2px solid #fff; border-radius: 25px;
+    padding: 10px 30px; color: #fff; display: flex; gap: 20px;
+    font-size: 1.2rem; font-weight: bold;
 }
 
+.changelog-box {
+    position: fixed; bottom: 20px; left: 20px;
+    background: rgba(0,0,0,0.8); border: 2px solid #555; padding: 15px;
+    color: #ffff00; font-size: 0.8rem; width: 230px; border-radius: 12px;
+}

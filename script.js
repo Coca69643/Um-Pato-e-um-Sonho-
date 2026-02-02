@@ -1,0 +1,91 @@
+const Game = {
+    canvas: null,
+    ctx: null,
+    resources: [],
+    inventory: { wood: 0, stone: 0 },
+    isRunning: false,
+
+    init() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        
+        document.getElementById('menu-principal').classList.add('hidden');
+        document.getElementById('game-hud').classList.remove('hidden');
+        
+        this.isRunning = true;
+        this.spawnResources();
+        this.bindEvents();
+        this.loop();
+    },
+
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        // Garantir que o contexto não suavize ao desenhar
+        this.ctx.imageSmoothingEnabled = false;
+    },
+
+    spawnResources() {
+        const types = ['🌳', '🪨'];
+        for(let i = 0; i < 15; i++) {
+            this.resources.push({
+                x: Math.random() * (this.canvas.width - 40) + 20,
+                y: Math.random() * (this.canvas.height - 40) + 20,
+                type: types[Math.floor(Math.random() * types.length)],
+                size: 40
+            });
+        }
+    },
+
+    bindEvents() {
+        const handleTouch = (e) => {
+            const touch = e.touches ? e.touches[0] : e;
+            this.checkClick(touch.clientX, touch.clientY);
+        };
+        this.canvas.addEventListener('touchstart', handleTouch);
+        this.canvas.addEventListener('mousedown', handleTouch);
+    },
+
+    checkClick(tx, ty) {
+        this.resources = this.resources.filter(res => {
+            const dist = Math.hypot(res.x - tx, res.y - ty);
+            if(dist < res.size) {
+                res.type === '🌳' ? this.inventory.wood++ : this.inventory.stone++;
+                this.updateHUD();
+                return false;
+            }
+            return true;
+        });
+        if(this.resources.length === 0) this.spawnResources();
+    },
+
+    updateHUD() {
+        document.getElementById('m-count').innerText = this.inventory.wood;
+        document.getElementById('p-count').innerText = this.inventory.stone;
+    },
+
+    render() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.font = "30px Arial";
+        this.ctx.textAlign = "center";
+        
+        this.resources.forEach(res => {
+            this.ctx.fillText(res.type, res.x, res.y + 10);
+        });
+    },
+
+    loop() {
+        if(!this.isRunning) return;
+        this.render();
+        requestAnimationFrame(() => this.loop());
+    }
+};
+
+const UI = {
+    openSettings() {
+        alert("Configurações v0.0.1: Brilho e Áudio em breve.");
+    }
+};
+
+window.addEventListener('resize', () => Game.resize());
