@@ -4,37 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pato Survival v0.0.8</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2d5a27">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
     <link rel="stylesheet" href="style.css">
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./updates.js')
+                    .then(reg => console.log('PWA v0.0.8 Ativo com Sucesso!'))
+                    .catch(err => console.log('Falha ao registrar PWA:', err));
+            });
+        }
+    </script>
 </head>
 <body>
 
-    <div id="ui-layer">
+    <div id="ui-container">
+        
         <div id="btn-log-toggle" onclick="UI.toggleLog()">📜</div>
 
-        <div id="modal-log" class="log-modal">
-            <h2>📜 REGISTRO DE UPDATES</h2>
-            <div class="log-content">
-                <p><b>v0.0.8:</b> Fix total de Assets e Cache.</p>
-                <p><b>v0.0.7:</b> Câmera 2D e Mundo Infinito.</p>
-                <p><b>v0.0.6:</b> Importação de Pixel Art.</p>
+        <div id="modal-log" class="modal hidden">
+            <div class="modal-content">
+                <h2>📜 REGISTRO DE UPDATES</h2>
+                <div class="log-scroll">
+                    <p><b>v0.0.8:</b> PWA Ativado & Fix de Cache.</p>
+                    <p><b>v0.0.7:</b> Câmera Livre & Mundo Gigante.</p>
+                    <p><b>v0.0.6:</b> Sistema de Sprites (Pixel Art).</p>
+                    <p><b>v0.0.1:</b> Início do Protótipo.</p>
+                </div>
+                <button class="btn-close" onclick="UI.toggleLog()">FECHAR</button>
             </div>
-            <button class="btn-fechar" onclick="UI.toggleLog()">FECHAR</button>
         </div>
 
         <div id="game-hud" class="hidden">
-            <div class="item">🌳 <span id="m-count">0</span></div>
-            <div class="item">🪨 <span id="p-count">0</span></div>
+            <div class="hud-item">🌳 <span id="m-count">0</span></div>
+            <div class="hud-item">🪨 <span id="p-count">0</span></div>
         </div>
 
         <div id="menu-principal">
-            <h1 class="logo">PATO<br>SURVIVAL</h1>
-            <div class="menu-btns">
-                <button class="btn-principal" onclick="Game.init()">SOBREVIVER</button>
-                <button class="btn-secundario" disabled>CONTINUAR 🔒</button>
-                <button class="btn-secundario" disabled>MULTIPLAYER 🔒</button>
-                <button class="btn-principal" onclick="UI.msg()">OPÇÕES</button>
+            <div class="menu-box">
+                <h1 class="game-title">PATO<br>SURVIVAL</h1>
+                
+                <div class="button-grid">
+                    <button class="menu-btn play" onclick="Game.init()">SOBREVIVER</button>
+                    <button class="menu-btn locked" disabled>CONTINUAR 🔒</button>
+                    <button class="menu-btn locked" disabled>MULTIPLAYER 🔒</button>
+                    <button class="menu-btn settings" onclick="alert('Configurações salvas!')">OPÇÕES</button>
+                </div>
+                
+                <div class="footer-info">
+                    <span id="version-display">Alpha v0.0.8</span>
+                </div>
             </div>
-            <div class="version-tag">Alpha v0.0.8</div>
         </div>
     </div>
 
@@ -43,9 +68,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
-
-

@@ -1,45 +1,171 @@
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-body, html { margin: 0; padding: 0; overflow: hidden; background: #1a3317; font-family: 'Courier New', monospace; }
+/* RESET E CONFIGURAÇÕES DE TELA */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    outline: none;
+}
 
-#gameCanvas { display: block; image-rendering: pixelated; }
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #1a3317;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* O JOGO (CANVAS) */
+#gameCanvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    image-rendering: pixelated; /* Mantém o Pixel Art nítido */
+    z-index: 1;
+}
 
 .hidden { display: none !important; }
 
-/* UI E LOG */
+/* CAMADA DE INTERFACE PRINCIPAL */
+#ui-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none; /* Permite clicar no jogo através da camada de UI */
+    z-index: 10;
+}
+
+#ui-container * {
+    pointer-events: auto; /* Reativa o clique para botões e menus */
+}
+
+/* BOTÃO DE LOG (PERGAMINHO) */
 #btn-log-toggle {
-    position: fixed; bottom: 25px; left: 25px;
-    width: 60px; height: 60px; background: rgba(0,0,0,0.8);
-    border: 3px solid #ffd700; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 30px; z-index: 1000; cursor: pointer;
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 3px solid #ffd700;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
 }
 
-.log-modal {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 80%; background: #111; border: 4px solid #ffd700;
-    padding: 20px; color: white; z-index: 2000; display: none;
-}
-.log-modal.active { display: block; }
-.btn-fechar { width: 100%; padding: 10px; background: #c0392b; color: white; border: none; margin-top: 15px; }
+#btn-log-toggle:active { transform: scale(0.9); }
 
-/* HUD */
+/* MODAL DE LOG (JANELA) */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #222;
+    border: 4px solid #ffd700;
+    width: 85%;
+    max-width: 400px;
+    padding: 20px;
+    color: white;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.log-scroll {
+    max-height: 200px;
+    overflow-y: auto;
+    text-align: left;
+    margin: 15px 0;
+    padding: 10px;
+    background: #111;
+    border-radius: 5px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.log-scroll b { color: #ffd700; }
+
+.btn-close {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* HUD DE RECURSOS */
 #game-hud {
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-    background: rgba(0,0,0,0.7); padding: 10px 30px;
-    border-radius: 50px; border: 2px solid white;
-    display: flex; gap: 20px; color: white; font-weight: bold; z-index: 500;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 25px;
+    border-radius: 30px;
+    border: 2px solid rgba(255,255,255,0.3);
+    display: flex;
+    gap: 20px;
+    color: white;
+    font-weight: bold;
+    backdrop-filter: blur(5px);
 }
 
-/* MENU */
+.hud-item { font-size: 18px; }
+
+/* MENU PRINCIPAL */
 #menu-principal {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 100;
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #2d5a27 0%, #1a3317 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
 }
-.logo { color: #ffff00; font-size: 3rem; text-align: center; text-shadow: 4px 4px #000; margin-bottom: 30px; }
-.menu-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.btn-principal { background: #2ecc71; border: none; padding: 15px; color: white; font-weight: bold; border-radius: 5px; }
-.btn-secundario { background: #555; border: none; padding: 15px; color: #888; border-radius: 5px; }
-.version-tag { position: absolute; bottom: 10px; right: 10px; color: #555; }
 
+.game-title {
+    color: #ffff00;
+    font-size: 3rem;
+    line-height: 0.9;
+    text-shadow: 4px 4px 0px #000;
+    margin-bottom: 30px;
+}
 
+.button-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
 
+.menu-btn {
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    color: white;
+    background: #34495e;
+    box-shadow: 0 4px 0 #222;
+    cursor: pointer;
+}
+
+.menu-btn.play { background: #27ae60; box-shadow: 0 4px 0 #1e8449; }
+.menu-btn.locked { background: #7f8c8d; color: #bdc3c7; cursor: not-allowed; }
+
+.footer-info {
+    margin-top: 30px;
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+}

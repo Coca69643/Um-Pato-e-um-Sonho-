@@ -1,5 +1,4 @@
-// Controle de Versão v0.0.7
-const CACHE_NAME = 'pato-survival-v0.0.7';
+const CACHE_NAME = 'pato-survival-v0.0.8';
 const ASSETS = [
   './',
   './index.html',
@@ -8,10 +7,12 @@ const ASSETS = [
   './img/idle1.png',
   './img/idle2.png',
   './img/walk1.png',
-  './img/walk2.png'
+  './img/walk2.png',
+  './img/arvore.png',
+  './img/rocha.png',
+  './img/icongame.png'
 ];
 
-// Forçar atualização imediata
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -28,3 +29,12 @@ self.addEventListener('activate', (event) => {
     })
   );
 });
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
+  );
+});
+
