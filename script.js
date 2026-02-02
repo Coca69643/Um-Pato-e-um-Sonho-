@@ -22,29 +22,28 @@ const Game = {
     resize() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
-        // Garantir que o contexto não suavize ao desenhar
         this.ctx.imageSmoothingEnabled = false;
     },
 
     spawnResources() {
         const types = ['🌳', '🪨'];
-        for(let i = 0; i < 15; i++) {
+        for(let i = 0; i < 20; i++) {
             this.resources.push({
-                x: Math.random() * (this.canvas.width - 40) + 20,
-                y: Math.random() * (this.canvas.height - 40) + 20,
+                x: Math.random() * (this.canvas.width - 60) + 30,
+                y: Math.random() * (this.canvas.height - 60) + 30,
                 type: types[Math.floor(Math.random() * types.length)],
-                size: 40
+                size: 45
             });
         }
     },
 
     bindEvents() {
-        const handleTouch = (e) => {
-            const touch = e.touches ? e.touches[0] : e;
-            this.checkClick(touch.clientX, touch.clientY);
+        const handleInput = (e) => {
+            const pos = e.touches ? e.touches[0] : e;
+            this.checkClick(pos.clientX, pos.clientY);
         };
-        this.canvas.addEventListener('touchstart', handleTouch);
-        this.canvas.addEventListener('mousedown', handleTouch);
+        this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); });
+        this.canvas.addEventListener('mousedown', handleInput);
     },
 
     checkClick(tx, ty) {
@@ -67,11 +66,10 @@ const Game = {
 
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.font = "30px Arial";
+        this.ctx.font = "35px Arial";
         this.ctx.textAlign = "center";
-        
         this.resources.forEach(res => {
-            this.ctx.fillText(res.type, res.x, res.y + 10);
+            this.ctx.fillText(res.type, res.x, res.y + 15);
         });
     },
 
@@ -83,8 +81,11 @@ const Game = {
 };
 
 const UI = {
+    toggleLog() {
+        document.getElementById('modal-log').classList.toggle('active');
+    },
     openSettings() {
-        alert("Configurações v0.0.1: Brilho e Áudio em breve.");
+        alert("Opções: Sistema de Brilho em breve!");
     }
 };
 

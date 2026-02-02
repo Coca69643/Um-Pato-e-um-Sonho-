@@ -1,4 +1,4 @@
-/* REGRA DE OURO: RENDERIZAÇÃO PIXEL ART */
+/* RENDERIZAÇÃO PIXEL ART (OBRIGATÓRIO) */
 canvas {
     image-rendering: -moz-crisp-edges;
     image-rendering: -webkit-crisp-edges;
@@ -24,41 +24,56 @@ body, html {
 
 .hidden { display: none !important; }
 
-/* UI E MENU (ESQUELETO PROTEGIDO) */
-#ui-layer {
-    position: absolute; inset: 0; z-index: 10;
-    pointer-events: none;
-}
-
+/* MENU PRINCIPAL (SEU ESQUELETO) */
 #menu-principal {
-    pointer-events: auto;
-    width: 100%; height: 100%;
+    position: absolute; inset: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     background: rgba(0,0,0,0.6);
+    z-index: 100;
 }
 
+.titulo-jogo { color: #ffff00; font-size: 3rem; text-shadow: 4px 4px #000; text-align: center; margin-bottom: 25px; }
+
 .pato-btn {
-    pointer-events: auto;
     width: 280px; padding: 16px; margin: 6px;
     border: 4px solid #111; border-radius: 8px;
     background: linear-gradient(to bottom, #5cb85c, #4cae4c);
     color: white; font-weight: bold; font-size: 1.2rem;
     text-shadow: 2px 2px #000; box-shadow: inset 0 -4px rgba(0,0,0,0.4);
+    cursor: pointer;
 }
 
 .btn-locked { background: #444; color: #888; cursor: not-allowed; }
 
-.titulo-jogo { color: #ffff00; font-size: 3rem; text-shadow: 4px 4px #000; text-align: center; }
-
+/* HUD */
 #game-hud {
     position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
     background: rgba(0,0,0,0.8); border: 2px solid #fff; border-radius: 25px;
     padding: 10px 30px; color: #fff; display: flex; gap: 20px;
-    font-size: 1.2rem; font-weight: bold;
+    font-size: 1.2rem; font-weight: bold; z-index: 50;
 }
 
-.changelog-box {
+/* SISTEMA DE LOG (MODAL) */
+#btn-log-toggle {
     position: fixed; bottom: 20px; left: 20px;
-    background: rgba(0,0,0,0.8); border: 2px solid #555; padding: 15px;
-    color: #ffff00; font-size: 0.8rem; width: 230px; border-radius: 12px;
+    width: 55px; height: 55px; background: rgba(0,0,0,0.8);
+    border: 2px solid #ffff00; border-radius: 12px;
+    font-size: 24px; z-index: 110; cursor: pointer;
 }
+
+.log-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+    width: 85%; max-width: 380px; background: rgba(0,0,0,0.95);
+    border: 3px solid #555; border-radius: 15px; padding: 20px;
+    color: #fff; z-index: 200; opacity: 0; pointer-events: none;
+    transition: 0.2s ease-out;
+}
+
+.log-modal.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+
+.btn-fechar-log {
+    width: 100%; padding: 12px; background: #e74c3c; border: none;
+    color: white; font-weight: bold; border-radius: 8px; margin-top: 15px;
+}
+
+.version-tag { position: fixed; bottom: 10px; right: 10px; color: #666; font-size: 0.8rem; }

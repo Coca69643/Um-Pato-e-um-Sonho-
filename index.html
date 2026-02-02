@@ -3,12 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pato Survival - v0.0.2</title>
+    <title>Pato Survival - Alpha v0.0.2</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="ui-layer">
+        
+        <button id="btn-log-toggle" onclick="UI.toggleLog()">📜</button>
+
+        <div id="modal-log" class="log-modal">
+            <h2>NOTAS DA VERSÃO</h2>
+            <ul>
+                <li>✨ <b>Rendering:</b> Pixelated Ativo</li>
+                <li>✨ <b>Sistema:</b> Inventário de Recursos</li>
+                <li>✨ <b>Mundo:</b> Geração Dinâmica 60FPS</li>
+                <li>✨ <b>UX:</b> Menu Limpo e Moderno</li>
+            </ul>
+            <button class="btn-fechar-log" onclick="UI.toggleLog()">FECHAR</button>
+        </div>
+
         <div id="game-hud" class="hidden">
             <div class="stat-item">🌳 <span id="m-count">0</span></div>
             <div class="stat-item">🪨 <span id="p-count">0</span></div>
@@ -22,13 +36,6 @@
                 <button class="pato-btn btn-locked">CONTINUAR 🔒</button>
                 <button class="pato-btn btn-locked">MULTIPLAYER 🔒</button>
                 <button class="pato-btn" onclick="UI.openSettings()">OPÇÕES</button>
-            </div>
-
-            <div class="changelog-box">
-                <b style="color: #fff;">UPDATE v0.0.2</b><br>
-                ✨ Rendering: Pixelated Ativo<br>
-                ✨ Sistema de Inventário<br>
-                ✨ Geração de Mundo 60FPS
             </div>
             
             <div class="version-tag">Alpha v0.0.2</div>
