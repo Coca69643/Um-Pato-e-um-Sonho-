@@ -56,11 +56,17 @@ const Game = {
     },
 
     loadSprites() {
-        const load = (path) => { const i = new Image(); i.src = path; return i; };
-        // Certifique-se que as imagens existem na pasta img/
-        this.assets.idle = [ load('img/idle1.png'), load('img/idle2.png') ];
-        this.assets.walk = [ load('img/walk1.png'), load('img/walk2.png') ];
-    },
+    const nocache = "?v=" + Date.now(); // Força o navegador a baixar de novo
+    const load = (path) => {
+        const img = new Image();
+        img.src = path + nocache; 
+        img.onload = () => console.log("Carregado: " + path);
+        img.onerror = () => console.error("ERRO: Verifique se a imagem está em: " + path);
+        return img;
+    };
+    this.assets.idle = [ load('img/idle1.png'), load('img/idle2.png') ];
+    this.assets.walk = [ load('img/walk1.png'), load('img/walk2.png') ];
+}
 
     spawnResources() {
         const types = [ { char: '🌳', type: 'wood' }, { char: '🪨', type: 'stone' } ];

@@ -1,17 +1,19 @@
 {
-  "name": "Um Pato e um Sonho",
   "short_name": "PatoSurvival",
-  "start_url": "index.html",
-  "display": "standalone",
-  "orientation": "landscape",
-  "background_color": "#1e3d1a",
-  "theme_color": "#2d5a27",
+  "name": "Pato Survival: Alpha",
   "icons": [
     {
-      "src": "idle_001.png",
-      "sizes": "192x192",
+      "src": "img/idle1.png",
+      "sizes": "64x64",
       "type": "image/png"
     }
-  ]
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#2e7d32",
+  "background_color": "#2e7d32",
+  "orientation": "landscape",
+  "version": "0.0.7"
 }
+
 

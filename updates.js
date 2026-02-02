@@ -1,15 +1,30 @@
-const AppControl = {
-    version: "1.0.8", // Aumente esse número se as imagens não aparecerem
-    
-    // Gera um link único para burlar o cache do navegador
-    fixPath: function(path) {
-        return path + "?v=" + this.version;
-    },
-    
-    log: function(msg) {
-        console.log(`[PatoEngine] ${msg}`);
-    }
-};
+// Controle de Versão v0.0.7
+const CACHE_NAME = 'pato-survival-v0.0.7';
+const ASSETS = [
+  './',
+  './index.html',
+  './style.css',
+  './script.js',
+  './img/idle1.png',
+  './img/idle2.png',
+  './img/walk1.png',
+  './img/walk2.png'
+];
 
-window.AppControl = AppControl;
+// Forçar atualização imediata
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+  );
+});
 
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      );
+    })
+  );
+});
