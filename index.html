@@ -3,41 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pato Survival - v0.0.2</title>
+    <title>Pato Survival v0.0.8</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="ui-layer">
-        <button id="btn-log-toggle" onclick="UI.toggleLog()">📜</button>
+        <div id="btn-log-toggle" onclick="UI.toggleLog()">📜</div>
 
         <div id="modal-log" class="log-modal">
-            <h2>NOTAS DA VERSÃO</h2>
-            <ul>
-                <li>✨ <b>Layout:</b> Botões Centralizados</li>
-                <li>✨ <b>Rendering:</b> Pixelated Ativo</li>
-                <li>✨ <b>Sistema:</b> Inventário de Recursos</li>
-                <li>✨ <b>Mundo:</b> Geração Dinâmica 60FPS</li>
-            </ul>
-            <button class="btn-fechar-log" onclick="UI.toggleLog()">FECHAR</button>
+            <h2>📜 REGISTRO DE UPDATES</h2>
+            <div class="log-content">
+                <p><b>v0.0.8:</b> Fix total de Assets e Cache.</p>
+                <p><b>v0.0.7:</b> Câmera 2D e Mundo Infinito.</p>
+                <p><b>v0.0.6:</b> Importação de Pixel Art.</p>
+            </div>
+            <button class="btn-fechar" onclick="UI.toggleLog()">FECHAR</button>
         </div>
 
         <div id="game-hud" class="hidden">
-            <div class="stat-item">🌳 <span id="m-count">0</span></div>
-            <div class="stat-item">🪨 <span id="p-count">0</span></div>
+            <div class="item">🌳 <span id="m-count">0</span></div>
+            <div class="item">🪨 <span id="p-count">0</span></div>
         </div>
 
         <div id="menu-principal">
-            <h1 class="titulo-jogo">PATO<br>SURVIVAL</h1>
-            
-            <div class="btn-grid">
-                <button class="pato-btn" onclick="Game.init()">SOBREVIVER</button>
-                <button class="pato-btn btn-locked">CONTINUAR 🔒</button>
-                <button class="pato-btn btn-locked">MULTIPLAYER 🔒</button>
-                <button class="pato-btn" onclick="UI.openSettings()">OPÇÕES</button>
+            <h1 class="logo">PATO<br>SURVIVAL</h1>
+            <div class="menu-btns">
+                <button class="btn-principal" onclick="Game.init()">SOBREVIVER</button>
+                <button class="btn-secundario" disabled>CONTINUAR 🔒</button>
+                <button class="btn-secundario" disabled>MULTIPLAYER 🔒</button>
+                <button class="btn-principal" onclick="UI.msg()">OPÇÕES</button>
             </div>
-            
-            <div class="version-tag">Alpha v0.0.2</div>
+            <div class="version-tag">Alpha v0.0.8</div>
         </div>
     </div>
 
@@ -46,6 +43,8 @@
     <script src="script.js"></script>
 </body>
 </html>
+
+
 
 
 
