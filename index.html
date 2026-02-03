@@ -1,169 +1,171 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="screen-orientation" content="landscape">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Pato Sonho">
-  <meta name="theme-color" content="#1a3d1a">
-  
-  <title>Um Pato e um Sonho!</title>
-  <meta name="description" content="Um jogo de sobrevivência pixel art">
-  
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="img/icongame.png">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Um Pato e um Sonho</title>
+    <style>
+        /* Base e Reset */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body {
+            margin: 0; padding: 0;
+            background-color: #050510;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #050510 100%);
+            image-rendering: pixelated;
+        }
+
+        /* Telas */
+        .screen {
+            position: absolute;
+            width: 100%; height: 100%;
+            display: none; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center; z-index: 10;
+        }
+        .active { display: flex; }
+
+        /* UI de Menu (Estilo do seu print 1000129962.png) */
+        .logo-img { width: 120px; margin-bottom: 10px; }
+        h1 { font-size: 1.8rem; color: #ffcc00; text-shadow: 2px 2px #000; margin: 0; }
+        h2 { font-size: 1rem; color: #cc99ff; margin-bottom: 20px; }
+
+        .btn {
+            background-color: #e2b43a;
+            color: #000; border: none;
+            padding: 12px 0; margin: 8px;
+            font-size: 1.1rem; font-weight: bold;
+            border-radius: 4px; cursor: pointer;
+            width: 220px;
+            box-shadow: 0 4px #8a6d22;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .btn-credits { background-color: #3e513e; color: #fff; box-shadow: 0 4px #243024; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px #8a6d22; }
+
+        /* Personagem (O Pato Branco da Logo) */
+        #player {
+            position: absolute;
+            width: 42px; height: 42px;
+            background-color: #ffffff;
+            bottom: 100px; left: 50%;
+            border-radius: 4px; z-index: 20;
+            transition: transform 0.1s;
+        }
+        #player::after { /* Bico */
+            content: ''; position: absolute;
+            width: 14px; height: 10px;
+            background-color: #ff9900;
+            right: -10px; top: 10px; border-radius: 2px;
+        }
+        #player::before { /* Olho */
+            content: ''; position: absolute;
+            width: 5px; height: 5px;
+            background-color: #000;
+            right: 10px; top: 8px;
+        }
+
+        /* Elementos da Floresta Noturna */
+        .ground {
+            position: absolute; bottom: 0;
+            width: 100%; height: 100px;
+            background-color: #0a1a0a;
+            border-top: 4px solid #142e14;
+        }
+        .fire {
+            position: absolute; bottom: 100px; left: 70%;
+            width: 30px; height: 25px;
+            background: #ff4d00;
+            box-shadow: 0 0 20px #ff9900;
+            border-radius: 50% 50% 20% 20%;
+            animation: burn 0.2s infinite alternate;
+        }
+        @keyframes burn { 
+            from { transform: scale(1); opacity: 0.8; } 
+            to { transform: scale(1.2); opacity: 1; } 
+        }
+
+        /* Controles Invisíveis */
+        .tap-zone { position: absolute; top: 0; width: 50%; height: 100%; z-index: 30; }
+        #left-zone { left: 0; }
+        #right-zone { right: 0; }
+    </style>
 </head>
 <body>
-  <!-- Title Screen -->
-  <div id="title-screen" class="screen active">
-    <div class="stars-bg"></div>
-    <div class="title-content">
-      <div class="duck-mascot">🦆</div>
-      <h1 class="game-title">Um Pato</h1>
-      <p class="game-subtitle">e um Sonho!</p>
-      <button id="start-btn" class="pixel-button primary">
-        <i class="fas fa-play"></i> Jogar
-      </button>
-      <button id="credits-btn" class="pixel-button secondary">
-        <i class="fas fa-info-circle"></i> Créditos
-      </button>
-      <p class="version">v0.1.0 Alpha</p>
-    </div>
-  </div>
 
-  <!-- Game Screen -->
-  <div id="game-screen" class="screen">
-    <canvas id="game-canvas"></canvas>
-    
-    <!-- HUD - Stats -->
-    <div id="hud-stats">
-      <div class="stat-row">
-        <i class="fas fa-heart stat-icon health"></i>
-        <div class="stat-bar"><div id="health-bar" class="stat-fill health"></div></div>
-        <span id="health-text" class="stat-text">100</span>
-      </div>
-      <div class="stat-row">
-        <i class="fas fa-drumstick-bite stat-icon hunger"></i>
-        <div class="stat-bar"><div id="hunger-bar" class="stat-fill hunger"></div></div>
-        <span id="hunger-text" class="stat-text">100</span>
-      </div>
-      <div class="stat-row">
-        <i class="fas fa-bolt stat-icon energy"></i>
-        <div class="stat-bar"><div id="energy-bar" class="stat-fill energy"></div></div>
-        <span id="energy-text" class="stat-text">100</span>
-      </div>
-      <div class="stat-row">
-        <i class="fas fa-skull stat-icon fear"></i>
-        <div class="stat-bar"><div id="fear-bar" class="stat-fill fear"></div></div>
-        <span id="fear-text" class="stat-text">0</span>
-      </div>
+    <div id="game-container">
+        <div id="menu-screen" class="screen active">
+            <div style="background:#fff; width:60px; height:60px; border-radius:8px; position:relative; margin-bottom:10px;">
+                <div style="background:#ff9900; width:20px; height:12px; position:absolute; right:-12px; top:15px; border-radius:3px;"></div>
+                <div style="background:#000; width:6px; height:6px; position:absolute; right:12px; top:12px;"></div>
+            </div>
+            <h1>Um Pato</h1>
+            <h2>e um Sonho!</h2>
+            
+            <button class="btn" onclick="goTo('game')">▶ Jogar</button>
+            <button class="btn btn-credits" onclick="goTo('credits')">ℹ Créditos</button>
+            <p style="margin-top:20px; font-size: 0.7rem; color: #555;">v0.1.0 Alpha</p>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="ground"></div>
+            <div class="fire"></div>
+            <div id="player"></div>
+            
+            <div id="left-zone" class="tap-zone"></div>
+            <div id="right-zone" class="tap-zone"></div>
+            
+            <button class="btn btn-credits" style="position:absolute; top:20px; width:100px; font-size:0.8rem;" onclick="goTo('menu')">SAIR</button>
+        </div>
+
+        <div id="credits-screen" class="screen">
+            <h1 style="font-size: 1.5rem;">Créditos</h1>
+            <p>Desenvolvido por:</p>
+            <p><strong>Duck Dream Studios</strong></p>
+            <p style="font-size: 0.8rem; color: #888; margin-top:20px;">Codado no Acode com ajuda do Gemini IA</p>
+            <button class="btn" onclick="goTo('menu')">VOLTAR</button>
+        </div>
     </div>
 
-    <!-- Time Display -->
-    <div id="time-display">
-      <i id="time-icon" class="fas fa-sun"></i>
-      <span id="time-text">06:00</span>
-      <span id="day-text">Dia 1</span>
-    </div>
+    <script>
+        let posX = window.innerWidth / 2 - 21;
+        const player = document.getElementById('player');
 
-    <!-- Joystick -->
-    <div id="joystick-container">
-      <div id="joystick-base">
-        <div id="joystick-handle"></div>
-      </div>
-    </div>
+        function goTo(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screen + '-screen').classList.add('active');
+            if(screen === 'game') {
+                posX = window.innerWidth / 2 - 21;
+                player.style.left = posX + 'px';
+            }
+        }
 
-    <!-- Action Buttons -->
-    <div id="action-buttons">
-      <button id="btn-attack" class="action-btn primary">
-        <i class="fas fa-hand-fist"></i>
-        <span>Atacar</span>
-      </button>
-      <button id="btn-harvest" class="action-btn secondary">
-        <i class="fas fa-axe"></i>
-        <span>Coletar</span>
-      </button>
-      <button id="btn-sleep" class="action-btn sleep" disabled>
-        <i class="fas fa-moon"></i>
-        <span>Dormir</span>
-      </button>
-      <button id="btn-inventory" class="action-btn secondary">
-        <i class="fas fa-backpack"></i>
-        <span>Itens</span>
-        <span id="inventory-count" class="badge hidden">0</span>
-      </button>
-      <button id="btn-craft" class="action-btn secondary">
-        <i class="fas fa-hammer"></i>
-        <span>Criar</span>
-      </button>
-    </div>
+        // Movimentação por Toque
+        document.getElementById('left-zone').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            posX -= 30;
+            if(posX < 0) posX = 0;
+            player.style.left = posX + 'px';
+            player.style.transform = 'scaleX(-1)';
+        });
 
-    <!-- Sleep Indicator -->
-    <div id="sleep-indicator" class="hidden">
-      💤 Abrigo seguro - toque para dormir
-    </div>
-  </div>
-
-  <!-- Inventory Panel -->
-  <div id="inventory-panel" class="panel hidden">
-    <div class="panel-header">
-      <h2><i class="fas fa-backpack"></i> Inventário</h2>
-      <button id="close-inventory" class="close-btn"><i class="fas fa-times"></i></button>
-    </div>
-    <div id="inventory-grid" class="inventory-grid"></div>
-  </div>
-
-  <!-- Crafting Panel -->
-  <div id="crafting-panel" class="panel hidden">
-    <div class="panel-header">
-      <h2><i class="fas fa-hammer"></i> Criar</h2>
-      <button id="close-crafting" class="close-btn"><i class="fas fa-times"></i></button>
-    </div>
-    <div id="crafting-tabs" class="tabs">
-      <button class="tab active" data-tab="food">Comida</button>
-      <button class="tab" data-tab="tool">Ferramentas</button>
-      <button class="tab" data-tab="building">Construção</button>
-    </div>
-    <div id="crafting-list" class="crafting-list"></div>
-  </div>
-
-  <!-- Dream Sequence -->
-  <div id="dream-overlay" class="hidden">
-    <div class="dream-content">
-      <div class="dream-text"></div>
-    </div>
-  </div>
-
-  <!-- Game Over -->
-  <div id="game-over" class="screen hidden">
-    <div class="game-over-content">
-      <h1>Fim do Sonho</h1>
-      <p id="death-reason"></p>
-      <p id="survival-days"></p>
-      <button id="restart-btn" class="pixel-button primary">
-        <i class="fas fa-redo"></i> Tentar Novamente
-      </button>
-    </div>
-  </div>
-
-  <!-- Credits -->
-  <div id="credits-screen" class="screen hidden">
-    <div class="credits-content">
-      <h1>Créditos</h1>
-      <p>Desenvolvido com 💛</p>
-      <p>Um Pato e um Sonho!</p>
-      <button id="back-credits" class="pixel-button secondary">
-        <i class="fas fa-arrow-left"></i> Voltar
-      </button>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
-  <script src="updates.js"></script>
+        document.getElementById('right-zone').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            posX += 30;
+            if(posX > window.innerWidth - 42) posX = window.innerWidth - 42;
+            player.style.left = posX + 'px';
+            player.style.transform = 'scaleX(1)';
+        });
+    </script>
 </body>
 </html>
