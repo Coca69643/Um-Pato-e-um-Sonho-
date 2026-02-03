@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Um Pato e um Sonho</title>
     <style>
-        /* Base e Reset */
+        /* Reset para Mobile */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         
         body {
@@ -22,80 +22,53 @@
             position: relative;
             width: 100vw; height: 100vh;
             background: radial-gradient(circle at center, #1a1a2e 0%, #050510 100%);
-            image-rendering: pixelated;
         }
 
-        /* Telas */
+        /* Sistema de Telas */
         .screen {
             position: absolute;
             width: 100%; height: 100%;
-            display: none; flex-direction: column;
+            display: none; /* Esconde todas por padrão */
+            flex-direction: column;
             justify-content: center; align-items: center;
             text-align: center; z-index: 10;
         }
-        .active { display: flex; }
 
-        /* UI de Menu (Estilo do seu print 1000129962.png) */
-        .logo-img { width: 120px; margin-bottom: 10px; }
-        h1 { font-size: 1.8rem; color: #ffcc00; text-shadow: 2px 2px #000; margin: 0; }
-        h2 { font-size: 1rem; color: #cc99ff; margin-bottom: 20px; }
+        /* Classe que faz a tela aparecer */
+        .active { display: flex !important; }
 
+        /* Estilo dos Botões do Menu */
+        h1 { font-size: 2rem; color: #ffcc00; text-shadow: 2px 2px #000; margin: 5px 0; }
+        
         .btn {
             background-color: #e2b43a;
             color: #000; border: none;
-            padding: 12px 0; margin: 8px;
-            font-size: 1.1rem; font-weight: bold;
-            border-radius: 4px; cursor: pointer;
-            width: 220px;
-            box-shadow: 0 4px #8a6d22;
-            display: flex; justify-content: center; align-items: center;
+            padding: 15px 0; margin: 10px;
+            font-size: 1.2rem; font-weight: bold;
+            border-radius: 6px; cursor: pointer;
+            width: 240px;
+            box-shadow: 0 5px #8a6d22;
         }
-        .btn-credits { background-color: #3e513e; color: #fff; box-shadow: 0 4px #243024; }
-        .btn:active { transform: translateY(2px); box-shadow: 0 2px #8a6d22; }
+        .btn-credits { background-color: #3e513e; color: #fff; box-shadow: 0 5px #243024; }
+        .btn:active { transform: translateY(3px); box-shadow: 0 2px #8a6d22; }
 
-        /* Personagem (O Pato Branco da Logo) */
+        /* O Pato Branco */
         #player {
             position: absolute;
             width: 42px; height: 42px;
             background-color: #ffffff;
             bottom: 100px; left: 50%;
             border-radius: 4px; z-index: 20;
-            transition: transform 0.1s;
         }
-        #player::after { /* Bico */
-            content: ''; position: absolute;
-            width: 14px; height: 10px;
-            background-color: #ff9900;
-            right: -10px; top: 10px; border-radius: 2px;
-        }
-        #player::before { /* Olho */
-            content: ''; position: absolute;
-            width: 5px; height: 5px;
-            background-color: #000;
-            right: 10px; top: 8px;
-        }
+        #player::after { content: ''; position: absolute; width: 14px; height: 10px; background-color: #ff9900; right: -10px; top: 10px; border-radius: 2px; }
+        #player::before { content: ''; position: absolute; width: 5px; height: 5px; background-color: #000; right: 10px; top: 8px; }
 
-        /* Elementos da Floresta Noturna */
-        .ground {
-            position: absolute; bottom: 0;
-            width: 100%; height: 100px;
-            background-color: #0a1a0a;
-            border-top: 4px solid #142e14;
-        }
-        .fire {
-            position: absolute; bottom: 100px; left: 70%;
-            width: 30px; height: 25px;
-            background: #ff4d00;
-            box-shadow: 0 0 20px #ff9900;
-            border-radius: 50% 50% 20% 20%;
-            animation: burn 0.2s infinite alternate;
-        }
-        @keyframes burn { 
-            from { transform: scale(1); opacity: 0.8; } 
-            to { transform: scale(1.2); opacity: 1; } 
-        }
+        /* Cenário */
+        .ground { position: absolute; bottom: 0; width: 100%; height: 100px; background-color: #0a1a0a; border-top: 4px solid #142e14; }
+        .fire { position: absolute; bottom: 100px; left: 70%; width: 30px; height: 25px; background: #ff4d00; box-shadow: 0 0 20px #ff9900; border-radius: 50%; animation: burn 0.2s infinite alternate; }
+        @keyframes burn { from { transform: scale(1); } to { transform: scale(1.2); } }
 
-        /* Controles Invisíveis */
+        /* Controles */
         .tap-zone { position: absolute; top: 0; width: 50%; height: 100%; z-index: 30; }
         #left-zone { left: 0; }
         #right-zone { right: 0; }
@@ -104,17 +77,18 @@
 <body>
 
     <div id="game-container">
+        
         <div id="menu-screen" class="screen active">
-            <div style="background:#fff; width:60px; height:60px; border-radius:8px; position:relative; margin-bottom:10px;">
+            <div style="background:#fff; width:60px; height:60px; border-radius:8px; position:relative; margin-bottom:15px;">
                 <div style="background:#ff9900; width:20px; height:12px; position:absolute; right:-12px; top:15px; border-radius:3px;"></div>
                 <div style="background:#000; width:6px; height:6px; position:absolute; right:12px; top:12px;"></div>
             </div>
             <h1>Um Pato</h1>
-            <h2>e um Sonho!</h2>
+            <h1 style="font-size: 1.2rem; color: #cc99ff;">e um Sonho!</h1>
             
-            <button class="btn" onclick="goTo('game')">▶ Jogar</button>
-            <button class="btn btn-credits" onclick="goTo('credits')">ℹ Créditos</button>
-            <p style="margin-top:20px; font-size: 0.7rem; color: #555;">v0.1.0 Alpha</p>
+            <button class="btn" onclick="mudarTela('game-screen')">▶ Jogar</button>
+            <button class="btn btn-credits" onclick="mudarTela('credits-screen')">ℹ Créditos</button>
+            <p style="margin-top:20px; font-size: 0.8rem; color: #555;">v0.1.0 Alpha</p>
         </div>
 
         <div id="game-screen" class="screen">
@@ -125,45 +99,54 @@
             <div id="left-zone" class="tap-zone"></div>
             <div id="right-zone" class="tap-zone"></div>
             
-            <button class="btn btn-credits" style="position:absolute; top:20px; width:100px; font-size:0.8rem;" onclick="goTo('menu')">SAIR</button>
+            <button class="btn btn-credits" style="position:absolute; top:20px; width:120px;" onclick="mudarTela('menu-screen')">SAIR</button>
         </div>
 
         <div id="credits-screen" class="screen">
-            <h1 style="font-size: 1.5rem;">Créditos</h1>
-            <p>Desenvolvido por:</p>
-            <p><strong>Duck Dream Studios</strong></p>
-            <p style="font-size: 0.8rem; color: #888; margin-top:20px;">Codado no Acode com ajuda do Gemini IA</p>
-            <button class="btn" onclick="goTo('menu')">VOLTAR</button>
+            <h1>Créditos</h1>
+            <p>Desenvolvedor:</p>
+            <h2 style="color: #ffcc00;">Duck Dream Studios</h2>
+            <p style="font-size: 0.9rem; margin-top: 20px;">Criado com Acode e Gemini IA</p>
+            <button class="btn" onclick="mudarTela('menu-screen')">VOLTAR</button>
         </div>
+
     </div>
 
     <script>
-        let posX = window.innerWidth / 2 - 21;
-        const player = document.getElementById('player');
+        // Função Única para Mudar de Tela (Sem erro agora!)
+        function mudarTela(idDaTela) {
+            // 1. Esconde todas as telas
+            const telas = document.querySelectorAll('.screen');
+            telas.forEach(tela => {
+                tela.classList.remove('active');
+            });
 
-        function goTo(screen) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screen + '-screen').classList.add('active');
-            if(screen === 'game') {
-                posX = window.innerWidth / 2 - 21;
-                player.style.left = posX + 'px';
+            // 2. Mostra apenas a tela que a gente quer
+            const telaAlvo = document.getElementById(idDaTela);
+            if (telaAlvo) {
+                telaAlvo.classList.add('active');
+            } else {
+                console.error("Tela não encontrada: " + idDaTela);
             }
         }
 
-        // Movimentação por Toque
+        // Lógica de Movimento
+        let playerX = window.innerWidth / 2 - 21;
+        const player = document.getElementById('player');
+
         document.getElementById('left-zone').addEventListener('touchstart', (e) => {
             e.preventDefault();
-            posX -= 30;
-            if(posX < 0) posX = 0;
-            player.style.left = posX + 'px';
+            playerX -= 30;
+            if(playerX < 0) playerX = 0;
+            player.style.left = playerX + 'px';
             player.style.transform = 'scaleX(-1)';
         });
 
         document.getElementById('right-zone').addEventListener('touchstart', (e) => {
             e.preventDefault();
-            posX += 30;
-            if(posX > window.innerWidth - 42) posX = window.innerWidth - 42;
-            player.style.left = posX + 'px';
+            playerX += 30;
+            if(playerX > window.innerWidth - 42) playerX = window.innerWidth - 42;
+            player.style.left = playerX + 'px';
             player.style.transform = 'scaleX(1)';
         });
     </script>
