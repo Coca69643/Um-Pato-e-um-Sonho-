@@ -1,76 +1,169 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pato Survival v0.0.8</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2d5a27">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    
-    <link rel="stylesheet" href="style.css">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    
-    <script>
-  // Registro forçado para PWA
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./updates.js', { scope: './' })
-      .then(function(registration) {
-        console.log('Service Worker registrado com sucesso:', registration.scope);
-      })
-      .catch(function(error) {
-        console.log('Falha ao registrar o Service Worker:', error);
-      });
-  }
-     </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="screen-orientation" content="landscape">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Pato Sonho">
+  <meta name="theme-color" content="#1a3d1a">
+  
+  <title>Um Pato e um Sonho!</title>
+  <meta name="description" content="Um jogo de sobrevivência pixel art">
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="img/icongame.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Title Screen -->
+  <div id="title-screen" class="screen active">
+    <div class="stars-bg"></div>
+    <div class="title-content">
+      <div class="duck-mascot">🦆</div>
+      <h1 class="game-title">Um Pato</h1>
+      <p class="game-subtitle">e um Sonho!</p>
+      <button id="start-btn" class="pixel-button primary">
+        <i class="fas fa-play"></i> Jogar
+      </button>
+      <button id="credits-btn" class="pixel-button secondary">
+        <i class="fas fa-info-circle"></i> Créditos
+      </button>
+      <p class="version">v0.1.0 Alpha</p>
+    </div>
+  </div>
 
-    <div id="ui-container">
-        
-        <div id="btn-log-toggle" onclick="UI.toggleLog()">📜</div>
-
-        <div id="modal-log" class="modal hidden">
-            <div class="modal-content">
-                <h2>📜 REGISTRO DE UPDATES</h2>
-                <div class="log-scroll">
-                    <p><b>v0.0.8:</b> PWA Ativado & Fix de Cache.</p>
-                    <p><b>v0.0.7:</b> Câmera Livre & Mundo Gigante.</p>
-                    <p><b>v0.0.6:</b> Sistema de Sprites (Pixel Art).</p>
-                    <p><b>v0.0.1:</b> Início do Protótipo.</p>
-                </div>
-                <button class="btn-close" onclick="UI.toggleLog()">FECHAR</button>
-            </div>
-        </div>
-
-        <div id="game-hud" class="hidden">
-            <div class="hud-item">🌳 <span id="m-count">0</span></div>
-            <div class="hud-item">🪨 <span id="p-count">0</span></div>
-        </div>
-
-        <div id="menu-principal">
-            <div class="menu-box">
-                <h1 class="game-title">PATO<br>SURVIVAL</h1>
-                
-                <div class="button-grid">
-                    <button class="menu-btn play" onclick="Game.init()">SOBREVIVER</button>
-                    <button class="menu-btn locked" disabled>CONTINUAR 🔒</button>
-                    <button class="menu-btn locked" disabled>MULTIPLAYER 🔒</button>
-                    <button class="menu-btn settings" onclick="alert('Configurações salvas!')">OPÇÕES</button>
-                </div>
-                
-                <div class="footer-info">
-                    <span id="version-display">Alpha v0.0.8</span>
-                </div>
-            </div>
-        </div>
+  <!-- Game Screen -->
+  <div id="game-screen" class="screen">
+    <canvas id="game-canvas"></canvas>
+    
+    <!-- HUD - Stats -->
+    <div id="hud-stats">
+      <div class="stat-row">
+        <i class="fas fa-heart stat-icon health"></i>
+        <div class="stat-bar"><div id="health-bar" class="stat-fill health"></div></div>
+        <span id="health-text" class="stat-text">100</span>
+      </div>
+      <div class="stat-row">
+        <i class="fas fa-drumstick-bite stat-icon hunger"></i>
+        <div class="stat-bar"><div id="hunger-bar" class="stat-fill hunger"></div></div>
+        <span id="hunger-text" class="stat-text">100</span>
+      </div>
+      <div class="stat-row">
+        <i class="fas fa-bolt stat-icon energy"></i>
+        <div class="stat-bar"><div id="energy-bar" class="stat-fill energy"></div></div>
+        <span id="energy-text" class="stat-text">100</span>
+      </div>
+      <div class="stat-row">
+        <i class="fas fa-skull stat-icon fear"></i>
+        <div class="stat-bar"><div id="fear-bar" class="stat-fill fear"></div></div>
+        <span id="fear-text" class="stat-text">0</span>
+      </div>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <!-- Time Display -->
+    <div id="time-display">
+      <i id="time-icon" class="fas fa-sun"></i>
+      <span id="time-text">06:00</span>
+      <span id="day-text">Dia 1</span>
+    </div>
 
-    <script src="script.js"></script>
+    <!-- Joystick -->
+    <div id="joystick-container">
+      <div id="joystick-base">
+        <div id="joystick-handle"></div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-buttons">
+      <button id="btn-attack" class="action-btn primary">
+        <i class="fas fa-hand-fist"></i>
+        <span>Atacar</span>
+      </button>
+      <button id="btn-harvest" class="action-btn secondary">
+        <i class="fas fa-axe"></i>
+        <span>Coletar</span>
+      </button>
+      <button id="btn-sleep" class="action-btn sleep" disabled>
+        <i class="fas fa-moon"></i>
+        <span>Dormir</span>
+      </button>
+      <button id="btn-inventory" class="action-btn secondary">
+        <i class="fas fa-backpack"></i>
+        <span>Itens</span>
+        <span id="inventory-count" class="badge hidden">0</span>
+      </button>
+      <button id="btn-craft" class="action-btn secondary">
+        <i class="fas fa-hammer"></i>
+        <span>Criar</span>
+      </button>
+    </div>
+
+    <!-- Sleep Indicator -->
+    <div id="sleep-indicator" class="hidden">
+      💤 Abrigo seguro - toque para dormir
+    </div>
+  </div>
+
+  <!-- Inventory Panel -->
+  <div id="inventory-panel" class="panel hidden">
+    <div class="panel-header">
+      <h2><i class="fas fa-backpack"></i> Inventário</h2>
+      <button id="close-inventory" class="close-btn"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="inventory-grid" class="inventory-grid"></div>
+  </div>
+
+  <!-- Crafting Panel -->
+  <div id="crafting-panel" class="panel hidden">
+    <div class="panel-header">
+      <h2><i class="fas fa-hammer"></i> Criar</h2>
+      <button id="close-crafting" class="close-btn"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="crafting-tabs" class="tabs">
+      <button class="tab active" data-tab="food">Comida</button>
+      <button class="tab" data-tab="tool">Ferramentas</button>
+      <button class="tab" data-tab="building">Construção</button>
+    </div>
+    <div id="crafting-list" class="crafting-list"></div>
+  </div>
+
+  <!-- Dream Sequence -->
+  <div id="dream-overlay" class="hidden">
+    <div class="dream-content">
+      <div class="dream-text"></div>
+    </div>
+  </div>
+
+  <!-- Game Over -->
+  <div id="game-over" class="screen hidden">
+    <div class="game-over-content">
+      <h1>Fim do Sonho</h1>
+      <p id="death-reason"></p>
+      <p id="survival-days"></p>
+      <button id="restart-btn" class="pixel-button primary">
+        <i class="fas fa-redo"></i> Tentar Novamente
+      </button>
+    </div>
+  </div>
+
+  <!-- Credits -->
+  <div id="credits-screen" class="screen hidden">
+    <div class="credits-content">
+      <h1>Créditos</h1>
+      <p>Desenvolvido com 💛</p>
+      <p>Um Pato e um Sonho!</p>
+      <button id="back-credits" class="pixel-button secondary">
+        <i class="fas fa-arrow-left"></i> Voltar
+      </button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="updates.js"></script>
 </body>
 </html>
