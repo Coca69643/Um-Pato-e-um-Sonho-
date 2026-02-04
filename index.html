@@ -3,145 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Um Pato e um Sonho</title>
+    <title>Um Pato e um Sonho - PRO</title>
     <style>
-        /* Reset de Estilo Lovable */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        
-        body {
-            margin: 0; padding: 0;
-            background-color: #121212; /* Fundo escuro padrão Lovable */
-            color: white;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh;
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #74c365; font-family: sans-serif; }
+
+        /* Canvas de Jogo */
+        #gameCanvas { position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* UI - HUD SUPERIOR (Relógio e Status) */
+        #ui-top-center {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: white; padding: 5px 20px;
+            border-radius: 4px; text-align: center; z-index: 10;
         }
 
-        #game-container {
-            position: relative;
-            width: 100vw; height: 100vh;
-            background-color: #1a1a1a;
+        #ui-status-bars {
+            position: fixed; top: 15px; right: 15px; width: 220px;
+            background: rgba(40, 44, 40, 0.9); border: 3px solid #1a1a1a;
+            padding: 10px; border-radius: 8px; z-index: 10;
+        }
+        .bar-container { display: flex; align-items: center; margin-bottom: 6px; }
+        .bar-bg { flex-grow: 1; height: 12px; background: #1a1a1a; border-radius: 6px; margin-left: 8px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 100%; transition: width 0.3s; }
+
+        /* CONTROLES - JOYSTICK E BOTÕES */
+        #joystick-wrapper {
+            position: fixed; bottom: 40px; left: 40px;
+            width: 120px; height: 120px; background: rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; z-index: 10;
+        }
+        #joystick-stick {
+            position: absolute; top: 35px; left: 35px; width: 50px; height: 50px;
+            background: #ffcc00; border-radius: 50%; box-shadow: 0 4px #b8860b;
         }
 
-        /* Telas */
+        #action-bar {
+            position: fixed; bottom: 20px; right: 20px;
+            display: flex; gap: 10px; z-index: 10;
+        }
+        .action-btn {
+            width: 70px; height: 70px; background: #3f423e; border: 3px solid #1a1a1a;
+            border-radius: 12px; color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-size: 11px; font-weight: bold;
+        }
+        .btn-attack { background: #eab308; color: black; }
+
+        /* TELAS */
         .screen {
-            position: absolute;
-            width: 100%; height: 100%;
-            display: none;
-            flex-direction: column;
-            justify-content: center; align-items: center;
-            text-align: center;
+            position: fixed; inset: 0; background: #121212;
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 100;
         }
         .active { display: flex !important; }
-
-        /* UI Estilo Lovable (Botões Verdes e Modernos) */
-        h1 { font-size: 2.5rem; margin-bottom: 5px; color: #ffffff; }
-        h2 { font-size: 1.2rem; color: #4ade80; margin-bottom: 30px; font-weight: normal; }
-        
-        .btn {
-            background-color: #22c55e; /* Verde Lovable */
-            color: white; border: none;
-            padding: 16px 0; margin: 10px;
-            font-size: 1.1rem; font-weight: 600;
-            border-radius: 12px; cursor: pointer;
-            width: 280px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .btn-secondary { background-color: #374151; }
-        .btn:active { transform: scale(0.98); opacity: 0.9; }
-
-        /* Personagem e Jogo */
-        #player {
-            position: absolute;
-            width: 45px; height: 45px;
-            background-color: #ffffff;
-            bottom: 100px; left: 50%;
-            border-radius: 8px; z-index: 20;
-        }
-        /* Bico do Pato */
-        #player::after { content: ''; position: absolute; width: 15px; height: 10px; background-color: #fb923c; right: -8px; top: 12px; border-radius: 4px; }
-        /* Olho do Pato */
-        #player::before { content: ''; position: absolute; width: 6px; height: 6px; background-color: #000; right: 10px; top: 10px; border-radius: 50%; }
-
-        .ground { position: absolute; bottom: 0; width: 100%; height: 100px; background-color: #262626; border-top: 2px solid #404040; }
-        
-        /* Controles de Toque */
-        .touch-area { position: absolute; top: 0; width: 50%; height: 100%; z-index: 30; }
-        #left-area { left: 0; }
-        #right-area { right: 0; }
+        .play-btn { background: #22c55e; color: white; border: none; padding: 20px 60px; border-radius: 12px; font-size: 1.5rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        
-        <div id="menu-screen" class="screen active">
-            <h1>Um Pato</h1>
-            <h2>e um Sonho!</h2>
-            
-            <button class="btn" onclick="appNav('game-screen')">Iniciar Jornada</button>
-            <button class="btn btn-secondary" onclick="appNav('credits-screen')">Créditos</button>
-            <p style="margin-top:40px; color: #71717a; font-size: 0.9rem;">Versão 0.1.0 Alpha</p>
-        </div>
-
-        <div id="game-screen" class="screen">
-            <div class="ground"></div>
-            <div id="player"></div>
-            
-            <div id="left-area" class="touch-area"></div>
-            <div id="right-area" class="touch-area"></div>
-            
-            <button class="btn btn-secondary" style="position:absolute; top:20px; width:100px; padding:10px;" onclick="appNav('menu-screen')">Sair</button>
-        </div>
-
-        <div id="credits-screen" class="screen">
-            <h1>Créditos</h1>
-            <p style="color: #a1a1aa;">Desenvolvedor</p>
-            <h3 style="font-size: 1.5rem;">Duck Dream Studios</h3>
-            <button class="btn btn-secondary" onclick="appNav('menu-screen')">Voltar</button>
-        </div>
-
+    <div id="menu-screen" class="screen active">
+        <h1 style="color: white; font-size: 3rem; margin-bottom: 0;">Um Pato</h1>
+        <p style="color: #22c55e; font-size: 1.5rem; margin-bottom: 40px;">e um Sonho!</p>
+        <button class="play-btn" onclick="startGame()">Iniciar Jornada</button>
     </div>
 
+    <div id="ui-top-center">
+        <div id="game-time" style="font-size: 1.2rem; font-weight: bold;">09:20</div>
+        <div id="game-day" style="font-size: 0.7rem;">Dia 1</div>
+    </div>
+
+    <div id="ui-status-bars">
+        <div class="bar-container">❤️ <div class="bar-bg"><div class="bar-fill" style="background: #ef4444; width: 100%;"></div></div></div>
+        <div class="bar-container">🍎 <div class="bar-bg"><div class="bar-fill" style="background: #eab308; width: 85%;"></div></div></div>
+        <div class="bar-container">⚡ <div class="bar-bg"><div class="bar-fill" style="background: #a855f7; width: 70%;"></div></div></div>
+    </div>
+
+    <div id="joystick-wrapper">
+        <div id="joystick-stick"></div>
+    </div>
+
+    <div id="action-bar">
+        <div class="action-btn">🎒<br>Itens</div>
+        <div class="action-btn">⛏️<br>Coletar</div>
+        <div class="action-btn btn-attack">⚔️<br>Atacar</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
     <script>
-        // Sistema de Navegação Robusto
-        function appNav(screenId) {
-            // Esconde todas as telas
-            const screens = document.querySelectorAll('.screen');
-            screens.forEach(s => s.classList.remove('active'));
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let playerPos = { x: 0, y: 0 };
+        let joyVector = { x: 0, y: 0 };
+        let isMoving = false;
 
-            // Ativa a tela desejada
-            const target = document.getElementById(screenId);
-            if (target) {
-                target.classList.add('active');
-            }
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.imageSmoothingEnabled = false;
         }
 
-        // Mecânica de Movimento
-        let pX = window.innerWidth / 2 - 22;
-        const p = document.getElementById('player');
+        function startGame() {
+            document.getElementById('menu-screen').classList.remove('active');
+            playerPos = { x: canvas.width / 2, y: canvas.height / 2 };
+            animate();
+        }
 
-        function move(dist, scale) {
-            pX += dist;
-            // Limites da tela
-            if (pX < 0) pX = 0;
-            if (pX > window.innerWidth - 45) pX = window.innerWidth - 45;
+        // Lógica de Joystick (Mobile First)
+        const stick = document.getElementById('joystick-stick');
+        const base = document.getElementById('joystick-wrapper');
+
+        base.addEventListener('touchstart', () => isMoving = true);
+        window.addEventListener('touchmove', (e) => {
+            if (!isMoving) return;
+            const touch = e.touches[0];
+            const rect = base.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
             
-            p.style.left = pX + 'px';
-            p.style.transform = `scaleX(${scale})`;
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const max = 40;
+
+            if (dist > max) { dx *= max / dist; dy *= max / dist; }
+            stick.style.transform = `translate(${dx}px, ${dy}px)`;
+            joyVector = { x: dx / max, y: dy / max };
+        });
+
+        window.addEventListener('touchend', () => {
+            isMoving = false;
+            stick.style.transform = `translate(0px, 0px)`;
+            joyVector = { x: 0, y: 0 };
+        });
+
+        function animate() {
+            // Desenhar Grama (Fundo)
+            ctx.fillStyle = "#74c365";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Movimentar e Desenhar Jogador
+            playerPos.x += joyVector.x * 4;
+            playerPos.y += joyVector.y * 4;
+
+            ctx.fillStyle = "white"; // Pato
+            ctx.fillRect(playerPos.x - 20, playerPos.y - 20, 40, 40);
+            ctx.fillStyle = "#fb923c"; // Bico
+            ctx.fillRect(playerPos.x + (joyVector.x >= 0 ? 15 : -25), playerPos.y - 5, 10, 8);
+
+            requestAnimationFrame(animate);
         }
 
-        document.getElementById('left-area').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            move(-40, -1);
-        });
-
-        document.getElementById('right-area').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            move(40, 1);
-        });
+        window.addEventListener('resize', resize);
+        resize();
     </script>
 </body>
 </html>
