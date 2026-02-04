@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Um Pato e um Sonho - V1.8</title>
+    <title>Um Pato e um Sonho - V1.9</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: none; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1a1a1a; font-family: sans-serif; overscroll-behavior: none; position: fixed; }
@@ -16,16 +16,15 @@
         #ui-menu { z-index: 100; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .menu-title { color: white; font-size: 32px; text-shadow: 3px 3px 0 #000; margin-bottom: 30px; }
         .btn-main { background: #22c55e; color: white; border: none; padding: 15px 40px; border-radius: 10px; font-size: 18px; font-weight: bold; box-shadow: 0 5px #166534; cursor: pointer; pointer-events: auto; margin: 10px; width: 220px; text-align: center; }
-        .btn-settings { background: #64748b; box-shadow: 0 5px #334155; }
 
         /* HUD JOGO */
         #ui-hud { z-index: 50; align-items: flex-start; justify-content: flex-start; }
-        .status-box { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 8px; border-radius: 10px; border: 2px solid #333; }
-        .bar { width: 100px; height: 8px; background: #222; margin: 4px 0; border-radius: 4px; overflow: hidden; }
-        .fill { height: 100%; transition: width 0.2s; }
+        .inventory-box { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 10px; border: 2px solid #444; color: white; font-weight: bold; }
         
-        /* INVENTÁRIO HUD */
-        .inventory-box { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 10px; border: 2px solid #333; color: white; font-weight: bold; font-size: 14px; }
+        /* CRAFTING PANEL */
+        #crafting-panel { position: absolute; top: 70px; left: 10px; pointer-events: auto; }
+        .btn-craft { background: #fb923c; border: 2px solid #9a3412; padding: 8px 12px; border-radius: 8px; color: white; font-weight: bold; font-size: 12px; box-shadow: 0 4px #7c2d12; }
+        .btn-craft:disabled { background: #444; border-color: #222; box-shadow: none; opacity: 0.6; }
 
         /* D-PAD */
         #controls-container { position: absolute; bottom: 20px; left: 20px; display: grid; grid-template-areas: ". up ." "left . right" ". down ."; gap: 8px; pointer-events: auto; }
@@ -34,7 +33,6 @@
 
         #action-container { position: absolute; bottom: 25px; right: 20px; pointer-events: auto; }
         .btn-collect { width: 80px; height: 80px; background: #4a2d18; border: 3px solid #2d1a0e; border-radius: 20px; color: white; font-size: 10px; font-weight: bold; box-shadow: 0 6px #2d1a0e; }
-        .btn-collect:active { transform: translateY(4px); box-shadow: 0 2px #2d1a0e; }
     </style>
 </head>
 <body>
@@ -42,15 +40,13 @@
     <div id="ui-menu" class="layer">
         <div class="menu-title">UM PATO E UM SONHO</div>
         <button class="btn-main" onclick="game.startGame()">INICIAR JORNADA</button>
-        <button class="btn-main btn-settings">CONFIGURAÇÕES</button>
     </div>
 
     <div id="ui-hud" class="layer hidden">
-        <div class="inventory-box">🪵 Madeira: <span id="wood-count">0</span></div>
+        <div class="inventory-box">🪵 <span id="wood-count">0</span></div>
         
-        <div class="status-box">
-            <div class="bar"><div id="hp-bar" class="fill" style="background: #ef4444; width: 100%;"></div></div>
-            <div class="bar"><div id="hunger-bar" class="fill" style="background: #f59e0b; width: 100%;"></div></div>
+        <div id="crafting-panel">
+            <button class="btn-craft" id="craft-fire" onclick="game.craft('campfire')">🔥 Fogueira (3 Wood)</button>
         </div>
 
         <div id="controls-container">
@@ -73,16 +69,13 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d', { alpha: false });
 
-        const TILE_SIZE = 32;
-        const PLAYER_SPEED = 160;
-
         const game = {
             state: 'MENU',
             lastTime: 0,
             width: 0, height: 0,
-            player: { x: 1000, y: 1000, radius: 12, hp: 100, hunger: 100, dir: 1, wood: 0 },
+            player: { x: 1000, y: 1000, radius: 12, dir: 1, wood: 0 },
             camera: { x: 1000, y: 1000 },
-            world: { seed: 888, removedItems: new Set() },
+            world: { seed: 888, removedItems: new Set(), placedObjects: [] },
             keys: { up: false, down: false, left: false, right: false },
 
             startGame() {
@@ -93,28 +86,34 @@
 
             interact() {
                 if (this.state !== 'PLAYING') return;
-                
-                // Procura a árvore mais próxima dentro do raio de alcance (40px)
-                const sx = Math.floor((this.player.x - 60) / TILE_SIZE);
-                const sy = Math.floor((this.player.y - 60) / TILE_SIZE);
-
+                const sx = Math.floor((this.player.x - 60) / 32);
+                const sy = Math.floor((this.player.y - 60) / 32);
                 for (let x = sx; x <= sx + 4; x++) {
                     for (let y = sy; y <= sy + 4; y++) {
                         const id = `${x},${y}`;
                         if (seededRandom(x, y) < 0.02 && !this.world.removedItems.has(id)) {
-                            const tx = x * TILE_SIZE + 16;
-                            const ty = y * TILE_SIZE + 16;
-                            const dist = Math.hypot(this.player.x - tx, this.player.y - ty);
-
-                            if (dist < 45) { // Alcance de coleta
+                            if (Math.hypot(this.player.x - (x * 32 + 16), this.player.y - (y * 32 + 16)) < 45) {
                                 this.world.removedItems.add(id);
                                 this.player.wood++;
-                                document.getElementById('wood-count').innerText = this.player.wood;
-                                return; // Coleta apenas uma por clique
+                                this.updateUI();
+                                return;
                             }
                         }
                     }
                 }
+            },
+
+            craft(item) {
+                if (item === 'campfire' && this.player.wood >= 3) {
+                    this.player.wood -= 3;
+                    this.world.placedObjects.push({ x: this.player.x, y: this.player.y, type: 'campfire' });
+                    this.updateUI();
+                }
+            },
+
+            updateUI() {
+                document.getElementById('wood-count').innerText = this.player.wood;
+                document.getElementById('craft-fire').disabled = this.player.wood < 3;
             }
         };
 
@@ -122,7 +121,6 @@
             const el = document.getElementById(id);
             el.addEventListener('touchstart', e => { e.preventDefault(); game.keys[k] = true; });
             el.addEventListener('touchend', e => { e.preventDefault(); game.keys[k] = false; });
-            el.addEventListener('touchcancel', e => { e.preventDefault(); game.keys[k] = false; });
         };
         bind('btn-up', 'up'); bind('btn-down', 'down'); bind('btn-left', 'left'); bind('btn-right', 'right');
 
@@ -131,88 +129,62 @@
             return val - Math.floor(val);
         }
 
-        function checkCollision(nx, ny) {
-            const sx = Math.floor((nx - 40) / TILE_SIZE);
-            const sy = Math.floor((ny - 40) / TILE_SIZE);
-            for (let x = sx; x <= sx + 3; x++) {
-                for (let y = sy; y <= sy + 3; y++) {
-                    const id = `${x},${y}`;
-                    if (seededRandom(x, y) < 0.02 && !game.world.removedItems.has(id)) {
-                        const dist = Math.hypot(nx - (x * TILE_SIZE + 16), ny - (y * TILE_SIZE + 16));
-                        if (dist < game.player.radius + 8) return true;
-                    }
-                }
-            }
-            return false;
-        }
-
         function drawWorld() {
-            const startX = Math.floor(game.camera.x / TILE_SIZE) - 1;
-            const endX = Math.ceil((game.camera.x + game.width) / TILE_SIZE) + 1;
-            const startY = Math.floor(game.camera.y / TILE_SIZE) - 1;
-            const endY = Math.ceil((game.camera.y + game.height) / TILE_SIZE) + 1;
+            const startX = Math.floor(game.camera.x / 32) - 1;
+            const endX = Math.ceil((game.camera.x + game.width) / 32) + 1;
+            const startY = Math.floor(game.camera.y / 32) - 1;
+            const endY = Math.ceil((game.camera.y + game.height) / 32) + 1;
 
             for (let x = startX; x <= endX; x++) {
                 for (let y = startY; y <= endY; y++) {
                     const noise = seededRandom(x, y);
-                    const wx = x * TILE_SIZE;
-                    const wy = y * TILE_SIZE;
-                    const id = `${x},${y}`;
-
+                    const wx = x * 32, wy = y * 32;
                     ctx.fillStyle = noise > 0.8 ? "#559449" : "#5da051";
-                    ctx.fillRect(wx, wy, TILE_SIZE + 1, TILE_SIZE + 1);
-
-                    if (noise < 0.02 && !game.world.removedItems.has(id)) {
+                    ctx.fillRect(wx, wy, 33, 33);
+                    if (noise < 0.02 && !game.world.removedItems.has(`${x},${y}`)) {
                         ctx.fillStyle = "#4a2d18"; ctx.fillRect(wx + 12, wy + 16, 8, 12);
                         ctx.fillStyle = "#2d5a27"; ctx.fillRect(wx + 4, wy - 4, 24, 20);
                     }
                 }
             }
+            
+            // Desenhar objetos construídos
+            game.world.placedObjects.forEach(obj => {
+                if (obj.type === 'campfire') {
+                    ctx.fillStyle = "#7c2d12"; ctx.fillRect(obj.x-10, obj.y-4, 20, 8);
+                    ctx.fillStyle = "#f97316"; ctx.beginPath(); ctx.arc(obj.x, obj.y-6, 6 + Math.random()*2, 0, 7); ctx.fill();
+                }
+            });
         }
 
         function update(dt) {
-            if (game.state === 'MENU') {
-                game.camera.x += 20 * dt; game.camera.y += 10 * dt;
-                return;
-            }
-
+            if (game.state === 'MENU') { game.camera.x += 20 * dt; game.camera.y += 10 * dt; return; }
             let moveX = 0, moveY = 0;
             if (game.keys.up) moveY -= 1; if (game.keys.down) moveY += 1;
             if (game.keys.left) { moveX -= 1; game.player.dir = -1; }
             if (game.keys.right) { moveX += 1; game.player.dir = 1; }
-
             if (moveX !== 0 || moveY !== 0) {
                 const mag = Math.hypot(moveX, moveY);
-                const nx = game.player.x + (moveX / mag) * PLAYER_SPEED * dt;
-                const ny = game.player.y + (moveY / mag) * PLAYER_SPEED * dt;
-                if (!checkCollision(nx, game.player.y)) game.player.x = nx;
-                if (!checkCollision(game.player.x, ny)) game.player.y = ny;
+                game.player.x += (moveX / mag) * 160 * dt;
+                game.player.y += (moveY / mag) * 160 * dt;
             }
-
             game.camera.x = game.player.x - game.width / 2;
             game.camera.y = game.player.y - game.height / 2;
-            game.player.hunger -= 0.1 * dt;
-            document.getElementById('hunger-bar').style.width = Math.max(0, game.player.hunger) + "%";
-        }
-
-        function draw() {
-            ctx.fillStyle = "#222"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.save();
-            ctx.translate(-game.camera.x, -game.camera.y);
-            drawWorld();
-            if (game.state === 'PLAYING') {
-                ctx.fillStyle = "white"; ctx.fillRect(game.player.x - 16, game.player.y - 16, 32, 32);
-                ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x + (game.player.dir === 1 ? 12 : -24), game.player.y - 4, 12, 8);
-                ctx.fillStyle = "black"; ctx.fillRect(game.player.x + (game.player.dir === 1 ? 6 : -10), game.player.y - 10, 4, 4);
-            }
-            ctx.restore();
         }
 
         function loop(t) {
             let dt = Math.min(0.1, (t - game.lastTime) / 1000);
             game.lastTime = t;
-            if (canvas.width !== window.innerWidth) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; ctx.imageSmoothingEnabled = false; game.width = canvas.width; game.height = canvas.height; }
-            update(dt); draw();
+            if (canvas.width !== window.innerWidth) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; game.width = canvas.width; game.height = canvas.height; }
+            update(dt);
+            ctx.fillStyle = "#222"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.save(); ctx.translate(-game.camera.x, -game.camera.y);
+            drawWorld();
+            if (game.state === 'PLAYING') {
+                ctx.fillStyle = "white"; ctx.fillRect(game.player.x-16, game.player.y-16, 32, 32);
+                ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x+(game.player.dir===1?12:-24), game.player.y-4, 12, 8);
+            }
+            ctx.restore();
             requestAnimationFrame(loop);
         }
         requestAnimationFrame(loop);
