@@ -3,83 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pato Survival V2.6</title>
+    <title>Pato Survival V2.7 - FINAL</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #111; font-family: sans-serif; position: fixed; }
-        canvas { display: block; image-rendering: pixelated; width: 100vw; height: 100vh; }
+        canvas { display: block; image-rendering: pixelated; width: 100vw; height: 100vh; z-index: 1; }
 
+        /* CAMADAS DE INTERFACE */
         .layer { position: fixed; inset: 0; pointer-events: none; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .hidden { display: none !important; }
         .interactive { pointer-events: auto !important; }
 
-        /* HUD SUPERIOR */
-        #hud-resources { position: absolute; top: 15px; left: 15px; display: flex; gap: 8px; z-index: 50; }
-        .res-badge { background: rgba(0,0,0,0.8); padding: 8px 12px; border-radius: 10px; color: white; border: 1px solid #444; font-size: 14px; font-weight: bold; }
+        /* MENU INICIAL E CONFIGS */
+        #ui-main, #ui-settings { background: rgba(0,0,0,0.9); z-index: 500; }
+        .btn-large { background: #22c55e; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; width: 240px; margin: 10px; box-shadow: 0 4px #166534; cursor: pointer; }
 
-        /* HOTBAR */
-        #hotbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 15px; pointer-events: auto; z-index: 80; }
-        .slot { width: 50px; height: 50px; background: #222; border: 2px solid #555; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; position: relative; }
-        .slot.active { border-color: #fb923c; background: #333; box-shadow: 0 0 10px #fb923c; }
-        .s-qty { position: absolute; bottom: 1px; right: 3px; font-size: 10px; color: white; }
+        /* HUD E RECURSOS */
+        .hud-top { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; z-index: 50; }
+        .badge { background: rgba(0,0,0,0.8); padding: 8px 12px; border-radius: 8px; color: white; border: 1px solid #444; font-size: 13px; font-weight: bold; }
 
-        /* CRAFTING STYLE MINECRAFT */
-        .craft-container { background: #2c2c2c; padding: 20px; border-radius: 15px; border: 4px solid #1a1a1a; width: 340px; color: white; box-shadow: 0 10px 0 #111; }
-        .recipe-grid { display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 300px; overflow-y: auto; padding: 5px; }
-        .recipe-card { background: #3d3d3d; border: 2px solid #555; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
-        .recipe-card.locked { opacity: 0.5; filter: grayscale(1); }
-        .recipe-info b { display: block; font-size: 14px; }
-        .recipe-info span { font-size: 11px; color: #aaa; }
-        .btn-craft { background: #22c55e; border: none; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        /* HOTBAR - CORREÇÃO ABSOLUTA NO RODAPÉ */
+        #hotbar { 
+            position: absolute; 
+            bottom: 5px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            display: flex; 
+            gap: 6px; 
+            background: rgba(0,0,0,0.7); 
+            padding: 6px; 
+            border-radius: 12px; 
+            pointer-events: auto; 
+            z-index: 400; 
+        }
+        .slot { width: 44px; height: 44px; background: #222; border: 2px solid #555; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; position: relative; }
+        .slot.active { border-color: #fb923c; background: #333; box-shadow: 0 0 8px #fb923c; }
+        .qty { position: absolute; bottom: 0px; right: 2px; font-size: 9px; color: white; font-weight: bold; }
 
-        /* ACTIONS */
-        #actions { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
-        .btn-a { width: 80px; height: 80px; border-radius: 20px; border: none; color: white; font-weight: bold; box-shadow: 0 5px rgba(0,0,0,0.4); font-size: 11px; }
+        /* CRAFTING ESTILO MINECRAFT */
+        #ui-crafting { background: rgba(0,0,0,0.85); z-index: 600; }
+        .craft-box { background: #2c2c2c; width: 320px; border-radius: 15px; border: 3px solid #fb923c; padding: 20px; color: white; }
+        .recipe-list { display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; margin: 15px 0; }
+        .recipe-item { background: #3d3d3d; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #555; pointer-events: auto; }
+        .recipe-item.disabled { opacity: 0.4; }
+        .btn-make { background: #22c55e; border: none; color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; }
+
+        /* CONTROLES E AÇÕES */
+        #controls { position: absolute; bottom: 60px; left: 10px; display: grid; grid-template-areas: ". u ." "l . r" ". d ."; gap: 5px; pointer-events: auto; z-index: 300; }
+        .btn-dir { width: 42px; height: 42px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; color: white; display: flex; align-items: center; justify-content: center; }
         
-        #controls { position: absolute; bottom: 20px; left: 20px; display: grid; grid-template-areas: ". u ." "l . r" ". d ."; gap: 5px; pointer-events: auto; }
-        .btn-dir { width: 45px; height: 45px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; display: flex; align-items: center; justify-content: center; }
+        #actions { position: absolute; bottom: 60px; right: 10px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; z-index: 300; }
+        .btn-action { width: 75px; height: 75px; border-radius: 20px; border: none; color: white; font-weight: bold; font-size: 11px; box-shadow: 0 5px rgba(0,0,0,0.4); }
     </style>
 </head>
 <body>
 
-    <div id="ui-menu" class="layer interactive">
-        <h1 style="color:white; margin-bottom:20px;">PATO SURVIVAL V2.6</h1>
-        <button class="btn-a" style="width:200px; background:#22c55e" onclick="game.start()">JOGAR</button>
+    <div id="ui-main" class="layer interactive">
+        <h2 style="color:white; text-shadow: 2px 2px 0 #000;">PATO SURVIVAL V2.7</h2>
+        <button class="btn-large" onclick="game.start()">INICIAR</button>
+        <button class="btn-large" style="background:#475569" onclick="game.toggleSet(true)">AJUSTES</button>
+    </div>
+
+    <div id="ui-settings" class="layer hidden interactive">
+        <div class="craft-box" style="border-color:#475569; text-align:center;">
+            <h3>AJUSTES</h3>
+            <p>Cor do Pato: <input type="color" onchange="game.player.color = this.value" value="#ffffff"></p>
+            <button class="btn-large" style="width:100%" onclick="game.toggleSet(false)">VOLTAR</button>
+        </div>
     </div>
 
     <div id="ui-crafting" class="layer hidden interactive">
-        <div class="craft-container">
-            <h3 id="craft-title">🔨 CRAFTING</h3>
-            <div id="recipe-list" class="recipe-grid"></div>
-            <button class="btn-a" style="width:100%; height:40px; margin-top:15px; background:#ef4444" onclick="game.toggleCraft(false)">FECHAR</button>
+        <div class="craft-box">
+            <h3 id="craft-title" style="margin-top:0">⚒️ CRAFTING</h3>
+            <div id="recipe-list" class="recipe-list"></div>
+            <button class="btn-large" style="width:100%; background:#ef4444" onclick="game.toggleCraft(false)">FECHAR</button>
         </div>
     </div>
 
     <div id="ui-hud" class="layer hidden">
-        <div id="hud-resources">
-            <div class="res-badge">🪵 <span id="w-val">0</span></div>
-            <div class="res-badge">🪨 <span id="s-val">0</span></div>
+        <div class="hud-top">
+            <div class="badge">🪵 <span id="w-val">0</span></div>
+            <div class="badge">🪨 <span id="s-val">0</span></div>
         </div>
 
         <div id="hotbar">
-            <div class="slot active" onclick="game.setSlot(0)">🪵<div class="s-qty" id="h0">0</div></div>
-            <div class="slot" onclick="game.setSlot(1)">🪨<div class="s-qty" id="h1">0</div></div>
-            <div class="slot" onclick="game.setSlot(2)">📦<div class="s-qty" id="h2">0</div></div>
-            <div class="slot" onclick="game.setSlot(3)">⛏️<div class="s-qty" id="h3">0</div></div>
+            <div class="slot active" onclick="game.setSlot(0)">🪵<div class="qty" id="h0">0</div></div>
+            <div class="slot" onclick="game.setSlot(1)">🪨<div class="qty" id="h1">0</div></div>
+            <div class="slot" onclick="game.setSlot(2)">📦<div class="qty" id="h2">0</div></div>
+            <div class="slot" onclick="game.setSlot(3)">⛏️<div class="qty" id="h3">0</div></div>
+            <div class="slot" onclick="game.setSlot(4)">🔥<div class="qty" id="h4">0</div></div>
         </div>
 
         <div id="controls">
-            <div class="btn-dir" style="grid-area:u" id="ctrl-u">▲</div>
-            <div class="btn-dir" style="grid-area:l" id="ctrl-l">◀</div>
-            <div class="btn-dir" style="grid-area:r" id="ctrl-r">▶</div>
-            <div class="btn-dir" style="grid-area:d" id="ctrl-d">▼</div>
+            <div class="btn-dir" style="grid-area:u" id="c-u">▲</div>
+            <div class="btn-dir" style="grid-area:l" id="c-l">◀</div>
+            <div class="btn-dir" style="grid-area:r" id="c-r">▶</div>
+            <div class="btn-dir" style="grid-area:d" id="c-d">▼</div>
         </div>
 
         <div id="actions">
-            <button id="btn-place" class="btn-a hidden" style="background:#2563eb" onclick="game.place()">📍<br>COLOCAR</button>
-            <button id="btn-open-craft" class="btn-a hidden" style="background:#fb923c" onclick="game.toggleCraft(true)">⚒️<br>CRAFT</button>
-            <button id="btn-manual-craft" class="btn-a" style="background:#64748b" onclick="game.toggleCraft(true, true)">🎒<br>INVENTÁRIO</button>
-            <button class="btn-a" style="background:#5d4037" onclick="game.interact()">🪓<br>AÇÃO</button>
+            <button id="btn-place" class="btn-action hidden" style="background:#2563eb" onclick="game.place()">📍<br>COLOCAR</button>
+            <button id="btn-bench" class="btn-action hidden" style="background:#fb923c" onclick="game.toggleCraft(true, false)">⚒️<br>BANCADA</button>
+            <button class="btn-action" style="background:#64748b" onclick="game.toggleCraft(true, true)">🎒<br>INV</button>
+            <button class="btn-action" style="background:#5d4037" onclick="game.interact()">🪓<br>AÇÃO</button>
         </div>
     </div>
 
@@ -91,55 +117,48 @@
 
         const game = {
             state: 'MENU',
-            player: { x: 1000, y: 1000, dir: 1, wood: 0, stone: 0, table: 0, pickaxe: 0, fire: 0, slot: 0 },
+            player: { x: 1000, y: 1000, dir: 1, color: '#ffffff', wood: 0, stone: 0, table: 0, pickaxe: 0, fire: 0, slot: 0 },
             world: { seed: 123, objects: [], removed: new Set() },
             keys: { u:0, d:0, l:0, r:0 },
-
+            
             recipes: [
-                { id: 'table', name: 'Bancada', cost: { wood: 4, stone: 2 }, icon: '📦', needTable: false },
-                { id: 'pickaxe', name: 'Picareta', cost: { wood: 2, stone: 4 }, icon: '⛏️', needTable: true },
-                { id: 'fire', name: 'Fogueira', cost: { wood: 6, stone: 2 }, icon: '🔥', needTable: true }
+                { id: 'table', name: 'Bancada', cost: { wood: 4, stone: 2 }, icon: '📦', bench: false },
+                { id: 'pickaxe', name: 'Picareta', cost: { wood: 3, stone: 5 }, icon: '⛏️', bench: true },
+                { id: 'fire', name: 'Fogueira', cost: { wood: 8, stone: 4 }, icon: '🔥', bench: true }
             ],
 
-            start() { this.state = 'PLAY'; document.getElementById('ui-menu').classList.add('hidden'); document.getElementById('ui-hud').classList.remove('hidden'); },
+            start() { this.state = 'PLAY'; document.getElementById('ui-main').classList.add('hidden'); document.getElementById('ui-hud').classList.remove('hidden'); },
+            toggleSet(s) { document.getElementById('ui-settings').classList.toggle('hidden', !s); },
             
-            toggleCraft(show, manual = false) {
+            toggleCraft(show, manual = true) {
                 this.state = show ? 'UI' : 'PLAY';
-                const el = document.getElementById('ui-crafting');
-                el.classList.toggle('hidden', !show);
+                document.getElementById('ui-crafting').classList.toggle('hidden', !show);
                 if(show) this.renderRecipes(manual);
             },
 
             renderRecipes(manual) {
                 const list = document.getElementById('recipe-list');
-                const title = document.getElementById('craft-title');
-                title.innerText = manual ? "🎒 INVENTÁRIO" : "🔨 BANCADA DE TRABALHO";
+                document.getElementById('craft-title').innerText = manual ? "🎒 INVENTÁRIO" : "⚒️ BANCADA";
                 list.innerHTML = '';
-                
                 this.recipes.forEach(r => {
-                    if(manual && r.needTable) return;
-                    const canAfford = Object.keys(r.cost).every(k => this.player[k] >= r.cost[k]);
-                    const card = document.createElement('div');
-                    card.className = `recipe-card ${canAfford ? '' : 'locked'}`;
-                    card.innerHTML = `
-                        <div class="recipe-info">
-                            <b>${r.icon} ${r.name}</b>
-                            <span>${Object.entries(r.cost).map(([k,v])=>`${v} ${k}`).join(', ')}</span>
-                        </div>
-                        <button class="btn-craft" onclick="game.doCraft('${r.id}')">CRAFT</button>
-                    `;
-                    list.appendChild(card);
+                    if(!manual && !r.bench) return; // Se for bancada, só mostra itens de bancada
+                    if(manual && r.bench) return;  // Se for manual, só mostra itens básicos
+                    
+                    const canCraft = Object.keys(r.cost).every(k => this.player[k] >= r.cost[k]);
+                    const item = document.createElement('div');
+                    item.className = `recipe-item ${canCraft ? '' : 'disabled'}`;
+                    item.innerHTML = `<div><b>${r.icon} ${r.name}</b><br><small>${Object.entries(r.cost).map(([k,v])=>`${v}${k==='wood'?'🪵':'🪨'}`).join(' ')}</small></div>
+                                      <button class="btn-make" onclick="game.doCraft('${r.id}')" ${canCraft?'':'disabled'}>CRAFT</button>`;
+                    list.appendChild(item);
                 });
             },
 
             doCraft(id) {
                 const r = this.recipes.find(x => x.id === id);
-                if(Object.keys(r.cost).every(k => this.player[k] >= r.cost[k])) {
-                    Object.entries(r.cost).forEach(([k,v]) => this.player[k] -= v);
-                    this.player[id]++;
-                    this.updateUI();
-                    this.renderRecipes(this.state === 'UI' && id === 'table');
-                }
+                Object.entries(r.cost).forEach(([k,v]) => this.player[k] -= v);
+                this.player[id]++;
+                this.updateUI();
+                this.renderRecipes(this.player.slot === 0); // Refresh simplificado
             },
 
             interact() {
@@ -148,19 +167,12 @@
                     for(let y=py-2; y<=py+2; y++) {
                         const id = `${x},${y}`;
                         if(this.world.removed.has(id)) continue;
-                        const n = this.getNoise(x,y);
+                        const n = Math.abs(Math.sin(x*12.98 + y*78.23)*43758.54)%1;
                         const dist = Math.hypot(this.player.x-(x*32+16), this.player.y-(y*32+16));
-                        
                         if(dist < 50) {
-                            if(n < 0.02) { // Árvore
-                                this.player.wood++; this.world.removed.add(id); this.updateUI(); return;
-                            } else if(n > 0.02 && n < 0.04) { // Pedrinha Ark
-                                this.player.stone++; this.world.removed.add(id); this.updateUI(); return;
-                            } else if(n > 0.98) { // Rocha Grande
-                                if(this.player.pickaxe > 0) {
-                                    this.player.stone += 3; this.world.removed.add(id); this.updateUI(); return;
-                                }
-                            }
+                            if(n < 0.02) { this.player.wood++; this.world.removed.add(id); this.updateUI(); return; } // Arvore
+                            if(n > 0.02 && n < 0.05) { this.player.stone++; this.world.removed.add(id); this.updateUI(); return; } // Pedra
+                            if(n > 0.97 && this.player.pickaxe > 0) { this.player.stone += 4; this.world.removed.add(id); this.updateUI(); return; } // Rocha
                         }
                     }
                 }
@@ -168,71 +180,68 @@
 
             place() {
                 const p = this.player;
-                const items = { 2: 'table', 3: 'pickaxe', 4: 'fire' }; // Exemplo simples
                 if(p.slot === 2 && p.table > 0) { this.world.objects.push({x:p.x, y:p.y, type:'table'}); p.table--; }
+                if(p.slot === 4 && p.fire > 0) { this.world.objects.push({x:p.x, y:p.y, type:'fire'}); p.fire--; }
                 this.updateUI();
             },
 
             updateUI() {
                 const p = this.player;
-                document.getElementById('w-val').innerText = p.wood;
-                document.getElementById('s-val').innerText = p.stone;
-                document.getElementById('h0').innerText = p.wood;
-                document.getElementById('h1').innerText = p.stone;
-                document.getElementById('h2').innerText = p.table;
-                document.getElementById('h3').innerText = p.pickaxe;
-                document.getElementById('btn-place').classList.toggle('hidden', !(p.slot === 2 && p.table > 0));
+                document.getElementById('w-val').innerText = p.wood; document.getElementById('s-val').innerText = p.stone;
+                document.getElementById('h0').innerText = p.wood; document.getElementById('h1').innerText = p.stone;
+                document.getElementById('h2').innerText = p.table; document.getElementById('h3').innerText = p.pickaxe;
+                document.getElementById('h4').innerText = p.fire;
+                const canPlace = (p.slot===2 && p.table>0) || (p.slot===4 && p.fire>0);
+                document.getElementById('btn-place').classList.toggle('hidden', !canPlace);
             },
 
-            getNoise(x, y) { return (Math.sin(x * 12.98 + y * 78.23 + 123) * 43758.54) % 1; },
-            setSlot(i) { this.player.slot = i; document.querySelectorAll('.slot').forEach((s, idx) => s.classList.toggle('active', idx === i)); this.updateUI(); }
+            setSlot(i) { this.player.slot = i; document.querySelectorAll('.slot').forEach((s,idx)=>s.classList.toggle('active',idx===i)); this.updateUI(); }
         };
 
-        const bind = (id, k) => {
-            const e = document.getElementById(id);
-            e.ontouchstart = () => game.keys[k] = 1; e.ontouchend = () => game.keys[k] = 0;
+        const setupBtn = (id, k) => {
+            const el = document.getElementById(id);
+            el.ontouchstart = (e) => { e.preventDefault(); game.keys[k] = 1; };
+            el.ontouchend = (e) => { e.preventDefault(); game.keys[k] = 0; };
         };
-        bind('ctrl-u','u'); bind('ctrl-d','d'); bind('ctrl-l','l'); bind('ctrl-r','r');
+        setupBtn('c-u','u'); setupBtn('c-d','d'); setupBtn('c-l','l'); setupBtn('c-r','r');
 
         function draw() {
             const cw = canvas.width = window.innerWidth, ch = canvas.height = window.innerHeight;
             if(game.state === 'PLAY') {
                 let mx = game.keys.r - game.keys.l, my = game.keys.d - game.keys.u;
-                if(mx || my) { const m = Math.hypot(mx,my); game.player.x += (mx/m)*3; game.player.y += (my/m)*3; if(mx) game.player.dir = mx > 0 ? 1 : -1; }
+                if(mx || my) { const m = Math.hypot(mx,my); game.player.x += (mx/m)*3.2; game.player.y += (my/m)*3.2; if(mx) game.player.dir = mx>0?1:-1; }
                 game.camera.x = game.player.x - cw/2; game.camera.y = game.player.y - ch/2;
             }
-            ctx.fillStyle = "#111"; ctx.fillRect(0,0,cw,ch);
+            ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0,0,cw,ch);
             ctx.save(); ctx.translate(-game.camera.x, -game.camera.y);
             
-            const startX = Math.floor(game.camera.x/32)-1, endX = Math.ceil((game.camera.x+cw)/32)+1;
-            const startY = Math.floor(game.camera.y/32)-1, endY = Math.ceil((game.camera.y+ch)/32)+1;
-            for(let x=startX; x<=endX; x++) {
-                for(let y=startY; y<=endY; y++) {
-                    const n = Math.abs(game.getNoise(x,y));
+            const sX = Math.floor(game.camera.x/32)-1, eX = Math.ceil((game.camera.x+cw)/32)+1;
+            const sY = Math.floor(game.camera.y/32)-1, eY = Math.ceil((game.camera.y+ch)/32)+1;
+            for(let x=sX; x<=eX; x++) {
+                for(let y=sY; y<=eY; y++) {
+                    const n = Math.abs(Math.sin(x*12.98 + y*78.23)*43758.54)%1;
                     ctx.fillStyle = n > 0.8 ? "#3d6e36" : "#457b3e"; ctx.fillRect(x*32, y*32, 33, 33);
                     if(game.world.removed.has(`${x},${y}`)) continue;
-                    if(n < 0.02) { // Árvore
-                        ctx.fillStyle = "#4a2d18"; ctx.fillRect(x*32+12, y*32+16, 8, 12);
-                        ctx.fillStyle = "#2d5a27"; ctx.fillRect(x*32+4, y*32-4, 24, 20);
-                    } else if (n > 0.02 && n < 0.04) { // Pedrinha
-                        ctx.fillStyle = "#888"; ctx.beginPath(); ctx.arc(x*32+16, y*32+20, 4, 0, 7); ctx.fill();
-                    } else if (n > 0.98) { // Rocha Grande
-                        ctx.fillStyle = "#666"; ctx.fillRect(x*32+4, y*32+4, 24, 24);
-                    }
+                    if(n < 0.02) { ctx.fillStyle="#4a2d18"; ctx.fillRect(x*32+12,y*32+16,8,12); ctx.fillStyle="#2d5a27"; ctx.fillRect(x*32+4,y*32-4,24,20); }
+                    else if(n<0.05) { ctx.fillStyle="#999"; ctx.beginPath(); ctx.arc(x*32+16,y*32+20,4,0,7); ctx.fill(); } // Pedra
+                    else if(n>0.97) { ctx.fillStyle="#666"; ctx.fillRect(x*32+4,y*32+4,24,24); } // Rocha
                 }
             }
 
-            let near = false;
+            let nearBench = false;
             game.world.objects.forEach(o => {
                 if(o.type==='table') { 
-                    ctx.fillStyle = "#5d4037"; ctx.fillRect(o.x-15, o.y-10, 30, 20); 
-                    if(Math.hypot(game.player.x-o.x, game.player.y-o.y) < 60) near = true;
+                    ctx.fillStyle="#5d4037"; ctx.fillRect(o.x-16,o.y-12,32,24); ctx.fillStyle="#3e2723"; ctx.fillRect(o.x-14,o.y-10,28,3);
+                    if(Math.hypot(game.player.x-o.x, game.player.y-o.y) < 60) nearBench = true;
+                } else if(o.type==='fire') {
+                    ctx.fillStyle="#7c2d12"; ctx.fillRect(o.x-10,o.y-2,20,5); ctx.fillStyle="#f97316"; ctx.beginPath(); ctx.arc(o.x,o.y-6,7+Math.random()*2,0,7); ctx.fill();
                 }
             });
-            document.getElementById('btn-open-craft').classList.toggle('hidden', !near);
+            document.getElementById('btn-bench').classList.toggle('hidden', !nearBench);
 
             ctx.fillStyle = game.player.color; ctx.fillRect(game.player.x-16, game.player.y-16, 32, 32);
             ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x+(game.player.dir===1?12:-24), game.player.y-4, 12, 8);
+            ctx.fillStyle = "black"; ctx.fillRect(game.player.x+(game.player.dir===1?6:-10), game.player.y-10, 4, 4);
             ctx.restore(); requestAnimationFrame(draw);
         }
         draw();
