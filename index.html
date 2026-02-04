@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Um Pato e um Sonho - V2.3</title>
+    <title>Um Pato e um Sonho - V2.4</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #111; font-family: sans-serif; position: fixed; }
@@ -12,58 +12,77 @@
         .layer { position: fixed; inset: 0; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .hidden { display: none !important; }
 
-        /* UI MENU & CONFIGS (ESTÁVEIS) */
-        #ui-menu, #ui-settings { z-index: 100; background: rgba(0,0,0,0.8); pointer-events: auto; color: white; }
-        .btn-ui { background: #22c55e; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 220px; margin: 8px; box-shadow: 0 4px #166534; cursor: pointer; }
-        .btn-config { background: #64748b; box-shadow: 0 4px #334155; }
+        /* MENUS */
+        #ui-menu, #ui-settings { z-index: 100; background: rgba(0,0,0,0.85); pointer-events: auto; color: white; }
+        .btn-ui { background: #22c55e; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 240px; margin: 8px; box-shadow: 0 4px #166534; cursor: pointer; }
+        
+        /* HUD E HOTBAR (CORRIGIDA) */
+        .hud-top { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.7); padding: 8px 15px; border-radius: 10px; color: white; font-weight: bold; }
+        
+        #hotbar { 
+            position: absolute; 
+            bottom: 20px; /* Movida para baixo */
+            left: 50%; 
+            transform: translateX(-50%); 
+            display: flex; 
+            gap: 10px; 
+            pointer-events: auto; 
+            z-index: 70;
+            background: rgba(0,0,0,0.4);
+            padding: 8px;
+            border-radius: 15px;
+        }
+        .slot { width: 50px; height: 50px; background: rgba(40,40,40,0.9); border: 3px solid #555; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; position: relative; }
+        .slot.active { border-color: #fb923c; background: #444; box-shadow: 0 0 10px #fb923c; }
+        .slot-count { position: absolute; bottom: 2px; right: 4px; font-size: 12px; color: white; text-shadow: 1px 1px 0 #000; }
 
-        /* HUD SUPERIOR */
-        .hud-top { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.7); padding: 8px 15px; border-radius: 10px; color: white; font-weight: bold; border: 1px solid #444; }
+        /* CONTROLES COMPACTOS */
+        #controls-container { position: absolute; bottom: 20px; left: 20px; display: grid; grid-template-areas: ". up ." "left . right" ". down ."; gap: 5px; pointer-events: auto; }
+        .btn-arrow { width: 45px; height: 45px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
 
-        /* HOTBAR (NOVO) */
-        #hotbar { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: auto; }
-        .slot { width: 45px; height: 45px; background: rgba(0,0,0,0.6); border: 2px solid #555; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; position: relative; }
-        .slot.active { border-color: #fb923c; background: rgba(251, 146, 60, 0.2); }
-        .slot-count { position: absolute; bottom: -2px; right: 2px; font-size: 10px; color: white; font-weight: bold; }
-
-        /* CONTROLES */
-        #controls-container { position: absolute; bottom: 10px; left: 10px; display: grid; grid-template-areas: ". up ." "left . right" ". down ."; gap: 4px; pointer-events: auto; }
-        .btn-arrow { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
-
-        #action-container { position: absolute; bottom: 15px; right: 15px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
-        .btn-action { width: 75px; height: 75px; border-radius: 20px; color: white; font-weight: bold; font-size: 11px; border: none; box-shadow: 0 5px rgba(0,0,0,0.4); }
+        #action-container { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
+        .btn-action { width: 85px; height: 85px; border-radius: 25px; color: white; font-weight: bold; font-size: 12px; border: none; box-shadow: 0 6px rgba(0,0,0,0.4); }
         .collect { background: #5d4037; }
         .place { background: #2563eb; }
-        .craft { background: #fb923c; }
+        .craft-btn { background: #fb923c; }
 
-        /* MENU CRAFTING */
-        #ui-crafting { z-index: 60; background: rgba(0,0,0,0.85); pointer-events: auto; }
-        .craft-window { background: #333; padding: 20px; border-radius: 15px; width: 280px; color: white; border: 3px solid #555; }
+        /* CRAFTING WINDOW */
+        #ui-crafting { z-index: 110; background: rgba(0,0,0,0.9); pointer-events: auto; }
+        .craft-window { background: #222; padding: 25px; border-radius: 20px; border: 3px solid #fb923c; width: 300px; color: white; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="ui-menu" class="layer">
-        <h2>PATO SURVIVAL V2.3</h2>
-        <button class="btn-ui" onclick="game.startGame()">JOGAR</button>
-        <button class="btn-ui btn-config" onclick="game.showSettings(true)">AJUSTES</button>
+        <h2>UM PATO E UM SONHO</h2>
+        <button class="btn-ui" onclick="game.startGame()">INICIAR</button>
+        <button class="btn-ui" style="background:#64748b" onclick="game.showSettings(true)">AJUSTES</button>
     </div>
 
     <div id="ui-settings" class="layer hidden">
-        <div style="background:#222; padding:20px; border-radius:15px; border:2px solid #444; width:280px;">
+        <div class="craft-window" style="border-color:#64748b">
             <h3>AJUSTES</h3>
-            <label>Cor do Pato: <input type="color" onchange="game.updateColor(this.value)" value="#ffffff"></label>
-            <button class="btn-ui" style="width:100%; margin-top:15px;" onclick="game.showSettings(false)">VOLTAR</button>
+            <p>Cor: <input type="color" onchange="game.player.color = this.value" value="#ffffff"></p>
+            <button class="btn-ui" style="width:100%" onclick="game.showSettings(false)">FECHAR</button>
+        </div>
+    </div>
+
+    <div id="ui-crafting" class="layer hidden">
+        <div class="craft-window">
+            <h3>BANCADA</h3>
+            <button class="btn-ui" style="width:100%; background:#5d4037" onclick="game.craft('table', 2)">📦 Bancada (2 Wood)</button>
+            <button class="btn-ui" style="width:100%; background:#7c2d12" onclick="game.craft('fire', 3)">🔥 Fogueira (3 Wood)</button>
+            <button class="btn-ui" style="width:100%; background:#444" onclick="game.showCrafting(false)">SAIR</button>
         </div>
     </div>
 
     <div id="ui-hud" class="layer hidden" style="justify-content: flex-start;">
-        <div class="hud-top">🪵 Madeira: <span id="wood-count">0</span></div>
+        <div class="hud-top">🪵 Madeira: <span id="wood-val">0</span></div>
 
         <div id="hotbar">
-            <div class="slot active" onclick="game.selectSlot(0)">🪵<div class="slot-count" id="s0-qty">0</div></div>
-            <div class="slot" onclick="game.selectSlot(1)" id="slot-table">📦<div class="slot-count" id="s1-qty">0</div></div>
-            <div class="slot" onclick="game.selectSlot(2)" id="slot-fire">🔥<div class="slot-count" id="s2-qty">0</div></div>
+            <div class="slot active" onclick="game.selectSlot(0)">🪵<div class="slot-count" id="s0-q">0</div></div>
+            <div class="slot" onclick="game.selectSlot(1)">📦<div class="slot-count" id="s1-q">0</div></div>
+            <div class="slot" onclick="game.selectSlot(2)">🔥<div class="slot-count" id="s2-q">0</div></div>
         </div>
 
         <div id="controls-container">
@@ -74,18 +93,9 @@
         </div>
 
         <div id="action-container">
-            <button id="btn-place" class="btn-action place hidden" onclick="game.placeObject()">📍<br>POSICIONAR</button>
-            <button id="btn-open-craft" class="btn-action craft hidden" onclick="game.showCrafting(true)">⚒️<br>CRAFT</button>
+            <button id="btn-place" class="btn-action place hidden" onclick="game.place()">📍<br>POSICIONAR</button>
+            <button id="btn-craft-open" class="btn-action craft-btn hidden" onclick="game.showCrafting(true)">⚒️<br>CRAFT</button>
             <button class="btn-action collect" onclick="game.interact()">🪓<br>AÇÃO</button>
-        </div>
-    </div>
-
-    <div id="ui-crafting" class="layer hidden">
-        <div class="craft-window">
-            <h3>CRAFTING</h3>
-            <button class="btn-ui" style="width:100%; background:#5d4037" onclick="game.craft('table', 2)">📦 Bancada (2 Madeira)</button>
-            <button class="btn-ui" style="width:100%; background:#7c2d12" onclick="game.craft('campfire', 3)">🔥 Fogueira (3 Madeira)</button>
-            <button class="btn-ui" style="width:100%; background:#444" onclick="game.showCrafting(false)">FECHAR</button>
         </div>
     </div>
 
@@ -96,10 +106,10 @@
         const ctx = canvas.getContext('2d', { alpha: false });
 
         const game = {
-            state: 'MENU', lastTime: 0,
-            player: { x: 1000, y: 1000, dir: 1, color: '#ffffff', wood: 0, table: 0, fire: 0, selectedSlot: 0 },
+            state: 'MENU',
+            player: { x: 1000, y: 1000, dir: 1, color: '#ffffff', wood: 0, table: 0, fire: 0, slot: 0 },
             camera: { x: 1000, y: 1000 },
-            world: { seed: 777, removedItems: new Set(), placedObjects: [] },
+            world: { seed: 123, removed: new Set(), objects: [] },
             keys: { up: false, down: false, left: false, right: false },
 
             startGame() {
@@ -108,29 +118,25 @@
                 document.getElementById('ui-hud').classList.remove('hidden');
             },
             showSettings(s) { document.getElementById('ui-settings').classList.toggle('hidden', !s); },
-            updateColor(c) { this.player.color = c; },
-            showCrafting(s) { this.state = s ? 'CRAFT' : 'PLAYING'; document.getElementById('ui-crafting').classList.toggle('hidden', !s); },
-            
+            showCrafting(s) { this.state = s ? 'MENU' : 'PLAYING'; document.getElementById('ui-crafting').classList.toggle('hidden', !s); },
             selectSlot(i) {
-                this.player.selectedSlot = i;
+                this.player.slot = i;
                 document.querySelectorAll('.slot').forEach((s, idx) => s.classList.toggle('active', idx === i));
                 this.updateUI();
             },
-
             interact() {
                 const sx = Math.floor(this.player.x/32)-2, sy = Math.floor(this.player.y/32)-2;
                 for(let x=sx; x<=sx+4; x++) {
                     for(let y=sy; y<=sy+4; y++) {
                         const id = `${x},${y}`;
-                        if(seededRandom(x,y) < 0.02 && !this.world.removedItems.has(id)) {
+                        if(seededRandom(x,y) < 0.02 && !this.world.removed.has(id)) {
                             if(Math.hypot(this.player.x-(x*32+16), this.player.y-(y*32+16)) < 45) {
-                                this.world.removedItems.add(id); this.player.wood++; this.updateUI(); return;
+                                this.world.removed.add(id); this.player.wood++; this.updateUI(); return;
                             }
                         }
                     }
                 }
             },
-
             craft(item, cost) {
                 if(this.player.wood >= cost) {
                     this.player.wood -= cost;
@@ -138,26 +144,19 @@
                     this.updateUI();
                 }
             },
-
-            placeObject() {
-                if(this.player.selectedSlot === 1 && this.player.table > 0) {
-                    this.world.placedObjects.push({ x: this.player.x, y: this.player.y, type: 'table' });
-                    this.player.table--;
-                } else if(this.player.selectedSlot === 2 && this.player.fire > 0) {
-                    this.world.placedObjects.push({ x: this.player.x, y: this.player.y, type: 'fire' });
-                    this.player.fire--;
-                }
+            place() {
+                const p = this.player;
+                if(p.slot === 1 && p.table > 0) { this.world.objects.push({x:p.x, y:p.y, type:'table'}); p.table--; }
+                else if(p.slot === 2 && p.fire > 0) { this.world.objects.push({x:p.x, y:p.y, type:'fire'}); p.fire--; }
                 this.updateUI();
             },
-
             updateUI() {
-                document.getElementById('wood-count').innerText = this.player.wood;
-                document.getElementById('s0-qty').innerText = this.player.wood;
-                document.getElementById('s1-qty').innerText = this.player.table;
-                document.getElementById('s2-qty').innerText = this.player.fire;
-                
-                // Mostrar botão de posicionar apenas se tiver item no slot 1 ou 2
-                const hasItem = (this.player.selectedSlot === 1 && this.player.table > 0) || (this.player.selectedSlot === 2 && this.player.fire > 0);
+                const p = this.player;
+                document.getElementById('wood-val').innerText = p.wood;
+                document.getElementById('s0-q').innerText = p.wood;
+                document.getElementById('s1-q').innerText = p.table;
+                document.getElementById('s2-q').innerText = p.fire;
+                const hasItem = (p.slot === 1 && p.table > 0) || (p.slot === 2 && p.fire > 0);
                 document.getElementById('btn-place').classList.toggle('hidden', !hasItem);
             }
         };
@@ -170,40 +169,42 @@
         bind('btn-up', 'up'); bind('btn-down', 'down'); bind('btn-left', 'left'); bind('btn-right', 'right');
 
         function seededRandom(x, y) {
-            const val = Math.sin(x * 12.9898 + y * 78.233 + game.world.seed) * 43758.5453;
-            return val - Math.floor(val);
+            const v = Math.sin(x * 12.98 + y * 78.23 + 123) * 43758.54;
+            return v - Math.floor(v);
         }
 
         function drawWorld() {
-            const startX = Math.floor(game.camera.x/32)-1, endX = Math.ceil((game.camera.x+canvas.width)/32)+1;
-            const startY = Math.floor(game.camera.y/32)-1, endY = Math.ceil((game.camera.y+canvas.height)/32)+1;
+            const cw = window.innerWidth, ch = window.innerHeight;
+            const startX = Math.floor(game.camera.x/32)-1, endX = Math.ceil((game.camera.x+cw)/32)+1;
+            const startY = Math.floor(game.camera.y/32)-1, endY = Math.ceil((game.camera.y+ch)/32)+1;
             for(let x=startX; x<=endX; x++) {
                 for(let y=startY; y<=endY; y++) {
                     const n = seededRandom(x,y);
-                    ctx.fillStyle = n > 0.8 ? "#4a7a42" : "#558c4c";
+                    ctx.fillStyle = n > 0.8 ? "#457b3e" : "#4e8546";
                     ctx.fillRect(x*32, y*32, 33, 33);
-                    if(n < 0.02 && !game.world.removedItems.has(`${x},${y}`)) {
+                    if(n < 0.02 && !game.world.removed.has(`${x},${y}`)) {
                         ctx.fillStyle = "#4a2d18"; ctx.fillRect(x*32+12, y*32+16, 8, 12);
                         ctx.fillStyle = "#2d5a27"; ctx.fillRect(x*32+4, y*32-4, 24, 20);
                     }
                 }
             }
-            let nearTable = false;
-            game.world.placedObjects.forEach(obj => {
+            let near = false;
+            game.world.objects.forEach(obj => {
                 if(obj.type === 'table') {
-                    ctx.fillStyle = "#5d4037"; ctx.fillRect(obj.x-14, obj.y-10, 28, 20);
-                    if(Math.hypot(game.player.x-obj.x, game.player.y-obj.y) < 50) nearTable = true;
+                    ctx.fillStyle = "#5d4037"; ctx.fillRect(obj.x-15, obj.y-10, 30, 20);
+                    ctx.fillStyle = "#3e2723"; ctx.fillRect(obj.x-12, obj.y-8, 24, 2);
+                    if(Math.hypot(game.player.x-obj.x, game.player.y-obj.y) < 60) near = true;
                 } else {
                     ctx.fillStyle = "#7c2d12"; ctx.fillRect(obj.x-10, obj.y-2, 20, 5);
-                    ctx.fillStyle = "#f97316"; ctx.beginPath(); ctx.arc(obj.x, obj.y-6, 6 + Math.random()*2, 0, 7); ctx.fill();
+                    ctx.fillStyle = "#f97316"; ctx.beginPath(); ctx.arc(obj.x, obj.y-6, 7 + Math.random()*2, 0, 7); ctx.fill();
                 }
             });
-            document.getElementById('btn-open-craft').classList.toggle('hidden', !nearTable);
+            document.getElementById('btn-craft-open').classList.toggle('hidden', !near);
         }
 
         function loop(t) {
-            let dt = Math.min(0.1, (t - game.lastTime)/1000); game.lastTime = t;
-            if (canvas.width !== window.innerWidth) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; ctx.imageSmoothingEnabled = false; }
+            let dt = Math.min(0.1, (t - (game.lastTime || t))/1000); game.lastTime = t;
+            if (canvas.width !== window.innerWidth) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
             if (game.state === 'PLAYING') {
                 let mx=0, my=0;
                 if(game.keys.up) my--; if(game.keys.down) my++; if(game.keys.left) { mx--; game.player.dir=-1; } if(game.keys.right) { mx++; game.player.dir=1; }
