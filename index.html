@@ -3,99 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Um Pato e um Sonho - V2.4</title>
+    <title>Um Pato e um Sonho - V2.5</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #111; font-family: sans-serif; position: fixed; }
-        canvas { display: block; image-rendering: pixelated; width: 100vw; height: 100vh; }
+        canvas { display: block; image-rendering: pixelated; width: 100vw; height: 100vh; z-index: 1; }
 
-        .layer { position: fixed; inset: 0; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        /* CAMADAS DE INTERFACE */
+        .layer { position: fixed; inset: 0; pointer-events: none; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .interactive { pointer-events: auto !important; }
         .hidden { display: none !important; }
 
-        /* MENUS */
-        #ui-menu, #ui-settings { z-index: 100; background: rgba(0,0,0,0.85); pointer-events: auto; color: white; }
-        .btn-ui { background: #22c55e; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 240px; margin: 8px; box-shadow: 0 4px #166534; cursor: pointer; }
+        /* ESTILO DOS BOTÕES */
+        .btn-ui { background: #22c55e; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 250px; margin: 10px; box-shadow: 0 4px #166534; cursor: pointer; pointer-events: auto; }
+        .btn-cancel { background: #ef4444; box-shadow: 0 4px #991b1b; }
+
+        /* HUD & HOTBAR */
+        .hud-top { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 12px; color: white; border: 1px solid #444; z-index: 50; }
         
-        /* HUD E HOTBAR (CORRIGIDA) */
-        .hud-top { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.7); padding: 8px 15px; border-radius: 10px; color: white; font-weight: bold; }
-        
-        #hotbar { 
-            position: absolute; 
-            bottom: 20px; /* Movida para baixo */
-            left: 50%; 
-            transform: translateX(-50%); 
-            display: flex; 
-            gap: 10px; 
-            pointer-events: auto; 
-            z-index: 70;
-            background: rgba(0,0,0,0.4);
-            padding: 8px;
-            border-radius: 15px;
-        }
-        .slot { width: 50px; height: 50px; background: rgba(40,40,40,0.9); border: 3px solid #555; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; position: relative; }
-        .slot.active { border-color: #fb923c; background: #444; box-shadow: 0 0 10px #fb923c; }
-        .slot-count { position: absolute; bottom: 2px; right: 4px; font-size: 12px; color: white; text-shadow: 1px 1px 0 #000; }
+        #hotbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 18px; pointer-events: auto; z-index: 80; }
+        .slot { width: 55px; height: 55px; background: #222; border: 3px solid #444; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 26px; position: relative; transition: 0.2s; }
+        .slot.active { border-color: #fb923c; background: #333; transform: scale(1.1); }
+        .slot-count { position: absolute; bottom: 2px; right: 5px; font-size: 12px; font-weight: bold; color: #fff; }
 
-        /* CONTROLES COMPACTOS */
-        #controls-container { position: absolute; bottom: 20px; left: 20px; display: grid; grid-template-areas: ". up ." "left . right" ". down ."; gap: 5px; pointer-events: auto; }
-        .btn-arrow { width: 45px; height: 45px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        /* CONTROLES */
+        #controls { position: absolute; bottom: 20px; left: 20px; display: grid; grid-template-areas: ". u ." "l . r" ". d ."; gap: 8px; pointer-events: auto; }
+        .btn-arrow { width: 48px; height: 48px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
 
-        #action-container { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
-        .btn-action { width: 85px; height: 85px; border-radius: 25px; color: white; font-weight: bold; font-size: 12px; border: none; box-shadow: 0 6px rgba(0,0,0,0.4); }
-        .collect { background: #5d4037; }
-        .place { background: #2563eb; }
-        .craft-btn { background: #fb923c; }
+        #actions { position: absolute; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
+        .btn-action { width: 85px; height: 85px; border-radius: 25px; border: none; color: white; font-weight: bold; box-shadow: 0 6px rgba(0,0,0,0.4); }
 
-        /* CRAFTING WINDOW */
-        #ui-crafting { z-index: 110; background: rgba(0,0,0,0.9); pointer-events: auto; }
-        .craft-window { background: #222; padding: 25px; border-radius: 20px; border: 3px solid #fb923c; width: 300px; color: white; text-align: center; }
+        /* MENU DE CRAFTING MELHORADO */
+        .craft-panel { background: #1a1a1a; padding: 30px; border-radius: 25px; border: 4px solid #fb923c; width: 320px; text-align: center; color: white; }
+        .recipe { background: #333; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; pointer-events: auto; border: 1px solid #444; }
+        .recipe:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
 
-    <div id="ui-menu" class="layer">
-        <h2>UM PATO E UM SONHO</h2>
-        <button class="btn-ui" onclick="game.startGame()">INICIAR</button>
-        <button class="btn-ui" style="background:#64748b" onclick="game.showSettings(true)">AJUSTES</button>
+    <div id="ui-menu" class="layer interactive">
+        <h1 style="color:white; text-shadow: 0 4px #000;">PATO SURVIVAL V2.5</h1>
+        <button class="btn-ui" onclick="game.startGame()">INICIAR JORNADA</button>
+        <button class="btn-ui" style="background:#475569" onclick="game.toggleSettings(true)">CONFIGURAÇÕES</button>
     </div>
 
-    <div id="ui-settings" class="layer hidden">
-        <div class="craft-window" style="border-color:#64748b">
+    <div id="ui-settings" class="layer hidden interactive">
+        <div class="craft-panel" style="border-color:#475569">
             <h3>AJUSTES</h3>
-            <p>Cor: <input type="color" onchange="game.player.color = this.value" value="#ffffff"></p>
-            <button class="btn-ui" style="width:100%" onclick="game.showSettings(false)">FECHAR</button>
+            <div style="margin:20px 0;">Cor do Pato: <input type="color" id="pColor" onchange="game.player.color = this.value" value="#ffffff"></div>
+            <button class="btn-ui" style="width:100%" onclick="game.toggleSettings(false)">SALVAR</button>
         </div>
     </div>
 
-    <div id="ui-crafting" class="layer hidden">
-        <div class="craft-window">
-            <h3>BANCADA</h3>
-            <button class="btn-ui" style="width:100%; background:#5d4037" onclick="game.craft('table', 2)">📦 Bancada (2 Wood)</button>
-            <button class="btn-ui" style="width:100%; background:#7c2d12" onclick="game.craft('fire', 3)">🔥 Fogueira (3 Wood)</button>
-            <button class="btn-ui" style="width:100%; background:#444" onclick="game.showCrafting(false)">SAIR</button>
+    <div id="ui-crafting" class="layer hidden interactive">
+        <div class="craft-panel">
+            <h2 style="margin-top:0">⚒️ BANCADA</h2>
+            
+            <div class="recipe" onclick="game.craftItem('table', 2)">
+                <span>📦 Bancada de Trabalho</span>
+                <small style="color:#22c55e">Custo: 2 Madeiras</small>
+            </div>
+
+            <div class="recipe" onclick="game.craftItem('fire', 3)">
+                <span>🔥 Fogueira</span>
+                <small style="color:#22c55e">Custo: 3 Madeiras</small>
+            </div>
+
+            <button class="btn-ui btn-cancel" style="width:100%; margin-top:10px" onclick="game.toggleCraft(false)">FECHAR</button>
         </div>
     </div>
 
-    <div id="ui-hud" class="layer hidden" style="justify-content: flex-start;">
-        <div class="hud-top">🪵 Madeira: <span id="wood-val">0</span></div>
+    <div id="ui-hud" class="layer hidden">
+        <div class="hud-top">🪵 Madeira: <span id="wood-txt">0</span></div>
 
         <div id="hotbar">
-            <div class="slot active" onclick="game.selectSlot(0)">🪵<div class="slot-count" id="s0-q">0</div></div>
-            <div class="slot" onclick="game.selectSlot(1)">📦<div class="slot-count" id="s1-q">0</div></div>
-            <div class="slot" onclick="game.selectSlot(2)">🔥<div class="slot-count" id="s2-q">0</div></div>
+            <div class="slot active" onclick="game.setSlot(0)">🪵<div class="slot-count" id="s0-v">0</div></div>
+            <div class="slot" onclick="game.setSlot(1)">📦<div class="slot-count" id="s1-v">0</div></div>
+            <div class="slot" onclick="game.setSlot(2)">🔥<div class="slot-count" id="s2-v">0</div></div>
         </div>
 
-        <div id="controls-container">
-            <div class="btn-arrow" style="grid-area:up" id="btn-up">▲</div>
-            <div class="btn-arrow" style="grid-area:left" id="btn-left">◀</div>
-            <div class="btn-arrow" style="grid-area:right" id="btn-right">▶</div>
-            <div class="btn-arrow" style="grid-area:down" id="btn-down">▼</div>
+        <div id="controls">
+            <div class="btn-arrow" style="grid-area:u" id="b-u">▲</div>
+            <div class="btn-arrow" style="grid-area:l" id="b-l">◀</div>
+            <div class="btn-arrow" style="grid-area:r" id="b-r">▶</div>
+            <div class="btn-arrow" style="grid-area:d" id="b-d">▼</div>
         </div>
 
-        <div id="action-container">
-            <button id="btn-place" class="btn-action place hidden" onclick="game.place()">📍<br>POSICIONAR</button>
-            <button id="btn-craft-open" class="btn-action craft-btn hidden" onclick="game.showCrafting(true)">⚒️<br>CRAFT</button>
-            <button class="btn-action collect" onclick="game.interact()">🪓<br>AÇÃO</button>
+        <div id="actions">
+            <button id="btn-place" class="btn-action hidden" style="background:#2563eb" onclick="game.placeObject()">📍<br>COLOCAR</button>
+            <button id="btn-open-craft" class="btn-action hidden" style="background:#fb923c" onclick="game.toggleCraft(true)">⚒️<br>ABRIR</button>
+            <button class="btn-action" style="background:#5d4037" onclick="game.playerAction()">🪓<br>AÇÃO</button>
         </div>
     </div>
 
@@ -109,78 +106,99 @@
             state: 'MENU',
             player: { x: 1000, y: 1000, dir: 1, color: '#ffffff', wood: 0, table: 0, fire: 0, slot: 0 },
             camera: { x: 1000, y: 1000 },
-            world: { seed: 123, removed: new Set(), objects: [] },
-            keys: { up: false, down: false, left: false, right: false },
+            world: { seed: 999, removed: new Set(), objects: [] },
+            keys: { u:0, d:0, l:0, r:0 },
 
             startGame() {
-                this.state = 'PLAYING';
+                this.state = 'PLAY';
                 document.getElementById('ui-menu').classList.add('hidden');
                 document.getElementById('ui-hud').classList.remove('hidden');
             },
-            showSettings(s) { document.getElementById('ui-settings').classList.toggle('hidden', !s); },
-            showCrafting(s) { this.state = s ? 'MENU' : 'PLAYING'; document.getElementById('ui-crafting').classList.toggle('hidden', !s); },
-            selectSlot(i) {
+            toggleSettings(s) { document.getElementById('ui-settings').classList.toggle('hidden', !s); },
+            toggleCraft(s) { 
+                this.state = s ? 'CRAFTING' : 'PLAY'; 
+                document.getElementById('ui-crafting').classList.toggle('hidden', !s); 
+            },
+            setSlot(i) {
                 this.player.slot = i;
                 document.querySelectorAll('.slot').forEach((s, idx) => s.classList.toggle('active', idx === i));
                 this.updateUI();
             },
-            interact() {
-                const sx = Math.floor(this.player.x/32)-2, sy = Math.floor(this.player.y/32)-2;
-                for(let x=sx; x<=sx+4; x++) {
-                    for(let y=sy; y<=sy+4; y++) {
+            playerAction() {
+                // Tenta coletar madeira
+                const px = Math.floor(this.player.x/32)-2, py = Math.floor(this.player.y/32)-2;
+                for(let x=px; x<=px+4; x++) {
+                    for(let y=py; y<=py+4; y++) {
                         const id = `${x},${y}`;
-                        if(seededRandom(x,y) < 0.02 && !this.world.removed.has(id)) {
-                            if(Math.hypot(this.player.x-(x*32+16), this.player.y-(y*32+16)) < 45) {
+                        if(this.getNoise(x,y) < 0.02 && !this.world.removed.has(id)) {
+                            if(Math.hypot(this.player.x-(x*32+16), this.player.y-(y*32+16)) < 50) {
                                 this.world.removed.add(id); this.player.wood++; this.updateUI(); return;
                             }
                         }
                     }
                 }
             },
-            craft(item, cost) {
+            craftItem(type, cost) {
                 if(this.player.wood >= cost) {
                     this.player.wood -= cost;
-                    this.player[item]++;
+                    this.player[type]++;
                     this.updateUI();
+                    console.log("Crafted:", type);
+                } else {
+                    alert("Madeira insuficiente!");
                 }
             },
-            place() {
+            placeObject() {
                 const p = this.player;
                 if(p.slot === 1 && p.table > 0) { this.world.objects.push({x:p.x, y:p.y, type:'table'}); p.table--; }
-                else if(p.slot === 2 && p.fire > 0) { this.world.objects.push({x:p.x, y:p.y, type:'fire'}); p.fire--; }
+                if(p.slot === 2 && p.fire > 0) { this.world.objects.push({x:p.x, y:p.y, type:'fire'}); p.fire--; }
                 this.updateUI();
             },
             updateUI() {
                 const p = this.player;
-                document.getElementById('wood-val').innerText = p.wood;
-                document.getElementById('s0-q').innerText = p.wood;
-                document.getElementById('s1-q').innerText = p.table;
-                document.getElementById('s2-q').innerText = p.fire;
-                const hasItem = (p.slot === 1 && p.table > 0) || (p.slot === 2 && p.fire > 0);
-                document.getElementById('btn-place').classList.toggle('hidden', !hasItem);
+                document.getElementById('wood-txt').innerText = p.wood;
+                document.getElementById('s0-v').innerText = p.wood;
+                document.getElementById('s1-v').innerText = p.table;
+                document.getElementById('s2-v').innerText = p.fire;
+                const canPlace = (p.slot === 1 && p.table > 0) || (p.slot === 2 && p.fire > 0);
+                document.getElementById('btn-place').classList.toggle('hidden', !canPlace);
+            },
+            getNoise(x, y) {
+                const v = Math.sin(x * 12.98 + y * 78.23 + 999) * 43758.54;
+                return v - Math.floor(v);
             }
         };
 
-        const bind = (id, k) => {
-            const el = document.getElementById(id);
-            el.addEventListener('touchstart', e => { e.preventDefault(); game.keys[k] = true; });
-            el.addEventListener('touchend', e => { e.preventDefault(); game.keys[k] = false; });
+        // Input Setup
+        const setupBtn = (id, k) => {
+            const e = document.getElementById(id);
+            e.ontouchstart = () => { game.keys[k] = 1; };
+            e.ontouchend = () => { game.keys[k] = 0; };
         };
-        bind('btn-up', 'up'); bind('btn-down', 'down'); bind('btn-left', 'left'); bind('btn-right', 'right');
+        setupBtn('b-u','u'); setupBtn('b-d','d'); setupBtn('b-l','l'); setupBtn('b-r','r');
 
-        function seededRandom(x, y) {
-            const v = Math.sin(x * 12.98 + y * 78.23 + 123) * 43758.54;
-            return v - Math.floor(v);
-        }
+        function draw() {
+            const cw = canvas.width = window.innerWidth, ch = canvas.height = window.innerHeight;
+            if(game.state === 'PLAY') {
+                let mx = game.keys.r - game.keys.l, my = game.keys.d - game.keys.u;
+                if(mx || my) {
+                    const m = Math.hypot(mx,my);
+                    game.player.x += (mx/m) * 3; game.player.y += (my/m) * 3;
+                    if(mx !== 0) game.player.dir = mx > 0 ? 1 : -1;
+                }
+                game.camera.x = game.player.x - cw/2; game.camera.y = game.player.y - ch/2;
+            }
 
-        function drawWorld() {
-            const cw = window.innerWidth, ch = window.innerHeight;
+            ctx.fillStyle = "#111"; ctx.fillRect(0,0,cw,ch);
+            ctx.save(); ctx.translate(-game.camera.x, -game.camera.y);
+
+            // Chão e Árvores
             const startX = Math.floor(game.camera.x/32)-1, endX = Math.ceil((game.camera.x+cw)/32)+1;
             const startY = Math.floor(game.camera.y/32)-1, endY = Math.ceil((game.camera.y+ch)/32)+1;
             for(let x=startX; x<=endX; x++) {
                 for(let y=startY; y<=endY; y++) {
-                    const n = seededRandom(x,y);
-                    ctx.fillStyle = n > 0.8 ? "#457b3e" : "#4e8546";
+                    const n = game.getNoise(x,y);
+                    ctx.fillStyle = n > 0.8 ? "#3d6e36" : "#457b3e";
                     ctx.fillRect(x*32, y*32, 33, 33);
                     if(n < 0.02 && !game.world.removed.has(`${x},${y}`)) {
                         ctx.fillStyle = "#4a2d18"; ctx.fillRect(x*32+12, y*32+16, 8, 12);
@@ -188,43 +206,29 @@
                     }
                 }
             }
-            let near = false;
-            game.world.objects.forEach(obj => {
-                if(obj.type === 'table') {
-                    ctx.fillStyle = "#5d4037"; ctx.fillRect(obj.x-15, obj.y-10, 30, 20);
-                    ctx.fillStyle = "#3e2723"; ctx.fillRect(obj.x-12, obj.y-8, 24, 2);
-                    if(Math.hypot(game.player.x-obj.x, game.player.y-obj.y) < 60) near = true;
+
+            // Objetos Construídos
+            let nearTable = false;
+            game.world.objects.forEach(o => {
+                if(o.type === 'table') {
+                    ctx.fillStyle = "#5d4037"; ctx.fillRect(o.x-15, o.y-10, 30, 20);
+                    if(Math.hypot(game.player.x-o.x, game.player.y-o.y) < 60) nearTable = true;
                 } else {
-                    ctx.fillStyle = "#7c2d12"; ctx.fillRect(obj.x-10, obj.y-2, 20, 5);
-                    ctx.fillStyle = "#f97316"; ctx.beginPath(); ctx.arc(obj.x, obj.y-6, 7 + Math.random()*2, 0, 7); ctx.fill();
+                    ctx.fillStyle = "#7c2d12"; ctx.fillRect(o.x-10, o.y-2, 20, 5);
+                    ctx.fillStyle = "#f97316"; ctx.beginPath(); ctx.arc(o.x, o.y-6, 7 + Math.random()*2, 0, 7); ctx.fill();
                 }
             });
-            document.getElementById('btn-craft-open').classList.toggle('hidden', !near);
-        }
+            document.getElementById('btn-open-craft').classList.toggle('hidden', !nearTable);
 
-        function loop(t) {
-            let dt = Math.min(0.1, (t - (game.lastTime || t))/1000); game.lastTime = t;
-            if (canvas.width !== window.innerWidth) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-            if (game.state === 'PLAYING') {
-                let mx=0, my=0;
-                if(game.keys.up) my--; if(game.keys.down) my++; if(game.keys.left) { mx--; game.player.dir=-1; } if(game.keys.right) { mx++; game.player.dir=1; }
-                if(mx!==0 || my!==0) {
-                    const m = Math.hypot(mx,my);
-                    game.player.x += (mx/m)*160*dt; game.player.y += (my/m)*160*dt;
-                }
-                game.camera.x = game.player.x - canvas.width/2; game.camera.y = game.player.y - canvas.height/2;
-            }
-            ctx.fillStyle = "#111"; ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.save(); ctx.translate(-game.camera.x, -game.camera.y);
-            drawWorld();
-            if(game.state !== 'MENU') {
-                ctx.fillStyle = game.player.color; ctx.fillRect(game.player.x-16, game.player.y-16, 32, 32);
-                ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x+(game.player.dir===1?12:-24), game.player.y-4, 12, 8);
-                ctx.fillStyle = "black"; ctx.fillRect(game.player.x+(game.player.dir===1?6:-10), game.player.y-10, 4, 4);
-            }
-            ctx.restore(); requestAnimationFrame(loop);
+            // Pato
+            ctx.fillStyle = game.player.color; ctx.fillRect(game.player.x-16, game.player.y-16, 32, 32);
+            ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x+(game.player.dir===1?12:-24), game.player.y-4, 12, 8);
+            ctx.fillStyle = "black"; ctx.fillRect(game.player.x+(game.player.dir===1?6:-10), game.player.y-10, 4, 4);
+
+            ctx.restore();
+            requestAnimationFrame(draw);
         }
-        requestAnimationFrame(loop);
+        draw();
     </script>
 </body>
 </html>
