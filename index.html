@@ -3,71 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Um Pato e um Sonho - V2.1</title>
+    <title>Um Pato e um Sonho - V2.2</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1a1a1a; font-family: sans-serif; position: fixed; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #111; font-family: sans-serif; position: fixed; }
         canvas { display: block; image-rendering: pixelated; width: 100vw; height: 100vh; }
 
+        /* CAMADAS */
         .layer { position: fixed; inset: 0; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .hidden { display: none !important; }
 
-        /* MENU PRINCIPAL */
-        #ui-menu { z-index: 100; background: rgba(0,0,0,0.7); pointer-events: auto; }
-        .btn-main { background: #22c55e; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 220px; margin: 8px; box-shadow: 0 4px #166534; }
+        /* MENU PRINCIPAL (FIXO) */
+        #ui-menu { z-index: 100; background: rgba(0,0,0,0.8); pointer-events: auto; }
+        .btn-ui { background: #22c55e; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 240px; margin: 10px; box-shadow: 0 5px #166534; pointer-events: auto; }
+        .btn-config { background: #64748b; box-shadow: 0 5px #334155; }
 
-        /* HUD & INVENTÁRIO */
-        .hud-top { position: absolute; top: 10px; left: 10px; display: flex; gap: 10px; pointer-events: none; }
-        .info-box { background: rgba(0,0,0,0.8); padding: 8px 12px; border-radius: 8px; border: 2px solid #444; color: white; font-size: 14px; font-weight: bold; }
+        /* PAINEL CONFIGS */
+        #ui-settings { z-index: 110; background: rgba(15,15,15,0.98); pointer-events: auto; color: white; }
+        .config-box { background: #222; padding: 20px; border-radius: 20px; border: 2px solid #444; width: 300px; }
+        
+        /* HUD JOGO */
+        .hud-top { position: absolute; top: 15px; left: 15px; display: flex; gap: 10px; }
+        .stats { background: rgba(0,0,0,0.8); padding: 10px; border-radius: 10px; color: white; font-weight: bold; border: 1px solid #444; }
 
-        /* TABELA DE CRAFTING (RECIPES) */
-        #ui-crafting { z-index: 60; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); pointer-events: auto; }
-        .craft-window { background: #333; border: 3px solid #555; border-radius: 15px; padding: 20px; width: 280px; color: white; }
-        .recipe-btn { background: #444; border: 2px solid #666; color: white; width: 100%; padding: 10px; margin: 5px 0; border-radius: 8px; font-size: 13px; text-align: left; }
-        .recipe-btn:not(:disabled) { border-color: #fb923c; background: #555; }
+        /* CONTROLES */
+        #controls-container { position: absolute; bottom: 15px; left: 15px; display: grid; grid-template-areas: ". up ." "left . right" ". down ."; gap: 5px; pointer-events: auto; }
+        .btn-arrow { width: 45px; height: 45px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
 
-        /* CONTROLES COMPACTOS E BAIXOS */
-        #controls-container { position: absolute; bottom: 10px; left: 10px; display: grid; grid-template-areas: ". up ." "left . right" ". down ."; gap: 4px; pointer-events: auto; }
-        .btn-arrow { width: 42px; height: 42px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
-        .up { grid-area: up; } .down { grid-area: down; } .left { grid-area: left; } .right { grid-area: right; }
+        #action-container { position: absolute; bottom: 15px; right: 15px; display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
+        .btn-action { width: 80px; height: 80px; border-radius: 22px; color: white; font-weight: bold; font-size: 11px; border: none; box-shadow: 0 6px rgba(0,0,0,0.4); }
+        .btn-collect { background: #5d4037; }
+        .btn-build { background: #2563eb; } /* Botão NOVO para construir */
+        .btn-open { background: #fb923c; }
 
-        #action-container { position: absolute; bottom: 15px; right: 15px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
-        .btn-action { width: 75px; height: 75px; border-radius: 20px; color: white; font-weight: bold; font-size: 11px; border: 3px solid rgba(0,0,0,0.3); box-shadow: 0 5px rgba(0,0,0,0.4); }
-        .collect { background: #5d4037; }
-        .craft-open { background: #fb923c; display: none; } /* Só aparece perto da bancada */
+        /* RECIPES */
+        #ui-crafting { z-index: 60; background: rgba(0,0,0,0.8); pointer-events: auto; }
+        .recipe-list { background: #333; padding: 20px; border-radius: 15px; width: 280px; color: white; border: 2px solid #555; }
     </style>
 </head>
 <body>
 
     <div id="ui-menu" class="layer">
-        <h1 style="color:white; text-shadow: 2px 2px 0 #000;">UM PATO E UM SONHO</h1>
-        <button class="btn-main" onclick="game.startGame()">INICIAR JORNADA</button>
+        <h2 style="color:white; margin-bottom:20px;">PATO SURVIVAL V2.2</h2>
+        <button class="btn-ui" onclick="game.startGame()">JOGAR</button>
+        <button class="btn-ui btn-config" onclick="game.showSettings(true)">AJUSTES</button>
+    </div>
+
+    <div id="ui-settings" class="layer hidden">
+        <div class="config-box">
+            <h3>AJUSTES</h3>
+            <div style="margin: 20px 0; display: flex; justify-content: space-between;">
+                <span>Cor do Pato:</span>
+                <input type="color" id="duckColor" value="#ffffff" onchange="game.updateDuckColor(this.value)">
+            </div>
+            <button class="btn-ui" style="width:100%" onclick="game.showSettings(false)">SALVAR E VOLTAR</button>
+        </div>
     </div>
 
     <div id="ui-crafting" class="layer hidden">
-        <div class="craft-window">
-            <h3 style="margin-top:0">Bancada de Trabalho</h3>
-            <button class="recipe-btn" id="rec-fire" onclick="game.craft('campfire')">🔥 Fogueira (3 Madeiras)</button>
-            <button class="recipe-btn" onclick="game.closeCrafting()">❌ FECHAR</button>
+        <div class="recipe-list">
+            <h3>RECIPES</h3>
+            <button class="btn-ui" style="width:100%; background:#7c2d12" onclick="game.craft('campfire')">🔥 Fogueira (3 Wood)</button>
+            <button class="btn-ui" style="width:100%; background:#444" onclick="game.showCrafting(false)">FECHAR</button>
         </div>
     </div>
 
     <div id="ui-hud" class="layer hidden" style="justify-content: flex-start; align-items: flex-start;">
         <div class="hud-top">
-            <div class="info-box">🪵 <span id="wood-count">0</span></div>
-            <div class="info-box" id="build-mode">🔨 Criar Bancada (2 Wood)</div>
+            <div class="stats">🪵 <span id="wood-count">0</span></div>
         </div>
 
         <div id="controls-container">
-            <div class="btn-arrow up" id="btn-up">▲</div>
-            <div class="btn-arrow left" id="btn-left">◀</div>
-            <div class="btn-arrow right" id="btn-right">▶</div>
-            <div class="btn-arrow down" id="btn-down">▼</div>
+            <div class="btn-arrow" style="grid-area:up" id="btn-up">▲</div>
+            <div class="btn-arrow" style="grid-area:left" id="btn-left">◀</div>
+            <div class="btn-arrow" style="grid-area:right" id="btn-right">▶</div>
+            <div class="btn-arrow" style="grid-area:down" id="btn-down">▼</div>
         </div>
 
         <div id="action-container">
-            <button id="btn-open-table" class="btn-action craft-open" onclick="game.openCrafting()">📦<br>ABRIR</button>
-            <button class="btn-action collect" onclick="game.interact()">🪓<br>COLETAR</button>
+            <button id="btn-build" class="btn-action btn-build hidden" onclick="game.buildTable()">🔨<br>BANCADA</button>
+            <button id="btn-open-table" class="btn-action btn-open hidden" onclick="game.showCrafting(true)">📦<br>ABRIR</button>
+            <button class="btn-action btn-collect" onclick="game.collect()">🪓<br>COLETAR</button>
         </div>
     </div>
 
@@ -80,9 +96,9 @@
         const game = {
             state: 'MENU',
             lastTime: 0,
-            player: { x: 1000, y: 1000, dir: 1, wood: 0 },
+            player: { x: 1000, y: 1000, dir: 1, wood: 0, color: '#ffffff' },
             camera: { x: 1000, y: 1000 },
-            world: { seed: 123, removedItems: new Set(), placedObjects: [] },
+            world: { seed: 555, removedItems: new Set(), placedObjects: [] },
             keys: { up: false, down: false, left: false, right: false },
 
             startGame() {
@@ -90,9 +106,16 @@
                 document.getElementById('ui-menu').classList.add('hidden');
                 document.getElementById('ui-hud').classList.remove('hidden');
             },
+            showSettings(show) { document.getElementById('ui-settings').classList.toggle('hidden', !show); },
+            updateDuckColor(val) { this.player.color = val; },
+            
+            showCrafting(show) {
+                if(show) this.state = 'CRAFTING';
+                else this.state = 'PLAYING';
+                document.getElementById('ui-crafting').classList.toggle('hidden', !show);
+            },
 
-            interact() {
-                // Lógica de Coleta de Árvore
+            collect() {
                 const sx = Math.floor(this.player.x / 32) - 2, sy = Math.floor(this.player.y / 32) - 2;
                 for (let x = sx; x <= sx + 4; x++) {
                     for (let y = sy; y <= sy + 4; y++) {
@@ -107,8 +130,9 @@
                         }
                     }
                 }
+            },
 
-                // Se não coletou árvore, tenta criar bancada se tiver madeira
+            buildTable() {
                 if (this.player.wood >= 2) {
                     this.player.wood -= 2;
                     this.world.placedObjects.push({ x: this.player.x, y: this.player.y, type: 'table' });
@@ -116,29 +140,18 @@
                 }
             },
 
-            openCrafting() {
-                this.state = 'CRAFTING';
-                document.getElementById('ui-crafting').classList.remove('hidden');
-            },
-
-            closeCrafting() {
-                this.state = 'PLAYING';
-                document.getElementById('ui-crafting').classList.add('hidden');
-            },
-
             craft(type) {
                 if (type === 'campfire' && this.player.wood >= 3) {
                     this.player.wood -= 3;
                     this.world.placedObjects.push({ x: this.player.x + 20, y: this.player.y, type: 'campfire' });
                     this.updateUI();
-                    this.closeCrafting();
+                    this.showCrafting(false);
                 }
             },
 
             updateUI() {
                 document.getElementById('wood-count').innerText = this.player.wood;
-                document.getElementById('build-mode').style.opacity = this.player.wood >= 2 ? "1" : "0.5";
-                document.getElementById('rec-fire').disabled = this.player.wood < 3;
+                document.getElementById('btn-build').classList.toggle('hidden', this.player.wood < 2);
             }
         };
 
@@ -162,7 +175,7 @@
                 for (let y = startY; y <= endY; y++) {
                     const noise = seededRandom(x, y);
                     const wx = x * 32, wy = y * 32;
-                    ctx.fillStyle = noise > 0.8 ? "#559449" : "#5da051";
+                    ctx.fillStyle = noise > 0.8 ? "#3d6e36" : "#457b3e";
                     ctx.fillRect(wx, wy, 33, 33);
                     if (noise < 0.02 && !game.world.removedItems.has(`${x},${y}`)) {
                         ctx.fillStyle = "#4a2d18"; ctx.fillRect(wx + 12, wy + 16, 8, 12);
@@ -175,14 +188,12 @@
             game.world.placedObjects.forEach(obj => {
                 if (obj.type === 'table') {
                     ctx.fillStyle = "#5d4037"; ctx.fillRect(obj.x-12, obj.y-8, 24, 16);
-                    ctx.fillStyle = "#3e2723"; ctx.fillRect(obj.x-10, obj.y-6, 20, 2);
                     if (Math.hypot(game.player.x - obj.x, game.player.y - obj.y) < 50) nearTable = true;
-                } else if (obj.type === 'campfire') {
-                    ctx.fillStyle = "#7c2d12"; ctx.fillRect(obj.x-8, obj.y-2, 16, 4);
-                    ctx.fillStyle = "#f97316"; ctx.beginPath(); ctx.arc(obj.x, obj.y-5, 5 + Math.random()*2, 0, 7); ctx.fill();
+                } else {
+                    ctx.fillStyle = "#f97316"; ctx.beginPath(); ctx.arc(obj.x, obj.y-5, 6, 0, 7); ctx.fill();
                 }
             });
-            document.getElementById('btn-open-table').style.display = nearTable ? "block" : "none";
+            document.getElementById('btn-open-table').classList.toggle('hidden', !nearTable);
         }
 
         function loop(t) {
@@ -198,15 +209,14 @@
                     const mag = Math.hypot(mx, my);
                     game.player.x += (mx/mag) * 160 * dt; game.player.y += (my/mag) * 160 * dt;
                 }
-                game.camera.x = game.player.x - canvas.width / 2;
-                game.camera.y = game.player.y - canvas.height / 2;
+                game.camera.x = game.player.x - canvas.width / 2; game.camera.y = game.player.y - canvas.height / 2;
             }
 
-            ctx.fillStyle = "#222"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#111"; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.save(); ctx.translate(-game.camera.x, -game.camera.y);
             drawWorld();
             if (game.state !== 'MENU') {
-                ctx.fillStyle = "white"; ctx.fillRect(game.player.x-16, game.player.y-16, 32, 32);
+                ctx.fillStyle = game.player.color; ctx.fillRect(game.player.x-16, game.player.y-16, 32, 32);
                 ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x+(game.player.dir===1?12:-24), game.player.y-4, 12, 8);
                 ctx.fillStyle = "black"; ctx.fillRect(game.player.x+(game.player.dir===1?6:-10), game.player.y-10, 4, 4);
             }
