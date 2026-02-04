@@ -3,159 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Um Pato e um Sonho - PRO</title>
+    <title>Um Pato e um Sonho - Engine V1</title>
     <style>
+        /* CSS preservado do estilo Lovable/Mobile */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #74c365; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #222; }
+        
+        #ui-layer { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
+        #ui-layer * { pointer-events: auto; }
 
-        /* Canvas de Jogo */
-        #gameCanvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        /* HUD Status */
+        .status-container { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; border: 2px solid #333; }
+        .bar { width: 120px; height: 10px; background: #1a1a1a; margin: 4px 0; border-radius: 5px; overflow: hidden; }
+        .fill { height: 100%; transition: width 0.3s; }
 
-        /* UI - HUD SUPERIOR (Relógio e Status) */
-        #ui-top-center {
-            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.7); color: white; padding: 5px 20px;
-            border-radius: 4px; text-align: center; z-index: 10;
-        }
-
-        #ui-status-bars {
-            position: fixed; top: 15px; right: 15px; width: 220px;
-            background: rgba(40, 44, 40, 0.9); border: 3px solid #1a1a1a;
-            padding: 10px; border-radius: 8px; z-index: 10;
-        }
-        .bar-container { display: flex; align-items: center; margin-bottom: 6px; }
-        .bar-bg { flex-grow: 1; height: 12px; background: #1a1a1a; border-radius: 6px; margin-left: 8px; overflow: hidden; }
-        .bar-fill { height: 100%; width: 100%; transition: width 0.3s; }
-
-        /* CONTROLES - JOYSTICK E BOTÕES */
-        #joystick-wrapper {
-            position: fixed; bottom: 40px; left: 40px;
-            width: 120px; height: 120px; background: rgba(0,0,0,0.2);
-            border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; z-index: 10;
-        }
-        #joystick-stick {
-            position: absolute; top: 35px; left: 35px; width: 50px; height: 50px;
-            background: #ffcc00; border-radius: 50%; box-shadow: 0 4px #b8860b;
-        }
-
-        #action-bar {
-            position: fixed; bottom: 20px; right: 20px;
-            display: flex; gap: 10px; z-index: 10;
-        }
-        .action-btn {
-            width: 70px; height: 70px; background: #3f423e; border: 3px solid #1a1a1a;
-            border-radius: 12px; color: white; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; font-size: 11px; font-weight: bold;
-        }
-        .btn-attack { background: #eab308; color: black; }
-
-        /* TELAS */
-        .screen {
-            position: fixed; inset: 0; background: #121212;
-            display: none; flex-direction: column; justify-content: center;
-            align-items: center; z-index: 100;
-        }
-        .active { display: flex !important; }
-        .play-btn { background: #22c55e; color: white; border: none; padding: 20px 60px; border-radius: 12px; font-size: 1.5rem; font-weight: bold; }
+        /* Controles */
+        #joystick-base { position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid #fff3; }
+        #joystick-stick { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.7; }
+        
+        #action-bar { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; }
+        .btn-action { width: 65px; height: 65px; background: #333; border: 3px solid #111; border-radius: 12px; color: #fff; font-size: 10px; font-weight: bold; }
+        
+        canvas { display: block; image-rendering: pixelated; }
     </style>
 </head>
 <body>
 
-    <div id="menu-screen" class="screen active">
-        <h1 style="color: white; font-size: 3rem; margin-bottom: 0;">Um Pato</h1>
-        <p style="color: #22c55e; font-size: 1.5rem; margin-bottom: 40px;">e um Sonho!</p>
-        <button class="play-btn" onclick="startGame()">Iniciar Jornada</button>
-    </div>
+    <div id="ui-layer">
+        <div class="status-container">
+            <div class="bar"><div id="hp-bar" class="fill" style="background: #ff4d4d; width: 100%;"></div></div>
+            <div class="bar"><div id="hunger-bar" class="fill" style="background: #ffcc00; width: 100%;"></div></div>
+        </div>
 
-    <div id="ui-top-center">
-        <div id="game-time" style="font-size: 1.2rem; font-weight: bold;">09:20</div>
-        <div id="game-day" style="font-size: 0.7rem;">Dia 1</div>
-    </div>
+        <div id="joystick-base">
+            <div id="joystick-stick"></div>
+        </div>
 
-    <div id="ui-status-bars">
-        <div class="bar-container">❤️ <div class="bar-bg"><div class="bar-fill" style="background: #ef4444; width: 100%;"></div></div></div>
-        <div class="bar-container">🍎 <div class="bar-bg"><div class="bar-fill" style="background: #eab308; width: 85%;"></div></div></div>
-        <div class="bar-container">⚡ <div class="bar-bg"><div class="bar-fill" style="background: #a855f7; width: 70%;"></div></div></div>
-    </div>
-
-    <div id="joystick-wrapper">
-        <div id="joystick-stick"></div>
-    </div>
-
-    <div id="action-bar">
-        <div class="action-btn">🎒<br>Itens</div>
-        <div class="action-btn">⛏️<br>Coletar</div>
-        <div class="action-btn btn-attack">⚔️<br>Atacar</div>
+        <div id="action-bar">
+            <button class="btn-action" onclick="game.interact()">⛏️<br>COLETAR</button>
+        </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
     <script>
+        /** @type {HTMLCanvasElement} */
         const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let playerPos = { x: 0, y: 0 };
-        let joyVector = { x: 0, y: 0 };
-        let isMoving = false;
+        const ctx = canvas.getContext('2d', { alpha: false });
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            ctx.imageSmoothingEnabled = false;
-        }
+        // --- DEFINIÇÕES DE TIPOS E CONSTANTES ---
+        const TILE_SIZE = 32;
+        const PLAYER_SPEED = 150; // Pixels por segundo
 
-        function startGame() {
-            document.getElementById('menu-screen').classList.remove('active');
-            playerPos = { x: canvas.width / 2, y: canvas.height / 2 };
-            animate();
-        }
+        // --- ESTADO DO JOGO (SINGLETON PATTERN) ---
+        const game = {
+            lastTime: 0,
+            width: 0,
+            height: 0,
+            worldSize: 2000,
+            
+            player: {
+                x: 1000,
+                y: 1000,
+                size: 32,
+                hp: 100,
+                hunger: 100,
+                dirX: 0,
+                dirY: 0,
+                isMoving: false
+            },
+            
+            camera: { x: 0, y: 0 },
+            
+            input: {
+                joyX: 0,
+                joyY: 0,
+                isTouching: false
+            },
 
-        // Lógica de Joystick (Mobile First)
+            interact() {
+                console.log("Interação disparada");
+                // Futura lógica de colisão com árvores/itens
+            }
+        };
+
+        // --- SISTEMA DE ENTRADA (JOYSTICK) ---
         const stick = document.getElementById('joystick-stick');
-        const base = document.getElementById('joystick-wrapper');
+        const base = document.getElementById('joystick-base');
 
-        base.addEventListener('touchstart', () => isMoving = true);
-        window.addEventListener('touchmove', (e) => {
-            if (!isMoving) return;
+        base.addEventListener('touchstart', (e) => { game.input.isTouching = true; handleJoy(e); }, {passive: false});
+        window.addEventListener('touchmove', (e) => { if(game.input.isTouching) handleJoy(e); }, {passive: false});
+        window.addEventListener('touchend', () => { 
+            game.input.isTouching = false; 
+            game.input.joyX = 0; game.input.joyY = 0;
+            stick.style.transform = `translate(0px, 0px)`;
+        });
+
+        function handleJoy(e) {
+            e.preventDefault();
             const touch = e.touches[0];
             const rect = base.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
+            const centerX = rect.left + rect.width/2;
+            const centerY = rect.top + rect.height/2;
             
             let dx = touch.clientX - centerX;
             let dy = touch.clientY - centerY;
             const dist = Math.sqrt(dx*dx + dy*dy);
             const max = 40;
 
-            if (dist > max) { dx *= max / dist; dy *= max / dist; }
+            if(dist > max) { dx *= max/dist; dy *= max/dist; }
             stick.style.transform = `translate(${dx}px, ${dy}px)`;
-            joyVector = { x: dx / max, y: dy / max };
-        });
+            
+            game.input.joyX = dx / max;
+            game.input.joyY = dy / max;
+        }
 
-        window.addEventListener('touchend', () => {
-            isMoving = false;
-            stick.style.transform = `translate(0px, 0px)`;
-            joyVector = { x: 0, y: 0 };
-        });
+        // --- CORE ENGINE FUNCTIONS ---
+        function init() {
+            resize();
+            requestAnimationFrame(loop);
+        }
 
-        function animate() {
-            // Desenhar Grama (Fundo)
-            ctx.fillStyle = "#74c365";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function resize() {
+            game.width = canvas.width = window.innerWidth;
+            game.height = canvas.height = window.innerHeight;
+            ctx.imageSmoothingEnabled = false;
+        }
 
-            // Movimentar e Desenhar Jogador
-            playerPos.x += joyVector.x * 4;
-            playerPos.y += joyVector.y * 4;
+        function update(dt) {
+            // Movimentação com Delta Time
+            if (game.input.isTouching) {
+                game.player.x += game.input.joyX * PLAYER_SPEED * dt;
+                game.player.y += game.input.joyY * PLAYER_SPEED * dt;
+            }
 
-            ctx.fillStyle = "white"; // Pato
-            ctx.fillRect(playerPos.x - 20, playerPos.y - 20, 40, 40);
-            ctx.fillStyle = "#fb923c"; // Bico
-            ctx.fillRect(playerPos.x + (joyVector.x >= 0 ? 15 : -25), playerPos.y - 5, 10, 8);
+            // Câmera (Interpolação Suave)
+            game.camera.x = game.player.x - game.width / 2;
+            game.camera.y = game.player.y - game.height / 2;
 
-            requestAnimationFrame(animate);
+            // Update UI
+            document.getElementById('hunger-bar').style.width = game.player.hunger + "%";
+        }
+
+        function draw() {
+            ctx.fillStyle = "#5da051"; // Cor da grama
+            ctx.fillRect(0, 0, game.width, game.height);
+
+            ctx.save();
+            ctx.translate(-game.camera.x, -game.camera.y);
+
+            // Desenhar Grid de Chão (Otimizado)
+            ctx.strokeStyle = "#4d8b42";
+            ctx.lineWidth = 1;
+            const startX = Math.floor(game.camera.x / TILE_SIZE) * TILE_SIZE;
+            const startY = Math.floor(game.camera.y / TILE_SIZE) * TILE_SIZE;
+            
+            for(let x = startX; x < startX + game.width + TILE_SIZE; x += TILE_SIZE) {
+                for(let y = startY; y < startY + game.height + TILE_SIZE; y += TILE_SIZE) {
+                    ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+                }
+            }
+
+            // Desenhar Jogador (Pato Branco)
+            ctx.fillStyle = "white";
+            ctx.fillRect(game.player.x - 16, game.player.y - 16, 32, 32);
+            // Bico
+            ctx.fillStyle = "#fb923c";
+            ctx.fillRect(game.player.x + (game.input.joyX >= 0 ? 10 : -22), game.player.y - 4, 12, 8);
+
+            ctx.restore();
+        }
+
+        function loop(timestamp) {
+            const dt = (timestamp - game.lastTime) / 1000;
+            game.lastTime = timestamp;
+
+            update(dt);
+            draw();
+            requestAnimationFrame(loop);
         }
 
         window.addEventListener('resize', resize);
-        resize();
+        init();
     </script>
 </body>
 </html>
