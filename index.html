@@ -3,11 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Um Pato e um Sonho - Engine V1.3</title>
+    <title>Um Pato e um Sonho - Engine V1.4</title>
     <style>
-        /* --- CORE STYLES --- */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #222; font-family: 'Courier New', monospace; }
+        /* --- CORE STYLES & FIXES --- */
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none; 
+        }
+        
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background: #222; 
+            font-family: 'Courier New', monospace;
+            
+            /* CORREÇÃO 2: Bloqueia o "Pull-to-Refresh" e gestos de zoom/scroll nativos */
+            touch-action: none;
+            overscroll-behavior: none;
+        }
         
         canvas { display: block; image-rendering: pixelated; width: 100%; height: 100%; }
 
@@ -24,8 +41,22 @@
         .bar { width: 120px; height: 10px; background: #1a1a1a; margin: 4px 0; border-radius: 5px; overflow: hidden; }
         .fill { height: 100%; transition: width 0.3s; }
 
-        #joystick-base { position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid #fff3; }
-        #joystick-stick { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.7; box-shadow: 0 4px rgba(0,0,0,0.3); }
+        /* Joystick Base */
+        #joystick-base { 
+            position: absolute; bottom: 40px; left: 40px; 
+            width: 100px; height: 100px; 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 50%; border: 2px solid #fff3; 
+        }
+        
+        #joystick-stick { 
+            position: absolute; top: 25px; left: 25px; 
+            width: 50px; height: 50px; 
+            background: #fff; border-radius: 50%; 
+            opacity: 0.7; box-shadow: 0 4px rgba(0,0,0,0.3); 
+            /* Otimização de renderização para movimento suave */
+            will-change: transform;
+        }
         
         #action-bar { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; }
         .btn-action { width: 65px; height: 65px; background: #333; border: 3px solid #111; border-radius: 12px; color: #fff; font-size: 10px; font-weight: bold; cursor: pointer; }
@@ -78,19 +109,18 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        /** * DUCK DREAM ENGINE V1.3
-         * Features: State Machine (Menu/Play), World Gen, Physics, Mobile Input
+        /** * DUCK DREAM ENGINE V1.4 - STABILITY PATCH
+         * Changes: Fixed Joystick Drift, Disabled Browser Refresh Gestures
          */
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d', { alpha: false });
 
-        // --- CONSTANTES ---
         const TILE_SIZE = 32;
         const PLAYER_SPEED = 160;
 
         // --- GAME STATE ---
         const game = {
-            state: 'MENU', // 'MENU' ou 'PLAYING'
+            state: 'MENU',
             lastTime: 0,
             width: 0, height: 0,
             
@@ -102,18 +132,14 @@
             },
             
             camera: { x: 0, y: 0 },
-            
-            world: { seed: 999, density: 0.05 }, // Seed fixa ou Math.random()
-            
+            world: { seed: 999, density: 0.05 },
             input: { joyX: 0, joyY: 0, isTouching: false },
 
-            // Transição de Estado
             startGame() {
                 this.state = 'PLAYING';
                 document.getElementById('ui-menu').classList.replace('visible', 'hidden');
                 document.getElementById('ui-hud').classList.replace('hidden', 'visible');
-                // Resetar inputs para evitar pulos
-                this.input.joyX = 0; this.input.joyY = 0;
+                this.input.joyX = 0; this.input.joyY = 0; this.input.isTouching = false;
             },
 
             interact() {
@@ -122,7 +148,7 @@
             }
         };
 
-        // --- WORLD GENERATION (Procedural) ---
+        // --- WORLD GENERATION ---
         function seededRandom(x, y) {
             const val = Math.sin(x * 12.9898 + y * 78.233 + game.world.seed) * 43758.5453;
             return val - Math.floor(val);
@@ -140,8 +166,7 @@
                     if (noise < 0.02) { // Árvore
                         const tx = x * TILE_SIZE + 16;
                         const ty = y * TILE_SIZE + 16;
-                        const dist = Math.hypot(newX - tx, newY - ty);
-                        if (dist < game.player.radius + 8) return true;
+                        if (Math.hypot(newX - tx, newY - ty) < game.player.radius + 8) return true;
                     }
                 }
             }
@@ -160,11 +185,9 @@
                     const wx = x * TILE_SIZE;
                     const wy = y * TILE_SIZE;
 
-                    // Chão
                     ctx.fillStyle = noise > 0.8 ? "#559449" : "#5da051";
                     ctx.fillRect(wx, wy, TILE_SIZE + 1, TILE_SIZE + 1);
 
-                    // Objetos
                     if (noise < 0.02) drawTree(ctx, wx + 16, wy + 16);
                     else if (noise > 0.98) drawBush(ctx, wx + 16, wy + 16);
                 }
@@ -181,13 +204,23 @@
             ctx.fillStyle = "#ef4444"; ctx.fillRect(x - 2, y + 6, 4, 4);
         }
 
-        // --- INPUT SYSTEM (Joystick) ---
+        // --- INPUT SYSTEM (CORREÇÃO DE BUGS) ---
         const stick = document.getElementById('joystick-stick');
         const base = document.getElementById('joystick-base');
 
+        const resetJoystick = () => {
+            game.input.isTouching = false; 
+            game.input.joyX = 0; 
+            game.input.joyY = 0;
+            stick.style.transform = `translate(0px, 0px)`;
+        };
+
         const handleInput = (e) => {
             if (game.state !== 'PLAYING') return;
-            e.preventDefault();
+            
+            // Impede o comportamento padrão do navegador (Scroll/Refresh)
+            if (e.cancelable) e.preventDefault();
+            
             const touch = e.touches[0];
             const rect = base.getBoundingClientRect();
             const dx = touch.clientX - (rect.left + rect.width / 2);
@@ -204,19 +237,23 @@
             if (dx !== 0) game.player.dir = dx > 0 ? 1 : -1;
         };
 
+        // Listeners corrigidos para Mobile Robustez
         base.addEventListener('touchstart', (e) => { 
             if (game.state !== 'PLAYING') return;
-            game.input.isTouching = true; handleInput(e); 
+            game.input.isTouching = true; 
+            handleInput(e); 
         }, {passive: false});
         
+        // Touchmove na window garante que pegue mesmo se o dedo sair da base
         window.addEventListener('touchmove', (e) => { 
             if(game.input.isTouching) handleInput(e); 
         }, {passive: false});
         
-        window.addEventListener('touchend', () => { 
-            game.input.isTouching = false; game.input.joyX = 0; game.input.joyY = 0;
-            stick.style.transform = `translate(0px, 0px)`;
-        });
+        // Touchend e Touchcancel na window garantem o reset
+        window.addEventListener('touchend', resetJoystick);
+        
+        // CORREÇÃO 1: Touchcancel resolve o bug de travar andando se o navegador interromper
+        window.addEventListener('touchcancel', resetJoystick);
 
         // --- ENGINE CORE ---
         function resize() {
@@ -227,13 +264,11 @@
 
         function update(dt) {
             if (game.state === 'MENU') {
-                // Efeito Cinematográfico: Câmera anda sozinha no menu
                 game.camera.x += 30 * dt;
                 game.camera.y += 10 * dt;
                 return;
             }
 
-            // Lógica de Jogo (PLAYING)
             if (game.input.isTouching) {
                 const nextX = game.player.x + game.input.joyX * PLAYER_SPEED * dt;
                 const nextY = game.player.y + game.input.joyY * PLAYER_SPEED * dt;
@@ -242,11 +277,9 @@
                 if (!checkCollision(game.player.x, nextY)) game.player.y = nextY;
             }
 
-            // Atualiza Câmera centrada no jogador
             game.camera.x = game.player.x - game.width / 2;
             game.camera.y = game.player.y - game.height / 2;
 
-            // Status
             game.player.hunger -= 0.5 * dt;
             const hBar = document.getElementById('hunger-bar');
             if(hBar) hBar.style.width = Math.max(0, game.player.hunger) + "%";
@@ -254,19 +287,16 @@
 
         function draw() {
             ctx.fillStyle = "#222"; ctx.fillRect(0, 0, game.width, game.height);
-            
             ctx.save();
             ctx.translate(-game.camera.x, -game.camera.y);
             
             drawWorld(ctx);
 
-            // Só desenha o jogador se estiver jogando
             if (game.state === 'PLAYING') {
                 ctx.fillStyle = "white"; ctx.fillRect(game.player.x - 16, game.player.y - 16, 32, 32);
                 ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x + (game.player.dir === 1 ? 12 : -24), game.player.y - 4, 12, 8);
                 ctx.fillStyle = "black"; ctx.fillRect(game.player.x + (game.player.dir === 1 ? 6 : -10), game.player.y - 10, 4, 4);
             }
-
             ctx.restore();
         }
 
