@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Um Pato e um Sonho - Engine V1</title>
+    <title>Um Pato e um Sonho - Engine V1.1</title>
     <style>
-        /* CSS preservado do estilo Lovable/Mobile */
+        /* CSS DE INTERFACE (ESTILO LOVABLE) */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #222; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #222; font-family: sans-serif; }
         
         #ui-layer { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
         #ui-layer * { pointer-events: auto; }
@@ -17,9 +17,9 @@
         .bar { width: 120px; height: 10px; background: #1a1a1a; margin: 4px 0; border-radius: 5px; overflow: hidden; }
         .fill { height: 100%; transition: width 0.3s; }
 
-        /* Controles */
+        /* Controles Mobile */
         #joystick-base { position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid #fff3; }
-        #joystick-stick { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.7; }
+        #joystick-stick { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.7; box-shadow: 0 4px rgba(0,0,0,0.2); }
         
         #action-bar { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; }
         .btn-action { width: 65px; height: 65px; background: #333; border: 3px solid #111; border-radius: 12px; color: #fff; font-size: 10px; font-weight: bold; }
@@ -47,20 +47,24 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        /** @type {HTMLCanvasElement} */
+        /** * @typedef {Object} GameState
+         * @property {number} lastTime - Timestamp do último frame
+         * @property {number} width - Largura do canvas
+         * @property {number} height - Altura do canvas
+         */
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d', { alpha: false });
 
-        // --- DEFINIÇÕES DE TIPOS E CONSTANTES ---
+        // --- CONSTANTES DE ENGENHARIA ---
         const TILE_SIZE = 32;
-        const PLAYER_SPEED = 150; // Pixels por segundo
+        const PLAYER_SPEED = 160;
 
-        // --- ESTADO DO JOGO (SINGLETON PATTERN) ---
+        // --- ESTADO CENTRALIZADO ---
         const game = {
             lastTime: 0,
             width: 0,
             height: 0,
-            worldSize: 2000,
             
             player: {
                 x: 1000,
@@ -68,13 +72,16 @@
                 size: 32,
                 hp: 100,
                 hunger: 100,
-                dirX: 0,
-                dirY: 0,
-                isMoving: false
+                dir: 1 // 1 para direita, -1 para esquerda
             },
             
             camera: { x: 0, y: 0 },
             
+            world: {
+                seed: 12345,
+                density: 0.05
+            },
+
             input: {
                 joyX: 0,
                 joyY: 0,
@@ -82,48 +89,92 @@
             },
 
             interact() {
-                console.log("Interação disparada");
-                // Futura lógica de colisão com árvores/itens
+                console.log("Interação: Tentando coletar recursos...");
             }
         };
 
-        // --- SISTEMA DE ENTRADA (JOYSTICK) ---
+        // --- WORLD GENERATION V1 (PROCEDURAL) ---
+        function seededRandom(x, y) {
+            const seed = game.world.seed;
+            const value = Math.sin(x * 12.9898 + y * 78.233 + seed) * 43758.5453;
+            return value - Math.floor(value);
+        }
+
+        function drawWorld(ctx) {
+            const startX = Math.floor(game.camera.x / TILE_SIZE) - 1;
+            const endX = Math.ceil((game.camera.x + game.width) / TILE_SIZE) + 1;
+            const startY = Math.floor(game.camera.y / TILE_SIZE) - 1;
+            const endY = Math.ceil((game.camera.y + game.height) / TILE_SIZE) + 1;
+
+            for (let x = startX; x <= endX; x++) {
+                for (let y = startY; y <= endY; y++) {
+                    const noise = seededRandom(x, y);
+                    const worldX = x * TILE_SIZE;
+                    const worldY = y * TILE_SIZE;
+
+                    // Camada de Chão
+                    ctx.fillStyle = noise > 0.8 ? "#559449" : "#5da051";
+                    ctx.fillRect(worldX, worldY, TILE_SIZE + 0.5, TILE_SIZE + 0.5);
+
+                    // Camada de Objetos (Árvores e Arbustos)
+                    if (noise < 0.02) { 
+                        drawTree(ctx, worldX + 16, worldY + 16);
+                    } else if (noise > 0.98) {
+                        drawBush(ctx, worldX + 16, worldY + 16);
+                    }
+                }
+            }
+        }
+
+        function drawTree(ctx, x, y) {
+            ctx.fillStyle = "#4a2d18";
+            ctx.fillRect(x - 4, y, 8, 12); // Tronco
+            ctx.fillStyle = "#2d5a27";
+            ctx.fillRect(x - 12, y - 20, 24, 20); // Folhagem
+        }
+
+        function drawBush(ctx, x, y) {
+            ctx.fillStyle = "#3a7332";
+            ctx.beginPath();
+            ctx.arc(x, y + 8, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#ff4d4d"; // Frutinha
+            ctx.fillRect(x - 2, y + 6, 4, 4);
+        }
+
+        // --- SISTEMA DE INPUT (JOYSTICK) ---
         const stick = document.getElementById('joystick-stick');
         const base = document.getElementById('joystick-base');
 
-        base.addEventListener('touchstart', (e) => { game.input.isTouching = true; handleJoy(e); }, {passive: false});
-        window.addEventListener('touchmove', (e) => { if(game.input.isTouching) handleJoy(e); }, {passive: false});
+        const handleInput = (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = base.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const max = 40;
+
+            if (dist > max) { dx *= max / dist; dy *= max / dist; }
+            stick.style.transform = `translate(${dx}px, ${dy}px)`;
+            
+            game.input.joyX = dx / max;
+            game.input.joyY = dy / max;
+            if (dx !== 0) game.player.dir = dx > 0 ? 1 : -1;
+        };
+
+        base.addEventListener('touchstart', (e) => { game.input.isTouching = true; handleInput(e); }, {passive: false});
+        window.addEventListener('touchmove', (e) => { if(game.input.isTouching) handleInput(e); }, {passive: false});
         window.addEventListener('touchend', () => { 
             game.input.isTouching = false; 
             game.input.joyX = 0; game.input.joyY = 0;
             stick.style.transform = `translate(0px, 0px)`;
         });
 
-        function handleJoy(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const rect = base.getBoundingClientRect();
-            const centerX = rect.left + rect.width/2;
-            const centerY = rect.top + rect.height/2;
-            
-            let dx = touch.clientX - centerX;
-            let dy = touch.clientY - centerY;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            const max = 40;
-
-            if(dist > max) { dx *= max/dist; dy *= max/dist; }
-            stick.style.transform = `translate(${dx}px, ${dy}px)`;
-            
-            game.input.joyX = dx / max;
-            game.input.joyY = dy / max;
-        }
-
-        // --- CORE ENGINE FUNCTIONS ---
-        function init() {
-            resize();
-            requestAnimationFrame(loop);
-        }
-
+        // --- GAME LOOP & CORE ---
         function resize() {
             game.width = canvas.width = window.innerWidth;
             game.height = canvas.height = window.innerHeight;
@@ -131,51 +182,51 @@
         }
 
         function update(dt) {
-            // Movimentação com Delta Time
+            // Movimento do Jogador
             if (game.input.isTouching) {
                 game.player.x += game.input.joyX * PLAYER_SPEED * dt;
                 game.player.y += game.input.joyY * PLAYER_SPEED * dt;
             }
 
-            // Câmera (Interpolação Suave)
+            // Camera segue jogador
             game.camera.x = game.player.x - game.width / 2;
             game.camera.y = game.player.y - game.height / 2;
 
-            // Update UI
+            // Simulação de Fome (Lenta)
+            game.player.hunger -= 0.5 * dt;
+            if (game.player.hunger < 0) game.player.hunger = 0;
             document.getElementById('hunger-bar').style.width = game.player.hunger + "%";
         }
 
         function draw() {
-            ctx.fillStyle = "#5da051"; // Cor da grama
+            ctx.fillStyle = "#222";
             ctx.fillRect(0, 0, game.width, game.height);
 
             ctx.save();
             ctx.translate(-game.camera.x, -game.camera.y);
 
-            // Desenhar Grid de Chão (Otimizado)
-            ctx.strokeStyle = "#4d8b42";
-            ctx.lineWidth = 1;
-            const startX = Math.floor(game.camera.x / TILE_SIZE) * TILE_SIZE;
-            const startY = Math.floor(game.camera.y / TILE_SIZE) * TILE_SIZE;
-            
-            for(let x = startX; x < startX + game.width + TILE_SIZE; x += TILE_SIZE) {
-                for(let y = startY; y < startY + game.height + TILE_SIZE; y += TILE_SIZE) {
-                    ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
-                }
-            }
+            drawWorld(ctx);
 
-            // Desenhar Jogador (Pato Branco)
+            // Desenhar Pato (Player)
             ctx.fillStyle = "white";
             ctx.fillRect(game.player.x - 16, game.player.y - 16, 32, 32);
-            // Bico
+            
+            // Bico baseado na direção
             ctx.fillStyle = "#fb923c";
-            ctx.fillRect(game.player.x + (game.input.joyX >= 0 ? 10 : -22), game.player.y - 4, 12, 8);
+            const bicoX = game.player.dir === 1 ? 12 : -24;
+            ctx.fillRect(game.player.x + bicoX, game.player.y - 4, 12, 8);
+            
+            // Olho
+            ctx.fillStyle = "black";
+            const olhoX = game.player.dir === 1 ? 6 : -10;
+            ctx.fillRect(game.player.x + olhoX, game.player.y - 10, 4, 4);
 
             ctx.restore();
         }
 
         function loop(timestamp) {
-            const dt = (timestamp - game.lastTime) / 1000;
+            let dt = (timestamp - game.lastTime) / 1000;
+            if (dt > 0.1) dt = 0.1; // Segurança contra engasgos do App
             game.lastTime = timestamp;
 
             update(dt);
@@ -184,7 +235,8 @@
         }
 
         window.addEventListener('resize', resize);
-        init();
+        resize();
+        requestAnimationFrame(loop);
     </script>
 </body>
 </html>
