@@ -2,93 +2,82 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Um Pato e um Sonho - Engine V1.4</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Um Pato e um Sonho - Engine V1.5</title>
     <style>
-        /* --- CORE STYLES & FIXES --- */
+        /* --- BLOQUEIO TOTAL DE COMPORTAMENTO NATIVO --- */
         * { 
             box-sizing: border-box; 
             -webkit-tap-highlight-color: transparent; 
-            user-select: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none; /* Bloqueia zoom e scroll em todos os elementos */
         }
         
         body, html { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
+            margin: 0; padding: 0; 
+            width: 100%; height: 100%; 
             overflow: hidden; 
             background: #222; 
             font-family: 'Courier New', monospace;
-            
-            /* CORREÇÃO 2: Bloqueia o "Pull-to-Refresh" e gestos de zoom/scroll nativos */
-            touch-action: none;
-            overscroll-behavior: none;
+            /* Proteção contra Pull-to-refresh no Chrome/Android */
+            overscroll-behavior-y: contain;
+            overscroll-behavior-x: none;
+            position: fixed; /* Impede o corpo de rolar */
         }
         
-        canvas { display: block; image-rendering: pixelated; width: 100%; height: 100%; }
+        canvas { display: block; image-rendering: pixelated; width: 100vw; height: 100vh; }
 
         /* --- UI LAYERS --- */
-        .layer { position: fixed; inset: 0; pointer-events: none; transition: opacity 0.5s; }
+        .layer { position: fixed; inset: 0; pointer-events: none; transition: opacity 0.5s; z-index: 10; }
         .hidden { opacity: 0; pointer-events: none !important; }
         .visible { opacity: 1; pointer-events: auto; }
 
-        /* --- HUD (JOGO) --- */
-        #ui-hud { z-index: 10; }
-        #ui-hud * { pointer-events: auto; }
-
+        /* HUD */
         .status-container { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 8px; border: 2px solid #333; }
         .bar { width: 120px; height: 10px; background: #1a1a1a; margin: 4px 0; border-radius: 5px; overflow: hidden; }
         .fill { height: 100%; transition: width 0.3s; }
 
-        /* Joystick Base */
+        /* Joystick */
         #joystick-base { 
             position: absolute; bottom: 40px; left: 40px; 
             width: 100px; height: 100px; 
             background: rgba(255,255,255,0.1); 
-            border-radius: 50%; border: 2px solid #fff3; 
+            border-radius: 50%; border: 2px solid #fff3;
         }
-        
         #joystick-stick { 
             position: absolute; top: 25px; left: 25px; 
             width: 50px; height: 50px; 
             background: #fff; border-radius: 50%; 
-            opacity: 0.7; box-shadow: 0 4px rgba(0,0,0,0.3); 
-            /* Otimização de renderização para movimento suave */
+            opacity: 0.7; box-shadow: 0 4px rgba(0,0,0,0.3);
             will-change: transform;
         }
         
         #action-bar { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; }
-        .btn-action { width: 65px; height: 65px; background: #333; border: 3px solid #111; border-radius: 12px; color: #fff; font-size: 10px; font-weight: bold; cursor: pointer; }
-        .btn-action:active { transform: scale(0.95); background: #444; }
+        .btn-action { width: 70px; height: 70px; background: #333; border: 3px solid #111; border-radius: 12px; color: #fff; font-size: 10px; font-weight: bold; cursor: pointer; }
+        .btn-action:active { transform: scale(0.9); background: #444; }
 
-        /* --- MENU PRINCIPAL --- */
+        /* MENU PRINCIPAL */
         #ui-menu { 
-            z-index: 20; 
-            background: rgba(0,0,0,0.4); 
+            z-index: 100; background: rgba(0,0,0,0.7); 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(2px);
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
         }
-        #ui-menu * { pointer-events: auto; }
-        
-        h1 { color: #fff; text-shadow: 4px 4px 0 #000; font-size: 2.5rem; text-align: center; margin-bottom: 0; }
-        .subtitle { color: #fb923c; font-weight: bold; font-size: 1.2rem; margin-bottom: 40px; text-shadow: 2px 2px 0 #000; }
-        
+        h1 { color: #fff; text-shadow: 4px 4px 0 #000; font-size: 2.5rem; margin: 0; }
+        .subtitle { color: #22c55e; font-weight: bold; margin-bottom: 40px; }
         .btn-menu {
             background: #22c55e; color: white; border: 4px solid #15803d;
-            padding: 15px 50px; font-size: 1.5rem; font-family: inherit; font-weight: bold;
-            border-radius: 8px; cursor: pointer; box-shadow: 0 6px #14532d;
-            transition: transform 0.1s;
+            padding: 15px 50px; font-size: 1.2rem; font-weight: bold;
+            border-radius: 8px; box-shadow: 0 6px #14532d;
         }
-        .btn-menu:active { transform: translateY(4px); box-shadow: 0 2px #14532d; }
     </style>
 </head>
-<body>
+<body scroll="no">
 
     <div id="ui-menu" class="layer visible">
         <h1>UM PATO</h1>
-        <div class="subtitle">E UM SONHO</div>
-        <button class="btn-menu" onclick="game.startGame()">JOGAR</button>
+        <div class="subtitle">E UM SONHO!</div>
+        <button class="btn-menu" id="start-btn">INICIAR JORNADA</button>
     </div>
 
     <div id="ui-hud" class="layer hidden">
@@ -96,84 +85,69 @@
             <div class="bar"><div id="hp-bar" class="fill" style="background: #ff4d4d; width: 100%;"></div></div>
             <div class="bar"><div id="hunger-bar" class="fill" style="background: #ffcc00; width: 100%;"></div></div>
         </div>
-
-        <div id="joystick-base">
-            <div id="joystick-stick"></div>
-        </div>
-
-        <div id="action-bar">
-            <button class="btn-action" onclick="game.interact()">⛏️<br>COLETAR</button>
-        </div>
+        <div id="joystick-base"><div id="joystick-stick"></div></div>
+        <div id="action-bar"><button class="btn-action" onclick="game.interact()">⛏️<br>COLETAR</button></div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        /** * DUCK DREAM ENGINE V1.4 - STABILITY PATCH
-         * Changes: Fixed Joystick Drift, Disabled Browser Refresh Gestures
-         */
+        // --- ANTI-REFRESH E BLOQUEIO DE GESTOS ---
+        // Bloqueia preventivamente qualquer scroll ou refresh no nível do documento
+        document.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
+        window.addEventListener('scroll', (e) => { window.scrollTo(0, 0); e.preventDefault(); });
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d', { alpha: false });
 
         const TILE_SIZE = 32;
         const PLAYER_SPEED = 160;
 
-        // --- GAME STATE ---
         const game = {
             state: 'MENU',
             lastTime: 0,
             width: 0, height: 0,
-            
-            player: {
-                x: 1000, y: 1000,
-                radius: 12,
-                hp: 100, hunger: 100,
-                dir: 1
-            },
-            
+            player: { x: 1000, y: 1000, radius: 12, hp: 100, hunger: 100, dir: 1 },
             camera: { x: 0, y: 0 },
-            world: { seed: 999, density: 0.05 },
+            world: { seed: 12345 },
             input: { joyX: 0, joyY: 0, isTouching: false },
 
             startGame() {
                 this.state = 'PLAYING';
                 document.getElementById('ui-menu').classList.replace('visible', 'hidden');
                 document.getElementById('ui-hud').classList.replace('hidden', 'visible');
-                this.input.joyX = 0; this.input.joyY = 0; this.input.isTouching = false;
+                this.resetInput();
             },
-
-            interact() {
-                if (this.state !== 'PLAYING') return;
-                console.log("Ação: Coletar");
-            }
+            resetInput() {
+                this.input.joyX = 0; this.input.joyY = 0; this.input.isTouching = false;
+                document.getElementById('joystick-stick').style.transform = `translate(0px, 0px)`;
+            },
+            interact() { if (this.state === 'PLAYING') console.log("Coletando..."); }
         };
 
-        // --- WORLD GENERATION ---
+        document.getElementById('start-btn').onclick = () => game.startGame();
+
+        // --- WORLD & PHYSICS ---
         function seededRandom(x, y) {
             const val = Math.sin(x * 12.9898 + y * 78.233 + game.world.seed) * 43758.5453;
             return val - Math.floor(val);
         }
 
         function checkCollision(newX, newY) {
-            const startX = Math.floor((newX - 50) / TILE_SIZE);
-            const endX = Math.ceil((newX + 50) / TILE_SIZE);
-            const startY = Math.floor((newY - 50) / TILE_SIZE);
-            const endY = Math.ceil((newY + 50) / TILE_SIZE);
-
-            for (let x = startX; x <= endX; x++) {
-                for (let y = startY; y <= endY; y++) {
-                    const noise = seededRandom(x, y);
-                    if (noise < 0.02) { // Árvore
-                        const tx = x * TILE_SIZE + 16;
-                        const ty = y * TILE_SIZE + 16;
-                        if (Math.hypot(newX - tx, newY - ty) < game.player.radius + 8) return true;
+            const sx = Math.floor((newX - 40) / TILE_SIZE);
+            const sy = Math.floor((newY - 40) / TILE_SIZE);
+            for (let x = sx; x <= sx + 3; x++) {
+                for (let y = sy; y <= sy + 3; y++) {
+                    if (seededRandom(x, y) < 0.02) {
+                        const dist = Math.hypot(newX - (x * TILE_SIZE + 16), newY - (y * TILE_SIZE + 16));
+                        if (dist < game.player.radius + 8) return true;
                     }
                 }
             }
             return false;
         }
 
-        function drawWorld(ctx) {
+        function drawWorld() {
             const startX = Math.floor(game.camera.x / TILE_SIZE) - 1;
             const endX = Math.ceil((game.camera.x + game.width) / TILE_SIZE) + 1;
             const startY = Math.floor(game.camera.y / TILE_SIZE) - 1;
@@ -184,78 +158,49 @@
                     const noise = seededRandom(x, y);
                     const wx = x * TILE_SIZE;
                     const wy = y * TILE_SIZE;
-
                     ctx.fillStyle = noise > 0.8 ? "#559449" : "#5da051";
                     ctx.fillRect(wx, wy, TILE_SIZE + 1, TILE_SIZE + 1);
-
-                    if (noise < 0.02) drawTree(ctx, wx + 16, wy + 16);
-                    else if (noise > 0.98) drawBush(ctx, wx + 16, wy + 16);
+                    if (noise < 0.02) {
+                        ctx.fillStyle = "#4a2d18"; ctx.fillRect(wx + 12, wy + 16, 8, 12);
+                        ctx.fillStyle = "#2d5a27"; ctx.fillRect(wx + 4, wy - 4, 24, 20);
+                    } else if (noise > 0.98) {
+                        ctx.fillStyle = "#3a7332"; ctx.beginPath(); ctx.arc(wx+16, wy+24, 8, 0, 7); ctx.fill();
+                    }
                 }
             }
         }
 
-        function drawTree(ctx, x, y) {
-            ctx.fillStyle = "#4a2d18"; ctx.fillRect(x - 4, y, 8, 12);
-            ctx.fillStyle = "#2d5a27"; ctx.fillRect(x - 12, y - 20, 24, 20);
-        }
-
-        function drawBush(ctx, x, y) {
-            ctx.fillStyle = "#3a7332"; ctx.beginPath(); ctx.arc(x, y + 8, 8, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = "#ef4444"; ctx.fillRect(x - 2, y + 6, 4, 4);
-        }
-
-        // --- INPUT SYSTEM (CORREÇÃO DE BUGS) ---
+        // --- INPUT ROBUSTO ---
         const stick = document.getElementById('joystick-stick');
         const base = document.getElementById('joystick-base');
 
-        const resetJoystick = () => {
-            game.input.isTouching = false; 
-            game.input.joyX = 0; 
-            game.input.joyY = 0;
-            stick.style.transform = `translate(0px, 0px)`;
-        };
-
         const handleInput = (e) => {
             if (game.state !== 'PLAYING') return;
-            
-            // Impede o comportamento padrão do navegador (Scroll/Refresh)
-            if (e.cancelable) e.preventDefault();
-            
+            e.preventDefault();
             const touch = e.touches[0];
             const rect = base.getBoundingClientRect();
             const dx = touch.clientX - (rect.left + rect.width / 2);
             const dy = touch.clientY - (rect.top + rect.height / 2);
             const dist = Math.hypot(dx, dy);
             const max = 40;
-
             const nx = dist > max ? dx * max / dist : dx;
             const ny = dist > max ? dy * max / dist : dy;
-            
             stick.style.transform = `translate(${nx}px, ${ny}px)`;
             game.input.joyX = nx / max;
             game.input.joyY = ny / max;
             if (dx !== 0) game.player.dir = dx > 0 ? 1 : -1;
         };
 
-        // Listeners corrigidos para Mobile Robustez
         base.addEventListener('touchstart', (e) => { 
-            if (game.state !== 'PLAYING') return;
-            game.input.isTouching = true; 
-            handleInput(e); 
-        }, {passive: false});
-        
-        // Touchmove na window garante que pegue mesmo se o dedo sair da base
+            game.input.isTouching = true; handleInput(e); 
+        }, { passive: false });
         window.addEventListener('touchmove', (e) => { 
             if(game.input.isTouching) handleInput(e); 
-        }, {passive: false});
-        
-        // Touchend e Touchcancel na window garantem o reset
-        window.addEventListener('touchend', resetJoystick);
-        
-        // CORREÇÃO 1: Touchcancel resolve o bug de travar andando se o navegador interromper
-        window.addEventListener('touchcancel', resetJoystick);
+        }, { passive: false });
+        window.addEventListener('touchend', () => game.resetInput());
+        window.addEventListener('touchcancel', () => game.resetInput());
 
-        // --- ENGINE CORE ---
+        // --- CORE ---
         function resize() {
             game.width = canvas.width = window.innerWidth;
             game.height = canvas.height = window.innerHeight;
@@ -264,34 +209,27 @@
 
         function update(dt) {
             if (game.state === 'MENU') {
-                game.camera.x += 30 * dt;
-                game.camera.y += 10 * dt;
+                game.camera.x += 30 * dt; game.camera.y += 10 * dt;
                 return;
             }
-
             if (game.input.isTouching) {
-                const nextX = game.player.x + game.input.joyX * PLAYER_SPEED * dt;
-                const nextY = game.player.y + game.input.joyY * PLAYER_SPEED * dt;
-
-                if (!checkCollision(nextX, game.player.y)) game.player.x = nextX;
-                if (!checkCollision(game.player.x, nextY)) game.player.y = nextY;
+                const nx = game.player.x + game.input.joyX * PLAYER_SPEED * dt;
+                const ny = game.player.y + game.input.joyY * PLAYER_SPEED * dt;
+                if (!checkCollision(nx, game.player.y)) game.player.x = nx;
+                if (!checkCollision(game.player.x, ny)) game.player.y = ny;
             }
-
             game.camera.x = game.player.x - game.width / 2;
             game.camera.y = game.player.y - game.height / 2;
-
             game.player.hunger -= 0.5 * dt;
-            const hBar = document.getElementById('hunger-bar');
-            if(hBar) hBar.style.width = Math.max(0, game.player.hunger) + "%";
+            const h = document.getElementById('hunger-bar');
+            if(h) h.style.width = Math.max(0, game.player.hunger) + "%";
         }
 
         function draw() {
             ctx.fillStyle = "#222"; ctx.fillRect(0, 0, game.width, game.height);
             ctx.save();
             ctx.translate(-game.camera.x, -game.camera.y);
-            
-            drawWorld(ctx);
-
+            drawWorld();
             if (game.state === 'PLAYING') {
                 ctx.fillStyle = "white"; ctx.fillRect(game.player.x - 16, game.player.y - 16, 32, 32);
                 ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x + (game.player.dir === 1 ? 12 : -24), game.player.y - 4, 12, 8);
@@ -300,10 +238,9 @@
             ctx.restore();
         }
 
-        function loop(timestamp) {
-            let dt = Math.min(0.1, (timestamp - game.lastTime) / 1000);
-            game.lastTime = timestamp;
-            update(dt); draw();
+        function loop(t) {
+            let dt = Math.min(0.1, (t - game.lastTime) / 1000);
+            game.lastTime = t; update(dt); draw();
             requestAnimationFrame(loop);
         }
 
