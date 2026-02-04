@@ -3,77 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pato Survival V2.8</title>
+    <title>Pato Survival V2.9</title>
     <style>
+        /* CSS RESET & BASE */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #111; font-family: 'Segoe UI', sans-serif; position: fixed; }
         canvas { display: block; image-rendering: pixelated; width: 100vw; height: 100vh; z-index: 1; }
 
+        /* LAYERS */
         .layer { position: fixed; inset: 0; pointer-events: none; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .hidden { display: none !important; }
         .interactive { pointer-events: auto !important; }
 
-        /* MENU PRINCIPAL COM LOG */
-        #ui-main { background: radial-gradient(circle, #2d5a27 0%, #1a1a1a 100%); z-index: 500; }
-        .log-box { background: rgba(0,0,0,0.6); width: 280px; height: 150px; border-radius: 10px; padding: 10px; margin: 15px 0; overflow-y: auto; color: #ccc; font-size: 11px; text-align: left; border: 1px solid #444; }
-        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
-        .log-entry b { color: #fb923c; }
+        /* MENU PRINCIPAL */
+        #ui-main { background: radial-gradient(circle, #2d5a27 0%, #111 100%); z-index: 500; }
+        
+        /* BOTÃO DE LOG (CANTO) */
+        #btn-open-log { position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: #fb923c; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; box-shadow: 0 4px #a34e0d; }
 
-        /* HUD SUPERIOR */
-        .hud-top { position: absolute; top: 15px; left: 15px; display: flex; gap: 10px; z-index: 200; }
-        .badge { background: rgba(0,0,0,0.8); padding: 8px 15px; border-radius: 12px; color: white; border: 1px solid #fb923c; font-weight: bold; }
+        /* JANELAS MODAIS */
+        .window { background: #1e1e1e; width: 90%; max-width: 320px; border-radius: 20px; border: 4px solid #fb923c; padding: 15px; color: white; max-height: 85vh; display: flex; flex-direction: column; }
+        .window h3 { margin: 0 0 10px 0; text-align: center; }
+        
+        .scroll-area { overflow-y: auto; flex: 1; margin: 10px 0; padding-right: 5px; }
+        .btn-ui { background: #22c55e; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; margin: 5px 0; box-shadow: 0 4px #15803d; flex-shrink: 0; }
+        
+        /* LOG ESTILO LISTA */
+        .log-item { background: #2a2a2a; padding: 8px; border-radius: 8px; margin-bottom: 8px; font-size: 12px; border-left: 4px solid #fb923c; }
 
-        /* HOTBAR - TRAVADA NO FUNDO */
-        #hotbar { 
-            position: absolute; 
-            bottom: 15px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            display: flex; 
-            gap: 8px; 
-            background: rgba(0,0,0,0.85); 
-            padding: 10px; 
-            border-radius: 18px; 
-            pointer-events: auto; 
-            z-index: 400; 
-            border: 2px solid #444;
-        }
-        .slot { width: 48px; height: 48px; background: #333; border: 2px solid #555; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; position: relative; }
-        .slot.active { border-color: #fb923c; background: #444; box-shadow: 0 0 15px rgba(251, 146, 60, 0.4); }
-        .qty { position: absolute; bottom: 2px; right: 5px; font-size: 11px; color: white; text-shadow: 1px 1px black; }
+        /* HUD & HOTBAR */
+        .hud-top { position: absolute; top: 15px; left: 15px; display: flex; gap: 8px; z-index: 200; }
+        .badge { background: rgba(0,0,0,0.8); padding: 8px 12px; border-radius: 10px; color: white; border: 1px solid #fb923c; font-weight: bold; font-size: 13px; }
 
-        /* CONTROLES - TRAVADOS EM BAIXO */
-        #controls { position: absolute; bottom: 25px; left: 20px; display: grid; grid-template-areas: ". u ." "l . r" ". d ."; gap: 10px; pointer-events: auto; z-index: 300; }
-        .btn-dir { width: 55px; height: 55px; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2); border-radius: 15px; color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+        #hotbar { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; background: rgba(0,0,0,0.8); padding: 8px; border-radius: 15px; pointer-events: auto; z-index: 400; }
+        .slot { width: 44px; height: 44px; background: #333; border: 2px solid #555; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; position: relative; }
+        .slot.active { border-color: #fb923c; background: #444; }
+        .qty { position: absolute; bottom: 1px; right: 3px; font-size: 10px; color: white; font-weight: bold; }
 
-        #actions { position: absolute; bottom: 25px; right: 20px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; z-index: 300; }
-        .btn-act { width: 80px; height: 80px; border-radius: 25px; border: none; color: white; font-weight: bold; font-size: 12px; box-shadow: 0 6px rgba(0,0,0,0.4); }
+        /* CONTROLES */
+        #controls { position: absolute; bottom: 15px; left: 15px; display: grid; grid-template-areas: ". u ." "l . r" ". d ."; gap: 8px; pointer-events: auto; z-index: 300; }
+        .btn-dir { width: 48px; height: 48px; background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; display: flex; align-items: center; justify-content: center; }
 
-        /* JANELA DE CRAFT */
-        .window { background: #1e1e1e; width: 320px; border-radius: 20px; border: 4px solid #fb923c; padding: 20px; color: white; }
-        .btn-ui { background: #22c55e; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; margin: 5px 0; box-shadow: 0 4px #15803d; pointer-events: auto; }
+        #actions { position: absolute; bottom: 15px; right: 15px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; z-index: 300; }
+        .btn-act { width: 75px; height: 75px; border-radius: 20px; border: none; color: white; font-weight: bold; font-size: 11px; box-shadow: 0 5px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
 
     <div id="ui-main" class="layer interactive">
-        <h1 style="color:white; margin:0; text-shadow: 0 4px 10px rgba(0,0,0,0.5);">PATO SURVIVAL V2.8</h1>
-        
-        <div class="log-box">
-            <div class="log-entry"><b>v2.8:</b> Fundo animado, Log de updates, Hotbar fixa e Fix na construção.</div>
-            <div class="log-entry"><b>v2.7:</b> Adicionado Sistema de Pedras e Rochas.</div>
-            <div class="log-entry"><b>v2.6:</b> Novas receitas e Crafting de Bancada.</div>
-            <div class="log-entry"><b>v2.5:</b> Engine de exploração infinita.</div>
-        </div>
+        <h1 style="color:white; margin-bottom:20px; text-shadow: 0 4px #000;">PATO SURVIVAL</h1>
+        <button class="btn-ui" style="width:220px" onclick="game.start()">JOGAR</button>
+        <button class="btn-ui" style="width:220px; background:#475569; box-shadow:0 4px #2c3641" onclick="game.toggleSet(true)">CONFIGURAÇÕES</button>
+        <button id="btn-open-log" onclick="game.toggleLog(true)">📜</button>
+    </div>
 
-        <button class="btn-ui" style="width:200px" onclick="game.start()">JOGAR AGORA</button>
-        <button class="btn-ui" style="width:200px; background:#475569; box-shadow:0 4px #334155" onclick="game.toggleSet(true)">AJUSTES</button>
+    <div id="ui-log" class="layer hidden interactive">
+        <div class="window">
+            <h3>NOVIDADES</h3>
+            <div class="scroll-area">
+                <div class="log-item"><b>v2.9:</b> Log virou botão, fundo animado corrigido e escala do Crafting ajustada.</div>
+                <div class="log-item"><b>v2.8:</b> Sistema de construção funcional e hotbar fixa.</div>
+                <div class="log-item"><b>v2.7:</b> Adição de Rochas e Picareta.</div>
+            </div>
+            <button class="btn-ui" style="background:#475569" onclick="game.toggleLog(false)">VOLTAR</button>
+        </div>
     </div>
 
     <div id="ui-settings" class="layer hidden interactive">
         <div class="window" style="border-color:#475569">
-            <h3>AJUSTES</h3>
-            <p>Cor do Pato: <input type="color" id="p-color" onchange="game.player.color = this.value"></p>
+            <h3>CONFIGURAÇÕES</h3>
+            <div class="scroll-area" style="text-align:center">
+                <p>Cor do Pato: <input type="color" onchange="game.player.color = this.value" value="#ffffff"></p>
+            </div>
             <button class="btn-ui" style="background:#475569" onclick="game.toggleSet(false)">VOLTAR</button>
         </div>
     </div>
@@ -81,7 +82,7 @@
     <div id="ui-crafting" class="layer hidden interactive">
         <div class="window">
             <h3 id="craft-title">🔨 CRAFTING</h3>
-            <div id="recipe-list" style="margin:15px 0; max-height:200px; overflow-y:auto;"></div>
+            <div id="recipe-list" class="scroll-area"></div>
             <button class="btn-ui" style="background:#ef4444" onclick="game.toggleCraft(false)">FECHAR</button>
         </div>
     </div>
@@ -91,7 +92,6 @@
             <div class="badge">🪵 <span id="w-val">0</span></div>
             <div class="badge">🪨 <span id="s-val">0</span></div>
         </div>
-
         <div id="hotbar">
             <div class="slot active" onclick="game.setSlot(0)">🪵<div class="qty" id="h0">0</div></div>
             <div class="slot" onclick="game.setSlot(1)">🪨<div class="qty" id="h1">0</div></div>
@@ -99,14 +99,12 @@
             <div class="slot" onclick="game.setSlot(3)">⛏️<div class="qty" id="h3">0</div></div>
             <div class="slot" onclick="game.setSlot(4)">🔥<div class="qty" id="h4">0</div></div>
         </div>
-
         <div id="controls">
             <div class="btn-dir" style="grid-area:u" id="c-u">▲</div>
             <div class="btn-dir" style="grid-area:l" id="c-l">◀</div>
             <div class="btn-dir" style="grid-area:r" id="c-r">▶</div>
             <div class="btn-dir" style="grid-area:d" id="c-d">▼</div>
         </div>
-
         <div id="actions">
             <button id="btn-place" class="btn-act hidden" style="background:#2563eb" onclick="game.place()">📍<br>COLOCAR</button>
             <button id="btn-bench" class="btn-act hidden" style="background:#fb923c" onclick="game.toggleCraft(true, false)">⚒️<br>BANCADA</button>
@@ -127,7 +125,7 @@
             camera: { x: 0, y: 0 },
             world: { objects: [], removed: new Set() },
             keys: { u:0, d:0, l:0, r:0 },
-            particles: [], // Fundo animado
+            particles: Array.from({length: 25}, () => ({ x: Math.random()*2000, y: Math.random()*2000, s: 1+Math.random()*2 })),
 
             recipes: [
                 { id: 'table', name: 'Bancada', cost: { wood: 4, stone: 2 }, icon: '📦', bench: false },
@@ -135,13 +133,9 @@
                 { id: 'fire', name: 'Fogueira', cost: { wood: 10, stone: 5 }, icon: '🔥', bench: true }
             ],
 
-            start() {
-                this.state = 'PLAY';
-                document.getElementById('ui-main').classList.add('hidden');
-                document.getElementById('ui-hud').classList.remove('hidden');
-            },
-
+            start() { this.state = 'PLAY'; document.getElementById('ui-main').classList.add('hidden'); document.getElementById('ui-hud').classList.remove('hidden'); },
             toggleSet(s) { document.getElementById('ui-settings').classList.toggle('hidden', !s); },
+            toggleLog(s) { document.getElementById('ui-log').classList.toggle('hidden', !s); },
 
             toggleCraft(show, manual = true) {
                 this.state = show ? 'UI' : 'PLAY';
@@ -154,9 +148,9 @@
                         if(manual !== !r.bench) return;
                         const can = Object.keys(r.cost).every(k => this.player[k] >= r.cost[k]);
                         const card = document.createElement('div');
-                        card.style = `background:#333; padding:10px; margin-bottom:5px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; opacity:${can?1:0.5}`;
+                        card.style = `background:#2a2a2a; padding:10px; margin-bottom:8px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid #444; opacity:${can?1:0.5}`;
                         card.innerHTML = `<div><b>${r.icon} ${r.name}</b><br><small>${Object.entries(r.cost).map(([k,v])=>`${v}${k==='wood'?'🪵':'🪨'}`).join(' ')}</small></div>
-                                          <button class="btn-ui" style="width:70px; padding:5px; margin:0" onclick="game.doCraft('${r.id}')" ${can?'':'disabled'}>CRAFT</button>`;
+                                          <button class="btn-ui" style="width:70px; padding:6px; margin:0" onclick="game.doCraft('${r.id}')" ${can?'':'disabled'}>CRAFT</button>`;
                         list.appendChild(card);
                     });
                 }
@@ -188,14 +182,8 @@
 
             place() {
                 const p = this.player;
-                // Verificação rigorosa do Slot
-                if(p.slot === 2 && p.table > 0) { 
-                    this.world.objects.push({x: p.x, y: p.y, type: 'table'}); 
-                    p.table--; 
-                } else if(p.slot === 4 && p.fire > 0) {
-                    this.world.objects.push({x: p.x, y: p.y, type: 'fire'});
-                    p.fire--;
-                }
+                if(p.slot === 2 && p.table > 0) { this.world.objects.push({x: p.x, y: p.y, type: 'table'}); p.table--; }
+                else if(p.slot === 4 && p.fire > 0) { this.world.objects.push({x: p.x, y: p.y, type: 'fire'}); p.fire--; }
                 this.updateUI();
             },
 
@@ -203,62 +191,41 @@
                 const p = this.player;
                 document.getElementById('w-val').innerText = p.wood;
                 document.getElementById('s-val').innerText = p.stone;
-                [p.wood, p.stone, p.table, p.pickaxe, p.fire].forEach((v, i) => {
-                    document.getElementById('h'+i).innerText = v;
-                });
-                // Só mostra COLOCAR se o slot selecionado tiver item de construção
+                [p.wood, p.stone, p.table, p.pickaxe, p.fire].forEach((v, i) => document.getElementById('h'+i).innerText = v);
                 const canPlace = (p.slot === 2 && p.table > 0) || (p.slot === 4 && p.fire > 0);
                 document.getElementById('btn-place').classList.toggle('hidden', !canPlace);
             },
 
-            setSlot(i) { 
-                this.player.slot = i; 
-                document.querySelectorAll('.slot').forEach((s, idx) => s.classList.toggle('active', idx === i)); 
-                this.updateUI(); 
-            }
+            setSlot(i) { this.player.slot = i; document.querySelectorAll('.slot').forEach((s, idx) => s.classList.toggle('active', idx === i)); this.updateUI(); }
         };
 
-        // SETUP DE BOTÕES
         const bind = (id, k) => {
             const el = document.getElementById(id);
             el.ontouchstart = (e) => { e.preventDefault(); game.keys[k] = 1; };
             el.ontouchend = (e) => { e.preventDefault(); game.keys[k] = 0; };
         };
-        bind('c-u','u'); bind('c-d','d'); bind('c-l','l'); bind('c-r','r');
-
-        // INICIALIZA PARTÍCULAS DO MENU
-        for(let i=0; i<30; i++) game.particles.push({x: Math.random()*2000, y: Math.random()*2000, s: 1+Math.random()*2});
+        ['u','d','l','r'].forEach(k => bind('c-'+k, k));
 
         function draw() {
             const cw = canvas.width = window.innerWidth, ch = canvas.height = window.innerHeight;
             
-            if(game.state === 'PLAY') {
-                let mx = game.keys.r - game.keys.l, my = game.keys.d - game.keys.u;
-                if(mx || my) {
-                    const m = Math.hypot(mx,my);
-                    game.player.x += (mx/m)*3.2; game.player.y += (my/m)*3.2;
-                    if(mx) game.player.dir = mx > 0 ? 1 : -1;
-                }
-                game.camera.x = game.player.x - cw/2;
-                game.camera.y = game.player.y - ch/2;
-            }
-
-            // FUNDO
-            ctx.fillStyle = game.state === 'MENU' ? "#1a1a1a" : "#457b3e";
-            ctx.fillRect(0,0,cw,ch);
-
-            ctx.save();
-            if(game.state === 'PLAY') ctx.translate(-game.camera.x, -game.camera.y);
-            else {
-                // ANIMAÇÃO DO MENU (Partículas de vento)
-                ctx.strokeStyle = "rgba(255,255,255,0.1)";
+            // LOGICA DE FUNDO
+            if(game.state === 'MENU') {
+                ctx.fillStyle = "#111"; ctx.fillRect(0,0,cw,ch);
+                ctx.strokeStyle = "rgba(255,255,255,0.05)";
                 game.particles.forEach(p => {
-                    p.x -= p.s; if(p.x < -50) p.x = cw + 50;
-                    ctx.beginPath(); ctx.moveTo(p.x, p.y % ch); ctx.lineTo(p.x+20, p.y % ch); ctx.stroke();
+                    p.x -= p.s; if(p.x < -20) p.x = cw + 20;
+                    ctx.beginPath(); ctx.moveTo(p.x, p.y % ch); ctx.lineTo(p.x+15, p.y % ch); ctx.stroke();
                 });
-            }
-
-            if(game.state === 'PLAY') {
+            } else {
+                if(game.state === 'PLAY') {
+                    let mx = game.keys.r - game.keys.l, my = game.keys.d - game.keys.u;
+                    if(mx || my) { const m = Math.hypot(mx,my); game.player.x += (mx/m)*3.2; game.player.y += (my/m)*3.2; if(mx) game.player.dir = mx > 0 ? 1 : -1; }
+                    game.camera.x = game.player.x - cw/2; game.camera.y = game.player.y - ch/2;
+                }
+                ctx.fillStyle = "#457b3e"; ctx.fillRect(0,0,cw,ch);
+                ctx.save(); ctx.translate(-game.camera.x, -game.camera.y);
+                
                 const sX = Math.floor(game.camera.x/32)-1, eX = Math.ceil((game.camera.x+cw)/32)+1;
                 const sY = Math.floor(game.camera.y/32)-1, eY = Math.ceil((game.camera.y+ch)/32)+1;
                 for(let x=sX; x<=eX; x++) {
@@ -266,14 +233,9 @@
                         const n = Math.abs(Math.sin(x*12.9 + y*78.2)*43758)%1;
                         if(n > 0.8) { ctx.fillStyle = "#3d6e36"; ctx.fillRect(x*32, y*32, 33, 33); }
                         if(game.world.removed.has(`${x},${y}`)) continue;
-                        if(n < 0.02) { 
-                            ctx.fillStyle="#4a2d18"; ctx.fillRect(x*32+12,y*32+16,8,12); 
-                            ctx.fillStyle="#2d5a27"; ctx.fillRect(x*32+4,y*32-4,24,20);
-                        } else if(n < 0.06) {
-                            ctx.fillStyle="#999"; ctx.beginPath(); ctx.arc(x*32+16,y*32+20,4,0,7); ctx.fill();
-                        } else if(n > 0.97) {
-                            ctx.fillStyle="#666"; ctx.fillRect(x*32+4,y*32+4,24,24);
-                        }
+                        if(n < 0.02) { ctx.fillStyle="#4a2d18"; ctx.fillRect(x*32+12,y*32+16,8,12); ctx.fillStyle="#2d5a27"; ctx.fillRect(x*32+4,y*32-4,24,20); }
+                        else if(n < 0.06) { ctx.fillStyle="#999"; ctx.beginPath(); ctx.arc(x*32+16,y*32+20,4,0,7); ctx.fill(); }
+                        else if(n > 0.97) { ctx.fillStyle="#666"; ctx.fillRect(x*32+4,y*32+4,24,24); }
                     }
                 }
 
@@ -281,7 +243,6 @@
                 game.world.objects.forEach(o => {
                     if(o.type==='table') {
                         ctx.fillStyle="#5d4037"; ctx.fillRect(o.x-16,o.y-12,32,24);
-                        ctx.fillStyle="#3e2723"; ctx.fillRect(o.x-16,o.y-12,32,4);
                         if(Math.hypot(game.player.x-o.x, game.player.y-o.y) < 65) nearBench = true;
                     } else {
                         ctx.fillStyle="#7c2d12"; ctx.fillRect(o.x-10,o.y-2,20,5);
@@ -290,14 +251,11 @@
                 });
                 document.getElementById('btn-bench').classList.toggle('hidden', !nearBench);
 
-                // PATO
-                ctx.fillStyle = game.player.color;
-                ctx.fillRect(game.player.x-16, game.player.y-16, 32, 32);
+                ctx.fillStyle = game.player.color; ctx.fillRect(game.player.x-16, game.player.y-16, 32, 32);
                 ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x+(game.player.dir===1?12:-24), game.player.y-4, 12, 8);
                 ctx.fillStyle = "black"; ctx.fillRect(game.player.x+(game.player.dir===1?6:-10), game.player.y-10, 4, 4);
+                ctx.restore();
             }
-
-            ctx.restore();
             requestAnimationFrame(draw);
         }
         draw();
