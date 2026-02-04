@@ -3,99 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Um Pato e um Sonho - Engine V1.5</title>
+    <title>Um Pato e um Sonho - V1.6</title>
     <style>
-        /* --- BLOQUEIO TOTAL DE COMPORTAMENTO NATIVO --- */
+        /* --- BLOQUEIO TOTAL DE GESTOS DO NAVEGADOR --- */
         * { 
             box-sizing: border-box; 
             -webkit-tap-highlight-color: transparent; 
             user-select: none;
             -webkit-user-select: none;
-            touch-action: none; /* Bloqueia zoom e scroll em todos os elementos */
+            touch-action: none;
         }
         
         body, html { 
             margin: 0; padding: 0; 
             width: 100%; height: 100%; 
             overflow: hidden; 
-            background: #222; 
-            font-family: 'Courier New', monospace;
-            /* Proteção contra Pull-to-refresh no Chrome/Android */
-            overscroll-behavior-y: contain;
-            overscroll-behavior-x: none;
-            position: fixed; /* Impede o corpo de rolar */
+            background: #1a1a1a; 
+            font-family: sans-serif;
+            overscroll-behavior: none;
+            position: fixed;
         }
         
         canvas { display: block; image-rendering: pixelated; width: 100vw; height: 100vh; }
 
-        /* --- UI LAYERS --- */
-        .layer { position: fixed; inset: 0; pointer-events: none; transition: opacity 0.5s; z-index: 10; }
-        .hidden { opacity: 0; pointer-events: none !important; }
-        .visible { opacity: 1; pointer-events: auto; }
+        .layer { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+        .hidden { display: none !important; }
 
-        /* HUD */
-        .status-container { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 8px; border: 2px solid #333; }
-        .bar { width: 120px; height: 10px; background: #1a1a1a; margin: 4px 0; border-radius: 5px; overflow: hidden; }
-        .fill { height: 100%; transition: width 0.3s; }
+        /* HUD STATUS */
+        .status-box { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 8px; border-radius: 10px; border: 2px solid #333; }
+        .bar { width: 100px; height: 8px; background: #222; margin: 4px 0; border-radius: 4px; overflow: hidden; }
+        .fill { height: 100%; transition: width 0.2s; }
 
-        /* Joystick */
-        #joystick-base { 
-            position: absolute; bottom: 40px; left: 40px; 
-            width: 100px; height: 100px; 
-            background: rgba(255,255,255,0.1); 
-            border-radius: 50%; border: 2px solid #fff3;
+        /* --- NOVO SISTEMA DE SETAS (D-PAD) --- */
+        #controls-container {
+            position: absolute; bottom: 20px; left: 20px;
+            display: grid;
+            grid-template-areas: 
+                ". up ."
+                "left . right"
+                ". down .";
+            gap: 8px;
+            pointer-events: auto;
         }
-        #joystick-stick { 
-            position: absolute; top: 25px; left: 25px; 
-            width: 50px; height: 50px; 
-            background: #fff; border-radius: 50%; 
-            opacity: 0.7; box-shadow: 0 4px rgba(0,0,0,0.3);
-            will-change: transform;
-        }
-        
-        #action-bar { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; }
-        .btn-action { width: 70px; height: 70px; background: #333; border: 3px solid #111; border-radius: 12px; color: #fff; font-size: 10px; font-weight: bold; cursor: pointer; }
-        .btn-action:active { transform: scale(0.9); background: #444; }
 
-        /* MENU PRINCIPAL */
+        .btn-arrow {
+            width: 45px; height: 45px;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 20px; font-weight: bold;
+            backdrop-filter: blur(4px);
+        }
+        .btn-arrow:active { background: rgba(255,255,255,0.4); transform: scale(0.9); }
+        .up { grid-area: up; } .down { grid-area: down; }
+        .left { grid-area: left; } .right { grid-area: right; }
+
+        /* AÇÕES */
+        #action-container { position: absolute; bottom: 25px; right: 20px; pointer-events: auto; }
+        .btn-collect { 
+            width: 70px; height: 70px; 
+            background: #222; border: 3px solid #444; border-radius: 15px;
+            color: white; font-size: 10px; font-weight: bold;
+        }
+
+        /* MENU */
         #ui-menu { 
-            z-index: 100; background: rgba(0,0,0,0.7); 
+            z-index: 100; background: #111; pointer-events: auto;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
         }
-        h1 { color: #fff; text-shadow: 4px 4px 0 #000; font-size: 2.5rem; margin: 0; }
-        .subtitle { color: #22c55e; font-weight: bold; margin-bottom: 40px; }
-        .btn-menu {
-            background: #22c55e; color: white; border: 4px solid #15803d;
-            padding: 15px 50px; font-size: 1.2rem; font-weight: bold;
-            border-radius: 8px; box-shadow: 0 6px #14532d;
+        .menu-title { color: white; font-size: 32px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        .menu-sub { color: #4ade80; font-weight: bold; margin-bottom: 30px; }
+        .btn-start { 
+            background: #22c55e; color: white; border: none; padding: 15px 40px; 
+            border-radius: 10px; font-size: 18px; font-weight: bold; box-shadow: 0 5px #166534;
         }
     </style>
 </head>
-<body scroll="no">
+<body>
 
-    <div id="ui-menu" class="layer visible">
-        <h1>UM PATO</h1>
-        <div class="subtitle">E UM SONHO!</div>
-        <button class="btn-menu" id="start-btn">INICIAR JORNADA</button>
+    <div id="ui-menu" class="layer">
+        <div class="menu-title">Um Pato</div>
+        <div class="menu-sub">e um Sonho!</div>
+        <button class="btn-start" onclick="game.startGame()">Iniciar Jornada</button>
     </div>
 
     <div id="ui-hud" class="layer hidden">
-        <div class="status-container">
-            <div class="bar"><div id="hp-bar" class="fill" style="background: #ff4d4d; width: 100%;"></div></div>
-            <div class="bar"><div id="hunger-bar" class="fill" style="background: #ffcc00; width: 100%;"></div></div>
+        <div class="status-box">
+            <div class="bar"><div id="hp-bar" class="fill" style="background: #ef4444; width: 100%;"></div></div>
+            <div class="bar"><div id="hunger-bar" class="fill" style="background: #f59e0b; width: 100%;"></div></div>
         </div>
-        <div id="joystick-base"><div id="joystick-stick"></div></div>
-        <div id="action-bar"><button class="btn-action" onclick="game.interact()">⛏️<br>COLETAR</button></div>
+
+        <div id="controls-container">
+            <div class="btn-arrow up" id="btn-up">▲</div>
+            <div class="btn-arrow left" id="btn-left">◀</div>
+            <div class="btn-arrow right" id="btn-right">▶</div>
+            <div class="btn-arrow down" id="btn-down">▼</div>
+        </div>
+
+        <div id="action-container">
+            <button class="btn-collect" onclick="game.interact()">⛏️<br>COLETAR</button>
+        </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // --- ANTI-REFRESH E BLOQUEIO DE GESTOS ---
-        // Bloqueia preventivamente qualquer scroll ou refresh no nível do documento
-        document.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
-        window.addEventListener('scroll', (e) => { window.scrollTo(0, 0); e.preventDefault(); });
+        // Bloqueio extra contra Pull-to-refresh
+        window.addEventListener('touchstart', function(e) {
+            if (e.target.tagName !== 'BUTTON') e.preventDefault();
+        }, { passive: false });
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d', { alpha: false });
@@ -109,23 +126,31 @@
             width: 0, height: 0,
             player: { x: 1000, y: 1000, radius: 12, hp: 100, hunger: 100, dir: 1 },
             camera: { x: 0, y: 0 },
-            world: { seed: 12345 },
-            input: { joyX: 0, joyY: 0, isTouching: false },
+            world: { seed: 888 },
+            
+            // Estado das setas
+            keys: { up: false, down: false, left: false, right: false },
 
             startGame() {
                 this.state = 'PLAYING';
-                document.getElementById('ui-menu').classList.replace('visible', 'hidden');
-                document.getElementById('ui-hud').classList.replace('hidden', 'visible');
-                this.resetInput();
+                document.getElementById('ui-menu').classList.add('hidden');
+                document.getElementById('ui-hud').classList.remove('hidden');
             },
-            resetInput() {
-                this.input.joyX = 0; this.input.joyY = 0; this.input.isTouching = false;
-                document.getElementById('joystick-stick').style.transform = `translate(0px, 0px)`;
-            },
-            interact() { if (this.state === 'PLAYING') console.log("Coletando..."); }
+            interact() { console.log("Coletando..."); }
         };
 
-        document.getElementById('start-btn').onclick = () => game.startGame();
+        // --- INPUT SETUP (SETAS) ---
+        const bindButton = (id, key) => {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); game.keys[key] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); game.keys[key] = false; });
+            btn.addEventListener('touchcancel', (e) => { e.preventDefault(); game.keys[key] = false; });
+        };
+
+        bindButton('btn-up', 'up');
+        bindButton('btn-down', 'down');
+        bindButton('btn-left', 'left');
+        bindButton('btn-right', 'right');
 
         // --- WORLD & PHYSICS ---
         function seededRandom(x, y) {
@@ -133,13 +158,13 @@
             return val - Math.floor(val);
         }
 
-        function checkCollision(newX, newY) {
-            const sx = Math.floor((newX - 40) / TILE_SIZE);
-            const sy = Math.floor((newY - 40) / TILE_SIZE);
+        function checkCollision(nx, ny) {
+            const sx = Math.floor((nx - 40) / TILE_SIZE);
+            const sy = Math.floor((ny - 40) / TILE_SIZE);
             for (let x = sx; x <= sx + 3; x++) {
                 for (let y = sy; y <= sy + 3; y++) {
                     if (seededRandom(x, y) < 0.02) {
-                        const dist = Math.hypot(newX - (x * TILE_SIZE + 16), newY - (y * TILE_SIZE + 16));
+                        const dist = Math.hypot(nx - (x * TILE_SIZE + 16), ny - (y * TILE_SIZE + 16));
                         if (dist < game.player.radius + 8) return true;
                     }
                 }
@@ -163,42 +188,10 @@
                     if (noise < 0.02) {
                         ctx.fillStyle = "#4a2d18"; ctx.fillRect(wx + 12, wy + 16, 8, 12);
                         ctx.fillStyle = "#2d5a27"; ctx.fillRect(wx + 4, wy - 4, 24, 20);
-                    } else if (noise > 0.98) {
-                        ctx.fillStyle = "#3a7332"; ctx.beginPath(); ctx.arc(wx+16, wy+24, 8, 0, 7); ctx.fill();
                     }
                 }
             }
         }
-
-        // --- INPUT ROBUSTO ---
-        const stick = document.getElementById('joystick-stick');
-        const base = document.getElementById('joystick-base');
-
-        const handleInput = (e) => {
-            if (game.state !== 'PLAYING') return;
-            e.preventDefault();
-            const touch = e.touches[0];
-            const rect = base.getBoundingClientRect();
-            const dx = touch.clientX - (rect.left + rect.width / 2);
-            const dy = touch.clientY - (rect.top + rect.height / 2);
-            const dist = Math.hypot(dx, dy);
-            const max = 40;
-            const nx = dist > max ? dx * max / dist : dx;
-            const ny = dist > max ? dy * max / dist : dy;
-            stick.style.transform = `translate(${nx}px, ${ny}px)`;
-            game.input.joyX = nx / max;
-            game.input.joyY = ny / max;
-            if (dx !== 0) game.player.dir = dx > 0 ? 1 : -1;
-        };
-
-        base.addEventListener('touchstart', (e) => { 
-            game.input.isTouching = true; handleInput(e); 
-        }, { passive: false });
-        window.addEventListener('touchmove', (e) => { 
-            if(game.input.isTouching) handleInput(e); 
-        }, { passive: false });
-        window.addEventListener('touchend', () => game.resetInput());
-        window.addEventListener('touchcancel', () => game.resetInput());
 
         // --- CORE ---
         function resize() {
@@ -209,20 +202,29 @@
 
         function update(dt) {
             if (game.state === 'MENU') {
-                game.camera.x += 30 * dt; game.camera.y += 10 * dt;
+                game.camera.x += 20 * dt; game.camera.y += 10 * dt;
                 return;
             }
-            if (game.input.isTouching) {
-                const nx = game.player.x + game.input.joyX * PLAYER_SPEED * dt;
-                const ny = game.player.y + game.input.joyY * PLAYER_SPEED * dt;
+
+            let moveX = 0;
+            let moveY = 0;
+            if (game.keys.up) moveY -= 1;
+            if (game.keys.down) moveY += 1;
+            if (game.keys.left) { moveX -= 1; game.player.dir = -1; }
+            if (game.keys.right) { moveX += 1; game.player.dir = 1; }
+
+            if (moveX !== 0 || moveY !== 0) {
+                const mag = Math.hypot(moveX, moveY);
+                const nx = game.player.x + (moveX / mag) * PLAYER_SPEED * dt;
+                const ny = game.player.y + (moveY / mag) * PLAYER_SPEED * dt;
                 if (!checkCollision(nx, game.player.y)) game.player.x = nx;
                 if (!checkCollision(game.player.x, ny)) game.player.y = ny;
             }
+
             game.camera.x = game.player.x - game.width / 2;
             game.camera.y = game.player.y - game.height / 2;
-            game.player.hunger -= 0.5 * dt;
-            const h = document.getElementById('hunger-bar');
-            if(h) h.style.width = Math.max(0, game.player.hunger) + "%";
+            game.player.hunger -= 0.3 * dt;
+            document.getElementById('hunger-bar').style.width = Math.max(0, game.player.hunger) + "%";
         }
 
         function draw() {
