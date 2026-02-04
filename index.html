@@ -3,67 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Um Pato e um Sonho - Engine V1.2</title>
+    <title>Um Pato e um Sonho - Engine V1.3</title>
     <style>
+        /* --- CORE STYLES --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #222; font-family: sans-serif; }
-        #ui-layer { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
-        #ui-layer * { pointer-events: auto; }
-        .status-container { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; border: 2px solid #333; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #222; font-family: 'Courier New', monospace; }
+        
+        canvas { display: block; image-rendering: pixelated; width: 100%; height: 100%; }
+
+        /* --- UI LAYERS --- */
+        .layer { position: fixed; inset: 0; pointer-events: none; transition: opacity 0.5s; }
+        .hidden { opacity: 0; pointer-events: none !important; }
+        .visible { opacity: 1; pointer-events: auto; }
+
+        /* --- HUD (JOGO) --- */
+        #ui-hud { z-index: 10; }
+        #ui-hud * { pointer-events: auto; }
+
+        .status-container { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 8px; border: 2px solid #333; }
         .bar { width: 120px; height: 10px; background: #1a1a1a; margin: 4px 0; border-radius: 5px; overflow: hidden; }
         .fill { height: 100%; transition: width 0.3s; }
+
         #joystick-base { position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid #fff3; }
-        #joystick-stick { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.7; }
+        #joystick-stick { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.7; box-shadow: 0 4px rgba(0,0,0,0.3); }
+        
         #action-bar { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; }
-        .btn-action { width: 65px; height: 65px; background: #333; border: 3px solid #111; border-radius: 12px; color: #fff; font-size: 10px; font-weight: bold; }
-        canvas { display: block; image-rendering: pixelated; }
+        .btn-action { width: 65px; height: 65px; background: #333; border: 3px solid #111; border-radius: 12px; color: #fff; font-size: 10px; font-weight: bold; cursor: pointer; }
+        .btn-action:active { transform: scale(0.95); background: #444; }
+
+        /* --- MENU PRINCIPAL --- */
+        #ui-menu { 
+            z-index: 20; 
+            background: rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        #ui-menu * { pointer-events: auto; }
+        
+        h1 { color: #fff; text-shadow: 4px 4px 0 #000; font-size: 2.5rem; text-align: center; margin-bottom: 0; }
+        .subtitle { color: #fb923c; font-weight: bold; font-size: 1.2rem; margin-bottom: 40px; text-shadow: 2px 2px 0 #000; }
+        
+        .btn-menu {
+            background: #22c55e; color: white; border: 4px solid #15803d;
+            padding: 15px 50px; font-size: 1.5rem; font-family: inherit; font-weight: bold;
+            border-radius: 8px; cursor: pointer; box-shadow: 0 6px #14532d;
+            transition: transform 0.1s;
+        }
+        .btn-menu:active { transform: translateY(4px); box-shadow: 0 2px #14532d; }
     </style>
 </head>
 <body>
 
-    <div id="ui-layer">
+    <div id="ui-menu" class="layer visible">
+        <h1>UM PATO</h1>
+        <div class="subtitle">E UM SONHO</div>
+        <button class="btn-menu" onclick="game.startGame()">JOGAR</button>
+    </div>
+
+    <div id="ui-hud" class="layer hidden">
         <div class="status-container">
             <div class="bar"><div id="hp-bar" class="fill" style="background: #ff4d4d; width: 100%;"></div></div>
             <div class="bar"><div id="hunger-bar" class="fill" style="background: #ffcc00; width: 100%;"></div></div>
         </div>
-        <div id="joystick-base"><div id="joystick-stick"></div></div>
-        <div id="action-bar"><button class="btn-action" onclick="game.interact()">⛏️<br>COLETAR</button></div>
+
+        <div id="joystick-base">
+            <div id="joystick-stick"></div>
+        </div>
+
+        <div id="action-bar">
+            <button class="btn-action" onclick="game.interact()">⛏️<br>COLETAR</button>
+        </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        /** @type {HTMLCanvasElement} */
+        /** * DUCK DREAM ENGINE V1.3
+         * Features: State Machine (Menu/Play), World Gen, Physics, Mobile Input
+         */
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d', { alpha: false });
 
+        // --- CONSTANTES ---
         const TILE_SIZE = 32;
         const PLAYER_SPEED = 160;
 
+        // --- GAME STATE ---
         const game = {
+            state: 'MENU', // 'MENU' ou 'PLAYING'
             lastTime: 0,
-            width: 0,
-            height: 0,
+            width: 0, height: 0,
+            
             player: {
                 x: 1000, y: 1000,
-                radius: 12, // Raio de colisão física
+                radius: 12,
                 hp: 100, hunger: 100,
                 dir: 1
             },
+            
             camera: { x: 0, y: 0 },
-            world: { seed: 12345, density: 0.05 },
+            
+            world: { seed: 999, density: 0.05 }, // Seed fixa ou Math.random()
+            
             input: { joyX: 0, joyY: 0, isTouching: false },
-            interact() { console.log("Interação disparada"); }
+
+            // Transição de Estado
+            startGame() {
+                this.state = 'PLAYING';
+                document.getElementById('ui-menu').classList.replace('visible', 'hidden');
+                document.getElementById('ui-hud').classList.replace('hidden', 'visible');
+                // Resetar inputs para evitar pulos
+                this.input.joyX = 0; this.input.joyY = 0;
+            },
+
+            interact() {
+                if (this.state !== 'PLAYING') return;
+                console.log("Ação: Coletar");
+            }
         };
 
-        // --- PHYSICS & WORLD GEN ---
+        // --- WORLD GENERATION (Procedural) ---
         function seededRandom(x, y) {
-            const seed = game.world.seed;
-            const value = Math.sin(x * 12.9898 + y * 78.233 + seed) * 43758.5453;
-            return value - Math.floor(value);
+            const val = Math.sin(x * 12.9898 + y * 78.233 + game.world.seed) * 43758.5453;
+            return val - Math.floor(val);
         }
 
-        /** Verifica colisão em um ponto específico do mundo */
         function checkCollision(newX, newY) {
             const startX = Math.floor((newX - 50) / TILE_SIZE);
             const endX = Math.ceil((newX + 50) / TILE_SIZE);
@@ -73,14 +137,11 @@
             for (let x = startX; x <= endX; x++) {
                 for (let y = startY; y <= endY; y++) {
                     const noise = seededRandom(x, y);
-                    if (noise < 0.02) { // É uma árvore
-                        const treeX = x * TILE_SIZE + 16;
-                        const treeY = y * TILE_SIZE + 16;
-                        const dx = newX - treeX;
-                        const dy = newY - treeY;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < game.player.radius + 8) return true;
+                    if (noise < 0.02) { // Árvore
+                        const tx = x * TILE_SIZE + 16;
+                        const ty = y * TILE_SIZE + 16;
+                        const dist = Math.hypot(newX - tx, newY - ty);
+                        if (dist < game.player.radius + 8) return true;
                     }
                 }
             }
@@ -96,14 +157,16 @@
             for (let x = startX; x <= endX; x++) {
                 for (let y = startY; y <= endY; y++) {
                     const noise = seededRandom(x, y);
-                    const worldX = x * TILE_SIZE;
-                    const worldY = y * TILE_SIZE;
+                    const wx = x * TILE_SIZE;
+                    const wy = y * TILE_SIZE;
 
+                    // Chão
                     ctx.fillStyle = noise > 0.8 ? "#559449" : "#5da051";
-                    ctx.fillRect(worldX, worldY, TILE_SIZE + 0.5, TILE_SIZE + 0.5);
+                    ctx.fillRect(wx, wy, TILE_SIZE + 1, TILE_SIZE + 1);
 
-                    if (noise < 0.02) drawTree(ctx, worldX + 16, worldY + 16);
-                    else if (noise > 0.98) drawBush(ctx, worldX + 16, worldY + 16);
+                    // Objetos
+                    if (noise < 0.02) drawTree(ctx, wx + 16, wy + 16);
+                    else if (noise > 0.98) drawBush(ctx, wx + 16, wy + 16);
                 }
             }
         }
@@ -115,33 +178,41 @@
 
         function drawBush(ctx, x, y) {
             ctx.fillStyle = "#3a7332"; ctx.beginPath(); ctx.arc(x, y + 8, 8, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = "#ff4d4d"; ctx.fillRect(x - 2, y + 6, 4, 4);
+            ctx.fillStyle = "#ef4444"; ctx.fillRect(x - 2, y + 6, 4, 4);
         }
 
-        // --- INPUT SYSTEM ---
+        // --- INPUT SYSTEM (Joystick) ---
         const stick = document.getElementById('joystick-stick');
         const base = document.getElementById('joystick-base');
 
         const handleInput = (e) => {
+            if (game.state !== 'PLAYING') return;
             e.preventDefault();
             const touch = e.touches[0];
             const rect = base.getBoundingClientRect();
             const dx = touch.clientX - (rect.left + rect.width / 2);
             const dy = touch.clientY - (rect.top + rect.height / 2);
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            const dist = Math.hypot(dx, dy);
             const max = 40;
 
-            const normalizedDX = dist > max ? dx * max / dist : dx;
-            const normalizedDY = dist > max ? dy * max / dist : dy;
+            const nx = dist > max ? dx * max / dist : dx;
+            const ny = dist > max ? dy * max / dist : dy;
             
-            stick.style.transform = `translate(${normalizedDX}px, ${normalizedDY}px)`;
-            game.input.joyX = normalizedDX / max;
-            game.input.joyY = normalizedDY / max;
+            stick.style.transform = `translate(${nx}px, ${ny}px)`;
+            game.input.joyX = nx / max;
+            game.input.joyY = ny / max;
             if (dx !== 0) game.player.dir = dx > 0 ? 1 : -1;
         };
 
-        base.addEventListener('touchstart', (e) => { game.input.isTouching = true; handleInput(e); }, {passive: false});
-        window.addEventListener('touchmove', (e) => { if(game.input.isTouching) handleInput(e); }, {passive: false});
+        base.addEventListener('touchstart', (e) => { 
+            if (game.state !== 'PLAYING') return;
+            game.input.isTouching = true; handleInput(e); 
+        }, {passive: false});
+        
+        window.addEventListener('touchmove', (e) => { 
+            if(game.input.isTouching) handleInput(e); 
+        }, {passive: false});
+        
         window.addEventListener('touchend', () => { 
             game.input.isTouching = false; game.input.joyX = 0; game.input.joyY = 0;
             stick.style.transform = `translate(0px, 0px)`;
@@ -155,32 +226,47 @@
         }
 
         function update(dt) {
+            if (game.state === 'MENU') {
+                // Efeito Cinematográfico: Câmera anda sozinha no menu
+                game.camera.x += 30 * dt;
+                game.camera.y += 10 * dt;
+                return;
+            }
+
+            // Lógica de Jogo (PLAYING)
             if (game.input.isTouching) {
                 const nextX = game.player.x + game.input.joyX * PLAYER_SPEED * dt;
                 const nextY = game.player.y + game.input.joyY * PLAYER_SPEED * dt;
 
-                // Colisão Independente nos Eixos (Deslizar em paredes)
                 if (!checkCollision(nextX, game.player.y)) game.player.x = nextX;
                 if (!checkCollision(game.player.x, nextY)) game.player.y = nextY;
             }
 
+            // Atualiza Câmera centrada no jogador
             game.camera.x = game.player.x - game.width / 2;
             game.camera.y = game.player.y - game.height / 2;
 
+            // Status
             game.player.hunger -= 0.5 * dt;
-            document.getElementById('hunger-bar').style.width = Math.max(0, game.player.hunger) + "%";
+            const hBar = document.getElementById('hunger-bar');
+            if(hBar) hBar.style.width = Math.max(0, game.player.hunger) + "%";
         }
 
         function draw() {
             ctx.fillStyle = "#222"; ctx.fillRect(0, 0, game.width, game.height);
+            
             ctx.save();
             ctx.translate(-game.camera.x, -game.camera.y);
+            
             drawWorld(ctx);
 
-            // Jogador
-            ctx.fillStyle = "white"; ctx.fillRect(game.player.x - 16, game.player.y - 16, 32, 32);
-            ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x + (game.player.dir === 1 ? 12 : -24), game.player.y - 4, 12, 8);
-            ctx.fillStyle = "black"; ctx.fillRect(game.player.x + (game.player.dir === 1 ? 6 : -10), game.player.y - 10, 4, 4);
+            // Só desenha o jogador se estiver jogando
+            if (game.state === 'PLAYING') {
+                ctx.fillStyle = "white"; ctx.fillRect(game.player.x - 16, game.player.y - 16, 32, 32);
+                ctx.fillStyle = "#fb923c"; ctx.fillRect(game.player.x + (game.player.dir === 1 ? 12 : -24), game.player.y - 4, 12, 8);
+                ctx.fillStyle = "black"; ctx.fillRect(game.player.x + (game.player.dir === 1 ? 6 : -10), game.player.y - 10, 4, 4);
+            }
+
             ctx.restore();
         }
 
