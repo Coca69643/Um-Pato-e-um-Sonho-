@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pato Survival V2.9.1</title>
+    <title>Pato Survival V3.0</title>
     <style>
         /* --- BASE --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #111; font-family: 'Segoe UI', sans-serif; position: fixed; }
         canvas { display: block; image-rendering: pixelated; width: 100vw; height: 100vh; z-index: 1; }
 
-        /* --- LAYERS (CAMADAS) --- */
+        /* --- LAYERS --- */
         .layer { position: fixed; inset: 0; pointer-events: none; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .hidden { display: none !important; }
         .interactive { pointer-events: auto !important; }
@@ -18,17 +18,16 @@
         /* --- MENU PRINCIPAL (Z: 500) --- */
         #ui-main { background: radial-gradient(circle, #2d5a27 0%, #0a0a0a 100%); z-index: 500; }
         
-        /* BOTÃO DE LOG (CANTO SUPERIOR) */
         #btn-open-log { 
             position: absolute; top: 20px; right: 20px; 
             width: 50px; height: 50px; 
             background: #fb923c; border: 2px solid #9a3412; border-radius: 12px; 
             display: flex; align-items: center; justify-content: center; 
             font-size: 24px; cursor: pointer; box-shadow: 0 4px #5e2e0b;
-            z-index: 501; /* Acima do fundo do menu */
+            z-index: 501; 
         }
 
-        /* --- MODAIS (LOG & SETTINGS) (Z: 600 - ACIMA DE TUDO) --- */
+        /* --- MODAIS (Z: 600) --- */
         #ui-log, #ui-settings { z-index: 600; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
         
         .window { 
@@ -38,14 +37,14 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
         .scroll-area { overflow-y: auto; max-height: 60vh; margin: 15px 0; padding-right: 5px; text-align: left; }
-        
         .log-item { background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; border-left: 4px solid #fb923c; color: #ddd; }
         .log-item b { color: #fff; display: block; margin-bottom: 3px; }
 
-        /* --- BOTÕES GERAIS --- */
+        /* --- ELEMENTOS DE FORMULÁRIO --- */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; background: #2a2a2a; padding: 10px; border-radius: 10px; }
         .btn-ui { background: #22c55e; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; margin: 6px 0; box-shadow: 0 4px #15803d; font-size: 16px; }
-        
-        /* --- HUD DO JOGO (Z: 200) --- */
+
+        /* --- HUD (Z: 200) --- */
         .hud-top { position: absolute; top: 15px; left: 15px; display: flex; gap: 8px; z-index: 200; }
         .badge { background: rgba(0,0,0,0.8); padding: 8px 12px; border-radius: 10px; color: white; border: 1px solid #fb923c; font-weight: bold; font-size: 13px; }
 
@@ -61,7 +60,7 @@
 
         #actions { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; pointer-events: auto; z-index: 300; }
         .btn-act { width: 75px; height: 75px; border-radius: 20px; border: none; color: white; font-weight: bold; font-size: 11px; box-shadow: 0 5px rgba(0,0,0,0.4); }
-
+        
         /* CRAFTING (Z: 450) */
         #ui-crafting { z-index: 450; background: rgba(0,0,0,0.9); }
     </style>
@@ -70,10 +69,8 @@
 
     <div id="ui-main" class="layer interactive">
         <h1 style="color:white; margin-bottom:30px; text-shadow: 0 4px 10px #000; font-size: 32px;">PATO SURVIVAL</h1>
-        
         <button class="btn-ui" style="width:240px" onclick="game.start()">JOGAR</button>
         <button class="btn-ui" style="width:240px; background:#475569; box-shadow:0 4px #2c3641" onclick="game.toggleSet(true)">CONFIGURAÇÕES</button>
-        
         <button id="btn-open-log" onclick="game.toggleLog(true)">📜</button>
     </div>
 
@@ -81,10 +78,9 @@
         <div class="window">
             <h3>📜 NOVIDADES</h3>
             <div class="scroll-area">
-                <div class="log-item"><b>v2.9.1 (Atual)</b><br>Correção visual: Menus não sobrepõem mais o jogo.</div>
-                <div class="log-item"><b>v2.9</b><br>Log agora é um botão dedicado. Ajuste de escala na Bancada.</div>
-                <div class="log-item"><b>v2.8</b><br>Correção da construção (Bancada/Fogueira) e Hotbar fixa.</div>
-                <div class="log-item"><b>v2.7</b><br>Adição de Rochas e Picareta.</div>
+                <div class="log-item"><b>v3.0 (Update Sonoro)</b><br>Adicionada música relaxante e nova Tocha decorativa.</div>
+                <div class="log-item"><b>v2.9.1</b><br>Correção visual: Menus isolados.</div>
+                <div class="log-item"><b>v2.8</b><br>Construção e Hotbar fixas.</div>
             </div>
             <button class="btn-ui" style="background:#475569" onclick="game.toggleLog(false)">VOLTAR</button>
         </div>
@@ -93,9 +89,15 @@
     <div id="ui-settings" class="layer hidden interactive">
         <div class="window" style="border-color:#475569">
             <h3>⚙️ CONFIGURAÇÕES</h3>
-            <div class="scroll-area" style="text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                <label style="margin-bottom:10px;">Cor do Pato</label>
-                <input type="color" style="width:60px; height:60px; border:none; border-radius:10px; cursor:pointer;" onchange="game.player.color = this.value" value="#ffffff">
+            <div class="scroll-area">
+                <div class="setting-row">
+                    <span>Cor do Pato</span>
+                    <input type="color" style="width:40px; height:40px; border:none; border-radius:8px;" onchange="game.player.color = this.value" value="#ffffff">
+                </div>
+                <div class="setting-row">
+                    <span>Música</span>
+                    <button id="btn-mus" style="background:#22c55e; border:none; color:white; padding:5px 10px; border-radius:5px;" onclick="game.toggleMusic()">LIGADA</button>
+                </div>
             </div>
             <button class="btn-ui" style="background:#475569" onclick="game.toggleSet(false)">VOLTAR</button>
         </div>
@@ -120,6 +122,7 @@
             <div class="slot" onclick="game.setSlot(2)">📦<div class="qty" id="h2">0</div></div>
             <div class="slot" onclick="game.setSlot(3)">⛏️<div class="qty" id="h3">0</div></div>
             <div class="slot" onclick="game.setSlot(4)">🔥<div class="qty" id="h4">0</div></div>
+            <div class="slot" onclick="game.setSlot(5)">🔦<div class="qty" id="h5">0</div></div>
         </div>
         <div id="controls">
             <div class="btn-dir" style="grid-area:u" id="c-u">▲</div>
@@ -142,23 +145,49 @@
         const ctx = canvas.getContext('2d', { alpha: false });
 
         const game = {
-            state: 'MENU', // MENU, PLAY, UI
-            player: { x: 1000, y: 1000, dir: 1, color: '#ffffff', wood: 0, stone: 0, table: 0, pickaxe: 0, fire: 0, slot: 0 },
+            state: 'MENU',
+            // Slot 5 agora é a Tocha
+            player: { x: 1000, y: 1000, dir: 1, color: '#ffffff', wood: 0, stone: 0, table: 0, pickaxe: 0, fire: 0, torch: 0, slot: 0 },
             camera: { x: 0, y: 0 },
             world: { objects: [], removed: new Set() },
             keys: { u:0, d:0, l:0, r:0 },
             particles: Array.from({length: 30}, () => ({ x: Math.random()*2000, y: Math.random()*2000, s: 1+Math.random()*2 })),
+            
+            // Sistema de Audio
+            audio: new Audio('https://opengameart.org/sites/default/files/Rolemusic_-_pl4y1ng.mp3'),
+            audioEnabled: true,
 
             recipes: [
                 { id: 'table', name: 'Bancada', cost: { wood: 4, stone: 2 }, icon: '📦', bench: false },
+                { id: 'torch', name: 'Tocha', cost: { wood: 2 }, icon: '🔦', bench: false }, // Novo Item
                 { id: 'pickaxe', name: 'Picareta', cost: { wood: 3, stone: 5 }, icon: '⛏️', bench: true },
                 { id: 'fire', name: 'Fogueira', cost: { wood: 10, stone: 5 }, icon: '🔥', bench: true }
             ],
+
+            init() {
+                this.audio.loop = true;
+                this.audio.volume = 0.4;
+            },
 
             start() { 
                 this.state = 'PLAY'; 
                 document.getElementById('ui-main').classList.add('hidden'); 
                 document.getElementById('ui-hud').classList.remove('hidden'); 
+                if(this.audioEnabled) this.audio.play().catch(e => console.log("Interação necessária para audio"));
+            },
+
+            toggleMusic() {
+                this.audioEnabled = !this.audioEnabled;
+                const btn = document.getElementById('btn-mus');
+                if(this.audioEnabled) {
+                    this.audio.play();
+                    btn.innerText = "LIGADA";
+                    btn.style.background = "#22c55e";
+                } else {
+                    this.audio.pause();
+                    btn.innerText = "DESLIG.";
+                    btn.style.background = "#ef4444";
+                }
             },
 
             toggleSet(s) { document.getElementById('ui-settings').classList.toggle('hidden', !s); },
@@ -188,7 +217,7 @@
                 Object.entries(r.cost).forEach(([k,v]) => this.player[k] -= v);
                 this.player[id]++;
                 this.updateUI();
-                this.toggleCraft(true, !r.bench); // Recarrega o menu
+                this.toggleCraft(true, !r.bench);
             },
 
             interact() {
@@ -211,6 +240,7 @@
                 const p = this.player;
                 if(p.slot === 2 && p.table > 0) { this.world.objects.push({x: p.x, y: p.y, type: 'table'}); p.table--; }
                 else if(p.slot === 4 && p.fire > 0) { this.world.objects.push({x: p.x, y: p.y, type: 'fire'}); p.fire--; }
+                else if(p.slot === 5 && p.torch > 0) { this.world.objects.push({x: p.x, y: p.y, type: 'torch'}); p.torch--; } // Colocar Tocha
                 this.updateUI();
             },
 
@@ -218,13 +248,18 @@
                 const p = this.player;
                 document.getElementById('w-val').innerText = p.wood;
                 document.getElementById('s-val').innerText = p.stone;
-                [p.wood, p.stone, p.table, p.pickaxe, p.fire].forEach((v, i) => document.getElementById('h'+i).innerText = v);
-                const canPlace = (p.slot === 2 && p.table > 0) || (p.slot === 4 && p.fire > 0);
+                [p.wood, p.stone, p.table, p.pickaxe, p.fire, p.torch].forEach((v, i) => {
+                    const el = document.getElementById('h'+i);
+                    if(el) el.innerText = v;
+                });
+                const canPlace = (p.slot === 2 && p.table > 0) || (p.slot === 4 && p.fire > 0) || (p.slot === 5 && p.torch > 0);
                 document.getElementById('btn-place').classList.toggle('hidden', !canPlace);
             },
 
             setSlot(i) { this.player.slot = i; document.querySelectorAll('.slot').forEach((s, idx) => s.classList.toggle('active', idx === i)); this.updateUI(); }
         };
+
+        game.init();
 
         const bind = (id, k) => {
             const el = document.getElementById(id);
@@ -236,9 +271,7 @@
         function draw() {
             const cw = canvas.width = window.innerWidth, ch = canvas.height = window.innerHeight;
             
-            // LÓGICA DE RENDERIZAÇÃO
             if(game.state === 'MENU') {
-                // Fundo do Menu (Animado)
                 ctx.fillStyle = "#111"; ctx.fillRect(0,0,cw,ch);
                 ctx.strokeStyle = "rgba(255,255,255,0.05)";
                 game.particles.forEach(p => {
@@ -246,14 +279,12 @@
                     ctx.beginPath(); ctx.moveTo(p.x, p.y % ch); ctx.lineTo(p.x+15, p.y % ch); ctx.stroke();
                 });
             } else {
-                // Jogo
                 if(game.state === 'PLAY') {
                     let mx = game.keys.r - game.keys.l, my = game.keys.d - game.keys.u;
                     if(mx || my) { const m = Math.hypot(mx,my); game.player.x += (mx/m)*3.2; game.player.y += (my/m)*3.2; if(mx) game.player.dir = mx > 0 ? 1 : -1; }
                     game.camera.x = game.player.x - cw/2; game.camera.y = game.player.y - ch/2;
                 }
                 
-                // Desenha Grama
                 ctx.fillStyle = "#457b3e"; ctx.fillRect(0,0,cw,ch);
                 ctx.save(); ctx.translate(-game.camera.x, -game.camera.y);
                 
@@ -264,9 +295,7 @@
                     for(let y=sY; y<=eY; y++) {
                         const n = Math.abs(Math.sin(x*12.9 + y*78.2)*43758)%1;
                         if(n > 0.8) { ctx.fillStyle = "#3d6e36"; ctx.fillRect(x*32, y*32, 33, 33); }
-                        
                         if(game.world.removed.has(`${x},${y}`)) continue;
-
                         if(n < 0.02) { 
                             ctx.fillStyle="#4a2d18"; ctx.fillRect(x*32+12,y*32+16,8,12); 
                             ctx.fillStyle="#2d5a27"; ctx.fillRect(x*32+4,y*32-4,24,20);
@@ -278,12 +307,17 @@
                     }
                 }
 
-                // Objetos
                 let nearBench = false;
                 game.world.objects.forEach(o => {
                     if(o.type==='table') {
                         ctx.fillStyle="#5d4037"; ctx.fillRect(o.x-16,o.y-12,32,24);
                         if(Math.hypot(game.player.x-o.x, game.player.y-o.y) < 65) nearBench = true;
+                    } else if(o.type==='torch') {
+                        // Desenho da Tocha
+                        ctx.fillStyle="#4a2d18"; ctx.fillRect(o.x-2, o.y, 4, 10);
+                        ctx.fillStyle="#facc15"; ctx.beginPath(); ctx.arc(o.x, o.y, 4, 0, 7); ctx.fill();
+                        // Efeito de brilho
+                        ctx.globalAlpha = 0.2; ctx.fillStyle="#facc15"; ctx.beginPath(); ctx.arc(o.x, o.y, 20, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
                     } else {
                         ctx.fillStyle="#7c2d12"; ctx.fillRect(o.x-10,o.y-2,20,5);
                         ctx.fillStyle="#f97316"; ctx.beginPath(); ctx.arc(o.x,o.y-6,7+Math.random()*2,0,7); ctx.fill();
