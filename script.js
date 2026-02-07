@@ -345,7 +345,7 @@ function updateHUD() {
     updateCraftAvailability();
 }
 
-// ==================== SISTEMA DE AÇÃO ====================
+// ==================== SISTEMA DE AÇÃO (ATUALIZADO) ====================
 function handleAction() {
     // Colocar bancada
     if(game.selectedSlot === 1 && game.inv.bench > 0) {
@@ -357,6 +357,75 @@ function handleAction() {
         saveGame();
         return;
     }
+    
+    // Coletar recursos - HITBOXES AJUSTADAS
+    const px = Math.floor(game.player.x / 60);
+    const py = Math.floor(game.player.y / 60);
+    
+    for(let x = px - 1; x <= px + 1; x++) {
+        for(let y = py - 1; y <= py + 1; y++) {
+            const id = `${x},${y}`;
+            const n = Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453123) % 1;
+            
+            if(n > 0.2) continue;
+            
+            const rx = x * 60 + 30;
+            const ry = y * 60 + 30;
+            
+            // HITBOXES AJUSTADAS POR TIPO
+            const isTree = n < 0.1;
+            const isRock = n >= 0.1 && n < 0.2;
+            
+            let hitboxWidth, hitboxHeight, hitboxOffsetY;
+            
+            if(isTree) {
+                // Hitbox da árvore: apenas o TRONCO
+                hitboxWidth = 30;
+                hitboxHeight = 35;
+                hitboxOffsetY = -15; // Base do tronco
+            } else if(isRock) {
+                // Hitbox da rocha: base da pedra
+                hitboxWidth = 40;
+                hitboxHeight = 25;
+                hitboxOffsetY = -10;
+            }
+            
+            // Verifica colisão com hitbox retangular
+            const distX = Math.abs(game.player.x - rx);
+            const distY = Math.abs(game.player.y - (ry + hitboxOffsetY + hitboxHeight / 2));
+            
+            if(distX < (hitboxWidth / 2 + 15) && distY < (hitboxHeight / 2 + 15)) {
+                if(!game.mapHP.has(id)) {
+                    game.mapHP.set(id, 6);
+                }
+                
+                let damage = 1;
+                
+                if(isTree && game.inv.axe && game.selectedSlot === 2) damage = 3;
+                if(isRock && game.inv.pick && game.selectedSlot === 3) damage = 3;
+                
+                const currentHP = game.mapHP.get(id);
+                game.mapHP.set(id, currentHP - damage);
+                
+                game.cam.shake = 6;
+                
+                if(game.mapHP.get(id) <= 0) {
+                    if(isTree) {
+                        game.res.wood += 3;
+                        createParticle(rx, ry, '🪵', '#8b4513');
+                    } else if(isRock) {
+                        game.res.stone += 3;
+                        createParticle(rx, ry, '🪨', '#64748b');
+                    }
+                    game.mapHP.set(id, -1);
+                }
+                
+                updateHUD();
+                return;
+            }
+        }
+    }
+}
     
     // Coletar recursos
     const px = Math.floor(game.player.x / 60);

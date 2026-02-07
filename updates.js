@@ -1,5 +1,14 @@
 // ==================== PATO SURVIVAL - RENDERING ENGINE ====================
 
+// ==================== CONFIGURAÇÕES DE ESCALA ====================
+const SCALES = {
+    tree: 0.35,      // Árvores ~120-140px de altura
+    rock: 0.45,      // Rochas ~50-60px
+    pato: 1.0,       // Pato mantém tamanho original
+    rabbit: 0.5,     // Coelhos proporcionais
+    bench: 1.0       // Bancadas mantêm tamanho
+};
+
 // ==================== FUNÇÕES DE DESENHO COM ASSETS ====================
 
 function drawTree(ctx, x, y, shake, hp) {
@@ -9,26 +18,30 @@ function drawTree(ctx, x, y, shake, hp) {
     const alpha = hp < 0 ? 0 : (hp < 3 ? 0.6 : 1);
     ctx.globalAlpha = alpha;
     
-    // Sombra
+    // Dimensões reais da árvore
+    const width = img.width * SCALES.tree;
+    const height = img.height * SCALES.tree;
+    
+    // Sombra na BASE (onde o tronco toca o chão)
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
-    ctx.ellipse(x + shake, y + 35, 20, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + shake, y + 5, width * 0.25, width * 0.12, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // Desenha a árvore mantendo proporção
-    const scale = 0.8;
-    const width = img.width * scale;
-    const height = img.height * scale;
-    
+    // Desenha a árvore com origem na BASE
     ctx.drawImage(
         img,
         x + shake - width / 2,
-        y - height + 35,
+        y - height,  // A imagem vai para CIMA a partir da posição Y
         width,
         height
     );
     
     ctx.globalAlpha = 1;
+    
+    // DEBUG: Desenha hitbox (comentar em produção)
+    // ctx.strokeStyle = 'red';
+    // ctx.strokeRect(x - 15, y - 30, 30, 35);
 }
 
 function drawRock(ctx, x, y, shake, hp) {
@@ -38,26 +51,30 @@ function drawRock(ctx, x, y, shake, hp) {
     const alpha = hp < 0 ? 0 : (hp < 3 ? 0.6 : 1);
     ctx.globalAlpha = alpha;
     
-    // Sombra
+    // Dimensões reais da rocha
+    const width = img.width * SCALES.rock;
+    const height = img.height * SCALES.rock;
+    
+    // Sombra na BASE
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.beginPath();
-    ctx.ellipse(x + shake, y + 20, 22, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + shake, y + 5, width * 0.35, width * 0.15, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // Desenha a rocha mantendo proporção
-    const scale = 0.7;
-    const width = img.width * scale;
-    const height = img.height * scale;
-    
+    // Desenha a rocha com origem na BASE
     ctx.drawImage(
         img,
         x + shake - width / 2,
-        y - height + 20,
+        y - height * 0.75,  // Rochas ficam um pouco "enterradas"
         width,
         height
     );
     
     ctx.globalAlpha = 1;
+    
+    // DEBUG: Desenha hitbox (comentar em produção)
+    // ctx.strokeStyle = 'blue';
+    // ctx.strokeRect(x - 20, y - 20, 40, 25);
 }
 
 function drawPato(ctx, x, y, dir, walking) {
@@ -87,28 +104,32 @@ function drawPato(ctx, x, y, dir, walking) {
     }
     
     // Bobbing sutil ao andar
-    const bob = walking ? Math.sin(game.player.frameCount * 0.15) * 2 : 0;
+    const bob = walking ? Math.sin(game.player.frameCount * 0.15) * 1.5 : 0;
     
     // Sombra no chão
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
-    ctx.ellipse(0, 25, 18, 9, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 18, 14, 7, 0, 0, Math.PI * 2);
     ctx.fill();
     
     // Desenha o pato mantendo proporção original
-    const scale = 1.2; // Ajuste de escala para o pato
+    const scale = SCALES.pato;
     const width = currentFrame.width * scale;
     const height = currentFrame.height * scale;
     
     ctx.drawImage(
         currentFrame,
         -width / 2,
-        -height + 25 + bob, // Ajusta a posição vertical
+        -height + 18 + bob, // Ajusta a posição vertical para a BASE
         width,
         height
     );
     
     ctx.restore();
+    
+    // DEBUG: Desenha hitbox do pato (comentar em produção)
+    // ctx.strokeStyle = 'green';
+    // ctx.strokeRect(x - 12, y - 20, 24, 25);
 }
 
 function drawRabbit(ctx, rabbit) {
@@ -128,19 +149,18 @@ function drawRabbit(ctx, rabbit) {
     // Sombra
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath();
-    ctx.ellipse(0, 20, 12, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 15, 10, 5, 0, 0, Math.PI * 2);
     ctx.fill();
     
     // Animação do spritesheet
-    // Assumindo que o spritesheet tem frames horizontais
-    const frameWidth = img.width / 4; // Ajuste baseado no número de frames
+    const frameWidth = img.width / 4; // 4 frames horizontais
     const frameHeight = img.height;
-    const frameIndex = Math.floor(rabbit.frameCount / 8) % 4; // 4 frames de animação
+    const frameIndex = Math.floor(rabbit.frameCount / 8) % 4;
     
     // Bobbing quando está pulando
-    const bob = rabbit.state === 'hop' ? Math.sin(rabbit.frameCount * 0.3) * 5 : 0;
+    const bob = rabbit.state === 'hop' ? Math.sin(rabbit.frameCount * 0.3) * 4 : 0;
     
-    const scale = 0.6;
+    const scale = SCALES.rabbit;
     const width = frameWidth * scale;
     const height = frameHeight * scale;
     
@@ -151,7 +171,7 @@ function drawRabbit(ctx, rabbit) {
         frameWidth, // Width source
         frameHeight, // Height source
         -width / 2, // X dest
-        -height + 20 + bob, // Y dest
+        -height + 15 + bob, // Y dest (base na posição Y)
         width, // Width dest
         height // Height dest
     );
@@ -162,30 +182,36 @@ function drawRabbit(ctx, rabbit) {
 function drawBench(ctx, x, y) {
     // Sombra
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.fillRect(x - 28, y + 20, 56, 8);
+    ctx.fillRect(x - 28, y + 8, 56, 6);
     
     // Base
     ctx.fillStyle = '#5d4037';
-    ctx.fillRect(x - 28, y - 12, 56, 30);
+    ctx.fillRect(x - 28, y - 20, 56, 30);
     
     // Topo
     ctx.fillStyle = '#8d6e63';
-    ctx.fillRect(x - 28, y - 12, 56, 6);
+    ctx.fillRect(x - 28, y - 20, 56, 6);
     
     // Pernas
     ctx.fillStyle = '#4e342e';
-    ctx.fillRect(x - 24, y + 8, 6, 10);
-    ctx.fillRect(x + 18, y + 8, 6, 10);
+    ctx.fillRect(x - 24, y, 6, 10);
+    ctx.fillRect(x + 18, y, 6, 10);
     
     // Detalhes
     ctx.strokeStyle = '#6d4c41';
     ctx.lineWidth = 2;
     for(let i = 0; i < 3; i++) {
         ctx.beginPath();
-        ctx.moveTo(x - 20, y - 8 + i * 8);
-        ctx.lineTo(x + 20, y - 8 + i * 8);
+        ctx.moveTo(x - 20, y - 16 + i * 8);
+        ctx.lineTo(x + 20, y - 16 + i * 8);
         ctx.stroke();
     }
+}
+
+// ==================== SISTEMA DE Z-INDEX (DEPTH SORTING) ====================
+function sortByDepth(entities) {
+    // Ordena entidades pela posição Y (quanto maior Y, mais na frente)
+    return entities.sort((a, b) => a.y - b.y);
 }
 
 // ==================== LOOP PRINCIPAL ====================
@@ -278,16 +304,19 @@ function render() {
     ctx.save();
     ctx.translate(-game.cam.x + shakeX, -game.cam.y + shakeY);
     
+    // ==================== COLETA DE ENTIDADES PARA Z-SORTING ====================
+    const entities = [];
+    
     // Bancadas
     game.isNearBench = false;
     game.built.forEach(b => {
         if(Math.hypot(game.player.x - b.x, game.player.y - b.y) < 80) {
             game.isNearBench = true;
         }
-        drawBench(ctx, b.x, b.y);
+        entities.push({ type: 'bench', x: b.x, y: b.y });
     });
     
-    // Recursos
+    // Recursos (árvores e rochas)
     const startX = Math.floor(game.cam.x / 60) - 2;
     const endX = startX + Math.ceil(cw / 60) + 4;
     const startY = Math.floor(game.cam.y / 60) - 2;
@@ -306,27 +335,50 @@ function render() {
             const dist = Math.hypot(game.player.x - ox, game.player.y - oy);
             
             let shake = 0;
-            if(dist < 65 && game.keys.action) {
+            if(dist < 50 && game.keys.action) {
                 shake = Math.sin(Date.now() * 0.05) * 6;
             }
             
             if(n < 0.1) {
-                drawTree(ctx, ox, oy, shake, hp);
+                entities.push({ type: 'tree', x: ox, y: oy, shake: shake, hp: hp });
             } else if(n >= 0.1 && n < 0.2) {
-                drawRock(ctx, ox, oy, shake, hp);
+                entities.push({ type: 'rock', x: ox, y: oy, shake: shake, hp: hp });
             }
         }
     }
     
     // Inimigos (coelhos)
     game.enemies.forEach(rabbit => {
-        drawRabbit(ctx, rabbit);
+        entities.push({ type: 'rabbit', x: rabbit.x, y: rabbit.y, data: rabbit });
     });
     
     // Player
-    drawPato(ctx, game.player.x, game.player.y, game.player.dir, isWalking);
+    entities.push({ type: 'player', x: game.player.x, y: game.player.y });
     
-    // Partículas
+    // ==================== RENDERIZA COM Z-SORTING ====================
+    const sorted = sortByDepth(entities);
+    
+    sorted.forEach(entity => {
+        switch(entity.type) {
+            case 'tree':
+                drawTree(ctx, entity.x, entity.y, entity.shake, entity.hp);
+                break;
+            case 'rock':
+                drawRock(ctx, entity.x, entity.y, entity.shake, entity.hp);
+                break;
+            case 'bench':
+                drawBench(ctx, entity.x, entity.y);
+                break;
+            case 'rabbit':
+                drawRabbit(ctx, entity.data);
+                break;
+            case 'player':
+                drawPato(ctx, entity.x, entity.y, game.player.dir, isWalking);
+                break;
+        }
+    });
+    
+    // Partículas sempre por cima
     drawParticles();
     updateParticles();
     
