@@ -5,261 +5,223 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#000000">
-    <meta name="orientation" content="landscape">
     <link rel="manifest" href="manifest.json">
-    <title>Pato Survival Alpha</title>
+    <title>Pato Survival Alpha 1.5.0</title>
     <style>
-        /* Reset total para evitar scroll */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; outline: none; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', Courier, monospace; }
-        
-        /* Canvas Pixelado */
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
-        /* UI - Camadas */
+        /* UI BASE */
         .layer { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
         .interactive { pointer-events: auto; }
         .hidden { display: none !important; }
 
-        /* MENU ESTILO ALPHA 1.5.0 */
-        #menu-screen { background: rgba(20, 30, 20, 0.95); z-index: 100; border: 4px solid #fb923c; }
-        h1 { color: #fb923c; font-size: 3rem; text-shadow: 4px 4px #000; margin-bottom: 2rem; text-align: center; line-height: 1; }
-        .btn {
-            background: #334155; color: white; border: 3px solid #fb923c;
-            padding: 15px 40px; font-size: 1.2rem; font-weight: bold;
-            margin: 10px; cursor: pointer; box-shadow: 5px 5px 0 #000;
-            text-transform: uppercase; letter-spacing: 2px;
+        /* MENU INICIAL ALPHA */
+        #menu-screen { background: rgba(15, 25, 15, 0.98); z-index: 100; border: 6px double #fb923c; }
+        h1 { color: #fb923c; font-size: 3rem; text-shadow: 4px 4px #000; margin-bottom: 20px; text-align: center; }
+        .btn-alpha { 
+            background: #334155; color: white; border: 3px solid #fb923c; 
+            padding: 15px 40px; font-size: 1.2rem; cursor: pointer; 
+            box-shadow: 5px 5px 0 #000; margin: 5px;
         }
-        .btn:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 #000; }
 
-        /* HUD (Recursos) */
-        #hud { position: absolute; top: 10px; left: 10px; z-index: 50; display: flex; gap: 10px; }
-        .res-box { background: rgba(0,0,0,0.7); color: #fff; padding: 8px 15px; border-radius: 4px; border-left: 4px solid #fb923c; font-weight: bold; font-size: 18px; }
+        /* HUD E INVENTÁRIO */
+        #hud { position: absolute; top: 10px; left: 10px; z-index: 50; display: flex; gap: 8px; }
+        .res-box { background: rgba(0,0,0,0.8); color: #fff; padding: 10px; border-left: 4px solid #fb923c; font-size: 16px; }
 
-        /* CONTROLES MOBILE */
-        #controls { position: absolute; bottom: 20px; left: 20px; width: 160px; height: 160px; z-index: 50; pointer-events: auto; }
-        .dpad-btn { position: absolute; width: 50px; height: 50px; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; display: flex; justify-content: center; align-items: center; color: white; font-size: 20px; }
-        .dpad-btn:active { background: rgba(255, 165, 0, 0.5); border-color: orange; }
-        
-        #btn-up { top: 0; left: 55px; }
-        #btn-down { bottom: 0; left: 55px; }
-        #btn-left { top: 55px; left: 0; }
-        #btn-right { top: 55px; right: 0; }
-
-        #action-btn { 
-            position: absolute; bottom: 30px; right: 30px; 
-            width: 90px; height: 90px; 
-            background: #fb923c; border: 4px solid #fff; border-radius: 50%; 
-            color: #fff; font-weight: bold; font-size: 14px;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            z-index: 50; pointer-events: auto;
+        /* BOTÃO INV (O QUE VOCÊ PEDIU) */
+        #btn-inv { 
+            position: absolute; top: 10px; right: 10px; width: 70px; height: 50px; 
+            background: #475569; border: 3px solid #fb923c; color: white; 
+            font-weight: bold; z-index: 60; display: flex; align-items: center; justify-content: center;
+            pointer-events: auto;
         }
-        #action-btn:active { transform: scale(0.95); background: #e27d26; }
+
+        /* PAINEL DE CRAFTING */
+        #craft-panel { 
+            position: absolute; top: 70px; right: 10px; width: 220px; 
+            background: rgba(30, 41, 59, 0.95); border: 3px solid #fb923c; 
+            padding: 10px; z-index: 60; pointer-events: auto; color: white;
+        }
+        .craft-item { 
+            background: #1e293b; border: 1px solid #475569; padding: 8px; 
+            margin-bottom: 5px; font-size: 12px; cursor: pointer;
+        }
+        .craft-item:active { background: #fb923c; }
+
+        /* CONTROLES */
+        #controls { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 150px; z-index: 50; pointer-events: auto; }
+        .d-btn { position: absolute; width: 50px; height: 50px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: white; }
+        #b-u { top: 0; left: 50px; } #b-d { bottom: 0; left: 50px; } #b-l { top: 50px; left: 0; } #b-r { top: 50px; right: 0; }
+
+        #btn-action { 
+            position: absolute; bottom: 30px; right: 30px; width: 100px; height: 100px; 
+            background: #fb923c; border: 5px solid #fff; border-radius: 50%; 
+            color: #fff; font-weight: bold; z-index: 50; pointer-events: auto;
+            display: flex; align-items: center; justify-content: center;
+        }
     </style>
 </head>
 <body>
 
     <div id="menu-screen" class="layer interactive">
-        <h1>PATO SURVIVAL<br><small style="font-size: 1.5rem; color: #fff;">ALPHA 1.5.0</small></h1>
-        <button class="btn" onclick="startGame()">JOGAR</button>
-        <button class="btn" style="filter: grayscale(1);">OPÇÕES</button>
-        <div style="margin-top: 20px; color: #888; font-size: 12px;">BUILD 2026 - GITHUB VERSION</div>
+        <h1>PATO SURVIVAL<br><small>ALPHA 1.5.0</small></h1>
+        <button class="btn-alpha" onclick="startGame()">INICIAR</button>
     </div>
 
     <div id="game-ui" class="hidden">
         <div id="hud">
-            <div class="res-box">🌲 <span id="wood">0</span></div>
-            <div class="res-box">🪨 <span id="stone">0</span></div>
+            <div class="res-box">MADEIRA: <span id="w-val">0</span></div>
+            <div class="res-box">PEDRA: <span id="s-val">0</span></div>
+        </div>
+
+        <div id="btn-inv" class="interactive" onclick="toggleCraft()">INV</div>
+
+        <div id="craft-panel" class="hidden">
+            <div style="font-size: 14px; margin-bottom: 10px; color: #fb923c;">CRAFTING ALPHA</div>
+            <div class="craft-item" onclick="doCraft('bench')">BANCADA (10 Mad.)</div>
+            <div class="craft-item" onclick="doCraft('axe')">MACHADO (5 Mad. + 5 Ped.)</div>
+            <div class="craft-item" onclick="doCraft('pick')">PICARETA (5 Mad. + 5 Ped.)</div>
+            <div id="inv-status" style="font-size: 10px; margin-top: 10px; color: #94a3b8;"></div>
         </div>
 
         <div id="controls">
-            <div class="dpad-btn" id="btn-up">▲</div>
-            <div class="dpad-btn" id="btn-down">▼</div>
-            <div class="dpad-btn" id="btn-left">◀</div>
-            <div class="dpad-btn" id="btn-right">▶</div>
+            <div class="d-btn" id="b-u">▲</div><div class="d-btn" id="b-d">▼</div>
+            <div class="d-btn" id="b-l">◀</div><div class="d-btn" id="b-r">▶</div>
         </div>
-
-        <div id="action-btn">AÇÃO</div>
+        <div id="btn-action">AÇÃO</div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // CONFIGURAÇÃO
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        const state = {
-            screen: 'MENU',
-            player: { x: 500, y: 500, dir: 1, speed: 4 },
+        const game = {
+            active: false,
+            player: { x: 2000, y: 2000, dir: 1, speed: 5 },
             cam: { x: 0, y: 0 },
-            keys: { up: false, down: false, left: false, right: false },
+            keys: { u:0, d:0, l:0, r:0 },
             res: { wood: 0, stone: 0 },
-            map: {}, // Armazena o que foi coletado
+            inv: { bench: false, axe: false, pick: false },
+            map: new Set(),
             time: 0
         };
 
-        // INICIAR
         function startGame() {
-            state.screen = 'GAME';
+            game.active = true;
             document.getElementById('menu-screen').classList.add('hidden');
             document.getElementById('game-ui').classList.remove('hidden');
-            // Tenta forçar fullscreen
-            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-            loop();
+            render();
         }
 
-        // CONTROLES DE TOQUE (D-PAD)
-        const bindTouch = (id, key) => {
-            const el = document.getElementById(id);
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); state.keys[key] = true; }, {passive: false});
-            el.addEventListener('touchend', (e) => { e.preventDefault(); state.keys[key] = false; });
-        };
-        bindTouch('btn-up', 'up');
-        bindTouch('btn-down', 'down');
-        bindTouch('btn-left', 'left');
-        bindTouch('btn-right', 'right');
+        function toggleCraft() {
+            document.getElementById('craft-panel').classList.toggle('hidden');
+        }
 
-        // BOTÃO DE AÇÃO
-        const actionBtn = document.getElementById('action-btn');
-        actionBtn.addEventListener('touchstart', (e) => {
+        function doCraft(item) {
+            const status = document.getElementById('inv-status');
+            if(item === 'bench' && game.res.wood >= 10) {
+                game.res.wood -= 10; game.inv.bench = true;
+                status.innerText = "BANCADA CRIADA!";
+            } else if(item === 'axe' && game.inv.bench && game.res.wood >= 5 && game.res.stone >= 5) {
+                game.res.wood -= 5; game.res.stone -= 5; game.inv.axe = true;
+                status.innerText = "MACHADO CRIADO!";
+            } else if(item === 'pick' && game.inv.bench && game.res.wood >= 5 && game.res.stone >= 5) {
+                game.res.wood -= 5; game.res.stone -= 5; game.inv.pick = true;
+                status.innerText = "PICARETA CRIADA!";
+            } else {
+                status.innerText = "MATERIAIS INSUFICIENTES!";
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('w-val').innerText = game.res.wood;
+            document.getElementById('s-val').innerText = game.res.stone;
+        }
+
+        // LÓGICA DE COLHEITA REALISTA (VOLTOU!)
+        document.getElementById('btn-action').addEventListener('touchstart', (e) => {
             e.preventDefault();
-            interact();
-            actionBtn.style.transform = "scale(0.9)";
-        }, {passive: false});
-        actionBtn.addEventListener('touchend', (e) => {
-            actionBtn.style.transform = "scale(1)";
+            const px = Math.floor(game.player.x/60);
+            const py = Math.floor(game.player.y/60);
+
+            for(let x=px-1; x<=px+1; x++) {
+                for(let y=py-1; y<=py+1; y++) {
+                    const id = `${x},${y}`;
+                    if(game.map.has(id)) continue;
+
+                    const n = Math.abs(Math.sin(x*12.9 + y*78.2)*437) % 1;
+                    if(n > 0.15) continue;
+
+                    const dist = Math.hypot(game.player.x - (x*60+30), game.player.y - (y*60+30));
+                    if(dist < 70) {
+                        if(n < 0.07) game.res.wood += game.inv.axe ? 3 : 1;
+                        else game.res.stone += game.inv.pick ? 3 : 1;
+                        
+                        game.map.add(id); // AGORA O OBJETO SOME
+                        updateUI();
+                        return;
+                    }
+                }
+            }
         });
 
-        // LÓGICA DE INTERAÇÃO (COLHETA)
-        function interact() {
-            const cx = Math.floor(state.player.x / 50);
-            const cy = Math.floor(state.player.y / 50);
+        const bind = (id, k) => {
+            document.getElementById(id).ontouchstart = () => game.keys[k] = 1;
+            document.getElementById(id).ontouchend = () => game.keys[k] = 0;
+        };
+        bind('b-u','u'); bind('b-d','d'); bind('b-l','l'); bind('b-r','r');
 
-            // Verifica área 3x3 ao redor do player
-            for(let x = cx-1; x <= cx+1; x++) {
-                for(let y = cy-1; y <= cy+1; y++) {
-                    const key = `${x},${y}`;
-                    if(state.map[key]) continue; // Já coletado
-
-                    // Geração procedural simples baseada na posição
-                    const rng = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
-                    const type = Math.abs(rng - Math.floor(rng));
-
-                    // Distância real
-                    const dx = state.player.x - (x * 50 + 25);
-                    const dy = state.player.y - (y * 50 + 25);
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-
-                    if(dist < 50) {
-                        if(type > 0.8) {
-                            state.res.stone++;
-                            state.map[key] = true;
-                            updateHUD();
-                            return; // Coleta um por vez
-                        } else if(type > 0.5) {
-                            state.res.wood++;
-                            state.map[key] = true;
-                            updateHUD();
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-
-        function updateHUD() {
-            document.getElementById('wood').innerText = state.res.wood;
-            document.getElementById('stone').innerText = state.res.stone;
-        }
-
-        // LOOP DO JOGO
-        function loop() {
-            if(state.screen !== 'GAME') return;
-            
-            const cw = canvas.width = window.innerWidth;
-            const ch = canvas.height = window.innerHeight;
-            state.time += 0.1;
+        function render() {
+            if(!game.active) return;
+            const cw = canvas.width = window.innerWidth, ch = canvas.height = window.innerHeight;
+            game.time += 0.05;
 
             // Movimento
-            if(state.keys.up) state.player.y -= state.player.speed;
-            if(state.keys.down) state.player.y += state.player.speed;
-            if(state.keys.left) { state.player.x -= state.player.speed; state.player.dir = -1; }
-            if(state.keys.right) { state.player.x += state.player.speed; state.player.dir = 1; }
+            let mx = game.keys.r - game.keys.l, my = game.keys.d - game.keys.u;
+            if(mx||my) {
+                game.player.x += mx * game.player.speed;
+                game.player.y += my * game.player.speed;
+                if(mx) game.player.dir = mx;
+            }
+            game.cam.x = game.player.x - cw/2; game.cam.y = game.player.y - ch/2;
 
-            // Câmera
-            state.cam.x = state.player.x - cw / 2;
-            state.cam.y = state.player.y - ch / 2;
+            ctx.fillStyle = '#1a3317'; ctx.fillRect(0,0,cw,ch);
+            ctx.save(); ctx.translate(-game.cam.x, -game.cam.y);
 
-            // Renderização
-            ctx.fillStyle = '#2d4a22'; // Grama Alpha
-            ctx.fillRect(0, 0, cw, ch);
+            // MUNDO
+            const sX = Math.floor(game.cam.x/60)-1, eX = sX + Math.ceil(cw/60)+2;
+            const sY = Math.floor(game.cam.y/60)-1, eY = sY + Math.ceil(ch/60)+2;
 
-            ctx.save();
-            ctx.translate(-state.cam.x, -state.cam.y);
+            for(let x=sX; x<=eX; x++) {
+                for(let y=sY; y<=eY; y++) {
+                    if(game.map.has(`${x},${y}`)) continue;
+                    const n = Math.abs(Math.sin(x*12.9 + y*78.2)*437) % 1;
+                    if(n > 0.15) continue;
 
-            // Desenhar Mundo (Grid 50x50)
-            const startX = Math.floor(state.cam.x / 50);
-            const endX = startX + Math.ceil(cw / 50) + 1;
-            const startY = Math.floor(state.cam.y / 50);
-            const endY = startY + Math.ceil(ch / 50) + 1;
+                    const ox = x*60+30, oy = y*60+30;
+                    const dist = Math.hypot(game.player.x - ox, game.player.y - oy);
+                    let shake = (dist < 70) ? Math.sin(game.time * 10) * 4 : 0;
 
-            for(let x = startX; x <= endX; x++) {
-                for(let y = startY; y <= endY; y++) {
-                    if(state.map[`${x},${y}`]) continue; // Se já foi pego, não desenha
-
-                    // Pseudo-aleatório fixo para cada coordenada
-                    const rng = Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1;
-                    
-                    if(rng > 0.5) { // 50% de chance de ter algo
-                        const px = x * 50 + 25;
-                        const py = y * 50 + 25;
-                        
-                        // EFEITO DE TREMOR (SHAKE)
-                        // Se o player estiver perto (< 60px), o objeto treme
-                        const dist = Math.hypot(state.player.x - px, state.player.y - py);
-                        let shakeX = 0;
-                        if(dist < 60) {
-                            shakeX = Math.sin(state.time * 5) * 3; // Treme 3px para os lados
-                        }
-
-                        if(rng > 0.8) {
-                            // Rocha
-                            ctx.fillStyle = '#64748b';
-                            ctx.beginPath();
-                            ctx.arc(px + shakeX, py, 15, 0, Math.PI*2);
-                            ctx.fill();
-                        } else {
-                            // Árvore
-                            ctx.fillStyle = '#3e2723'; // Tronco
-                            ctx.fillRect(px - 5 + shakeX, py, 10, 20);
-                            ctx.fillStyle = '#1b5e20'; // Copa
-                            ctx.beginPath();
-                            ctx.arc(px + shakeX, py - 10, 20, 0, Math.PI*2);
-                            ctx.fill();
-                        }
+                    if(n < 0.07) { // ÁRVORE
+                        ctx.fillStyle = '#3e2723'; ctx.fillRect(ox-4+shake, oy, 8, 12);
+                        ctx.fillStyle = '#064e3b'; ctx.beginPath(); ctx.arc(ox+shake, oy-8, 16, 0, 7); ctx.fill();
+                    } else { // ROCHA
+                        ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.arc(ox+shake, oy+10, 12, 0, 7); ctx.fill();
                     }
                 }
             }
 
-            // Desenhar Player (Pato)
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(state.player.x - 15, state.player.y - 15, 30, 30);
-            // Bico
-            ctx.fillStyle = '#fb923c';
-            if(state.player.dir === 1) ctx.fillRect(state.player.x + 10, state.player.y - 5, 10, 8);
-            else ctx.fillRect(state.player.x - 20, state.player.y - 5, 10, 8);
-            // Olho
-            ctx.fillStyle = '#000';
-            if(state.player.dir === 1) ctx.fillRect(state.player.x + 5, state.player.y - 8, 4, 4);
-            else ctx.fillRect(state.player.x - 9, state.player.y - 8, 4, 4);
+            // PATO
+            ctx.fillStyle = 'white'; ctx.fillRect(game.player.x-15, game.player.y-15, 30, 30);
+            ctx.fillStyle = '#fb923c'; ctx.fillRect(game.player.x + (game.player.dir > 0 ? 10 : -20), game.player.y-4, 10, 8);
 
             ctx.restore();
-
-            requestAnimationFrame(loop);
+            requestAnimationFrame(render);
         }
     </script>
 </body>
