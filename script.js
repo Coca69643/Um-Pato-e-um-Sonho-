@@ -614,8 +614,117 @@ for(let i = 0; i <= 4; i++) {
     });
 }
 
-// ==================== INICIALIZAÇÃO ====================
-checkSave();
-loadAssets(() => {
-    console.log('🎮 Jogo pronto para iniciar!');
+// ==================== EVENT LISTENERS (CORRIGIDOS) ====================
+
+// Aguarda o DOM estar completamente carregado
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎮 DOM Carregado. Inicializando event listeners...');
+    
+    // ==================== MENU PRINCIPAL ====================
+    const btnNewGame = document.getElementById('btn-new-game');
+    const btnContinue = document.getElementById('btn-continue');
+    const btnConfig = document.getElementById('btn-config');
+    const btnPatchNotes = document.getElementById('btn-patch-notes');
+    
+    if(btnNewGame) {
+        btnNewGame.addEventListener('click', function() {
+            console.log('✅ Novo jogo iniciado');
+            newGame();
+        });
+    }
+    
+    if(btnContinue) {
+        btnContinue.addEventListener('click', function() {
+            console.log('✅ Carregando save...');
+            loadGame();
+        });
+    }
+    
+    if(btnConfig) {
+        btnConfig.addEventListener('click', function() {
+            console.log('⚙️ Abrindo configurações');
+            toggleConfig();
+        });
+    }
+    
+    if(btnPatchNotes) {
+        btnPatchNotes.addEventListener('click', function() {
+            console.log('📋 Abrindo Patch Notes');
+            openPatchNotes();
+        });
+    }
+    
+    // ==================== MODAL DE CONFIGURAÇÕES ====================
+    const btnResetSave = document.getElementById('btn-reset-save');
+    const btnCloseConfig = document.getElementById('btn-close-config');
+    
+    if(btnResetSave) {
+        btnResetSave.addEventListener('click', resetSave);
+    }
+    
+    if(btnCloseConfig) {
+        btnCloseConfig.addEventListener('click', toggleConfig);
+    }
+    
+    // ==================== MODAL DE PATCH NOTES ====================
+    const btnClosePatch = document.getElementById('btn-close-patch');
+    const patchModal = document.getElementById('patch-modal');
+    
+    if(btnClosePatch) {
+        btnClosePatch.addEventListener('click', closePatchNotes);
+    }
+    
+    // Fechar ao clicar fora do modal
+    if(patchModal) {
+        patchModal.addEventListener('click', function(e) {
+            if(e.target === patchModal) {
+                closePatchNotes();
+            }
+        });
+    }
+    
+    // ==================== INVENTÁRIO E CRAFT ====================
+    const btnInv = document.getElementById('btn-inv');
+    if(btnInv) {
+        btnInv.addEventListener('click', toggleCraft);
+    }
+    
+    // Botões de craft
+    document.querySelectorAll('.craft-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const craftType = this.getAttribute('data-craft');
+            if(craftType) {
+                doCraft(craftType);
+            }
+        });
+    });
+    
+    // ==================== INICIALIZAÇÃO ====================
+    checkSave();
+    loadAssets(() => {
+        console.log('🎮 Jogo pronto para iniciar!');
+    });
 });
+
+// ==================== FUNÇÕES DE PATCH NOTES ====================
+function openPatchNotes() {
+    const modal = document.getElementById('patch-modal');
+    if(modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function closePatchNotes() {
+    const modal = document.getElementById('patch-modal');
+    if(modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// ==================== FUNÇÃO TOGGLE CONFIG ATUALIZADA ====================
+function toggleConfig() {
+    const modal = document.getElementById('config-modal');
+    if(modal) {
+        modal.classList.toggle('hidden');
+    }
+}

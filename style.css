@@ -389,4 +389,223 @@ canvas {
 
 .shake { 
     animation: screenShake 0.2s ease; 
+
+  /* ==================== BOTÃO DE PATCH NOTES ==================== */
+.btn-patch-notes {
+    position: absolute;
+    top: clamp(15px, 3vh, 25px);
+    right: clamp(15px, 3vw, 25px);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: 2px solid #60a5fa;
+    padding: clamp(8px, 2vh, 12px) clamp(12px, 3vw, 18px);
+    font-size: clamp(10px, 2.5vw, 13px);
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #1e40af, 0 6px 12px rgba(59, 130, 246, 0.4);
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+    letter-spacing: 1px;
+}
+
+.btn-patch-notes:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #1e40af, 0 8px 16px rgba(59, 130, 246, 0.5);
+}
+
+.btn-patch-notes:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #1e40af, 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.patch-badge {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: clamp(9px, 2vw, 11px);
+    font-weight: 900;
+    letter-spacing: 0.5px;
+}
+
+/* ==================== MODAL DE PATCH NOTES ==================== */
+#patch-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    padding: clamp(15px, 4vw, 30px);
+    animation: fadeIn 0.3s ease;
+}
+
+.patch-content {
+    width: 100%;
+    max-width: 600px;
+    max-height: 85vh;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 3px solid #3b82f6;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 
+        0 0 40px rgba(59, 130, 246, 0.3),
+        0 20px 60px rgba(0, 0, 0, 0.8);
+    animation: modalPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    display: flex;
+    flex-direction: column;
+}
+
+.patch-header {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    padding: clamp(15px, 4vw, 25px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #60a5fa;
+}
+
+.patch-header h2 {
+    font-size: clamp(18px, 5vw, 26px);
+    color: white;
+    margin: 0;
+    font-weight: 900;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.version-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: clamp(4px, 1vh, 8px) clamp(10px, 2.5vw, 16px);
+    border-radius: 20px;
+    font-size: clamp(11px, 2.8vw, 14px);
+    font-weight: 700;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    letter-spacing: 1px;
+}
+
+.patch-body {
+    padding: clamp(15px, 4vw, 25px);
+    overflow-y: auto;
+    flex: 1;
+    color: white;
+}
+
+.patch-section {
+    margin-bottom: clamp(15px, 4vh, 25px);
+}
+
+.patch-category {
+    margin-bottom: 12px;
+}
+
+.badge {
+    display: inline-block;
+    padding: clamp(4px, 1vh, 8px) clamp(12px, 3vw, 18px);
+    border-radius: 20px;
+    font-size: clamp(10px, 2.5vw, 12px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.added .badge {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border: 2px solid #22c55e;
+}
+
+.changed .badge {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 2px solid #f59e0b;
+}
+
+.removed .badge {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 2px solid #ef4444;
+}
+
+.patch-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.patch-list li {
+    padding: clamp(8px, 2vh, 12px) clamp(12px, 3vw, 18px);
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid #3b82f6;
+    border-radius: 6px;
+    font-size: clamp(11px, 2.8vw, 14px);
+    line-height: 1.5;
+    backdrop-filter: blur(10px);
+}
+
+.patch-list li::before {
+    content: "▸ ";
+    color: #3b82f6;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.patch-footer {
+    padding: clamp(15px, 4vw, 20px);
+    background: rgba(15, 23, 42, 0.8);
+    border-top: 2px solid #334155;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+/* ==================== COPYRIGHT ==================== */
+.copyright {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(10px, 2.5vw, 12px);
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    margin-top: auto;
+    padding: clamp(10px, 2vh, 15px);
+}
+
+#menu-screen .copyright {
+    position: absolute;
+    bottom: clamp(40px, 8vh, 60px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+}
+
+/* ==================== AJUSTES DE RESPONSIVIDADE ==================== */
+@media (max-height: 600px) {
+    .patch-content {
+        max-height: 90vh;
+    }
+    
+    .patch-body {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 400px) {
+    .btn-patch-notes {
+        font-size: 10px;
+        padding: 6px 10px;
+    }
+    
+    .patch-badge {
+        font-size: 8px;
+        padding: 2px 6px;
+    }
 }

@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0a0f0a">
     <meta name="description" content="Pato Survival - Jogo de sobrevivência em HTML5">
-    <title>Pato Survival - Definitive Edition v2.0</title>
+    <title>Pato Survival v2.1 - A Era do Sprite</title>
+    
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -17,13 +22,83 @@
 
     <!-- ==================== MENU PRINCIPAL ==================== -->
     <div id="menu-screen">
-        <div class="alpha-title">🦆 PATO SURVIVAL<br><small>DEFINITIVE EDITION</small></div>
+        <div class="alpha-title">🦆 PATO SURVIVAL<br><small>A ERA DO SPRITE</small></div>
+        
         <div class="menu-btns">
-            <button class="btn-alpha" onclick="newGame()">NOVO JOGO</button>
-            <button class="btn-alpha" id="btn-continue" onclick="loadGame()" disabled>CONTINUAR</button>
-            <button class="btn-alpha" onclick="toggleConfig()">CONFIGURAÇÕES</button>
+            <button class="btn-alpha" id="btn-new-game">NOVO JOGO</button>
+            <button class="btn-alpha" id="btn-continue" disabled>CONTINUAR</button>
+            <button class="btn-alpha" id="btn-config">CONFIGURAÇÕES</button>
         </div>
-        <div id="version-log">BUILD: 2.0.0 - DEFINITIVE</div>
+        
+        <!-- Botão de Patch Notes -->
+        <button class="btn-patch-notes" id="btn-patch-notes">
+            <span class="patch-badge">v2.1</span>
+            NOVIDADES
+        </button>
+        
+        <div id="version-log">BUILD: 2.1.0 - SPRITE ERA</div>
+        
+        <!-- Copyright -->
+        <div class="copyright">
+            © 2026 Duck Dream Studios. Todos os direitos reservados.
+        </div>
+    </div>
+
+    <!-- ==================== MODAL DE PATCH NOTES ==================== -->
+    <div id="patch-modal" class="hidden">
+        <div class="patch-content">
+            <div class="patch-header">
+                <h2>🎨 A Era do Sprite</h2>
+                <span class="version-badge">v2.1.0</span>
+            </div>
+            
+            <div class="patch-body">
+                <div class="patch-section">
+                    <div class="patch-category added">
+                        <span class="badge">🟢 ADICIONADO</span>
+                    </div>
+                    <ul class="patch-list">
+                        <li>Sistema de animação por frames reais (Walking/Idle)</li>
+                        <li>Sprites profissionais para Pato, Árvores e Rochas</li>
+                        <li>IA de coelhos saltitantes com animação por spritesheet</li>
+                        <li>Tela de loading com contador de progresso de assets</li>
+                        <li>Sistema de depth sorting (Z-index por posição Y)</li>
+                        <li>Hitboxes realistas apenas na base dos objetos</li>
+                    </ul>
+                </div>
+                
+                <div class="patch-section">
+                    <div class="patch-category changed">
+                        <span class="badge">🟡 ALTERADO</span>
+                    </div>
+                    <ul class="patch-list">
+                        <li>Escala global ajustada: Árvores (0.35x) e Rochas (0.45x)</li>
+                        <li>Colisões agora ocorrem apenas no tronco/base dos recursos</li>
+                        <li>Pato pode passar "por trás" das copas das árvores</li>
+                        <li>Sombras reposicionadas na base real dos objetos</li>
+                        <li>Performance otimizada com carregamento assíncrono</li>
+                    </ul>
+                </div>
+                
+                <div class="patch-section">
+                    <div class="patch-category removed">
+                        <span class="badge">🔴 REMOVIDO</span>
+                    </div>
+                    <ul class="patch-list">
+                        <li>Renderização de triângulos e elipses do ambiente</li>
+                        <li>Desenho geométrico de árvores e rochas (substituído por sprites)</li>
+                        <li>Sistema de iluminação antigo (refatorado)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="patch-footer">
+                <div class="copyright">
+                    © 2026 Duck Dream Studios. Todos os direitos reservados.
+                </div>
+                <button class="btn-alpha" id="btn-close-patch">FECHAR</button>
+            </div>
+        </div>
     </div>
 
     <!-- ==================== MODAL DE CONFIGURAÇÕES ==================== -->
@@ -31,10 +106,10 @@
         <h3>⚙️ CONFIGURAÇÕES</h3>
         <div style="font-size: clamp(11px, 2.8vw, 13px); margin: 8px 0; color: #94a3b8;">
             Som: Desativado (Alpha)<br>
-            Versão: 2.0 Definitive
+            Versão: 2.1.0 - A Era do Sprite
         </div>
-        <button class="btn-alpha" onclick="resetSave()">🗑️ LIMPAR SAVE</button>
-        <button class="btn-alpha" onclick="toggleConfig()">FECHAR</button>
+        <button class="btn-alpha" id="btn-reset-save">🗑️ LIMPAR SAVE</button>
+        <button class="btn-alpha" id="btn-close-config">FECHAR</button>
     </div>
 
     <!-- ==================== INTERFACE DO JOGO ==================== -->
@@ -48,19 +123,19 @@
             <div class="res-box">🪨 <span id="s-val">0</span></div>
         </div>
         
-        <div id="btn-inv" onclick="toggleCraft()">📦</div>
+        <div id="btn-inv">📦</div>
         
         <div id="craft-panel" class="hidden">
-            <div class="craft-item" onclick="doCraft('bench')" data-craft="bench">
+            <div class="craft-item" data-craft="bench">
                 <span>🔨 Bancada</span><span>10🪵</span>
             </div>
-            <div class="craft-item" onclick="doCraft('torch')" data-craft="torch">
+            <div class="craft-item" data-craft="torch">
                 <span>🔥 Tocha</span><span>5🪵</span>
             </div>
-            <div class="craft-item" onclick="doCraft('axe')" data-craft="axe">
+            <div class="craft-item" data-craft="axe">
                 <span>🪓 Machado</span><span>5🪵 5🪨</span>
             </div>
-            <div class="craft-item" onclick="doCraft('pick')" data-craft="pick">
+            <div class="craft-item" data-craft="pick">
                 <span>⛏️ Picareta</span><span>5🪵 5🪨</span>
             </div>
         </div>
