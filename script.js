@@ -1,5 +1,5 @@
-// ==================== UM PATO E UM SONHO - CORE ENGINE ====================
-console.log('🎮 Script.js carregado!');
+================== UM PATO E UM SONHO - CORE ENGINE v2.1.1 ====================
+console.log('🎮 Script.js v2.1.1 carregado!');
 
 // Configuração do Canvas
 const canvas = document.getElementById('gameCanvas');
@@ -63,7 +63,7 @@ function updateLoadingScreen() {
     if(loadingText && !assets.isReady) {
         loadingText.innerHTML = `⏳ CARREGANDO... ${percentage}%`;
     } else if(loadingText && assets.isReady) {
-        loadingText.innerHTML = `BUILD: 2.1.0 - THE SPRITE ERA`;
+        loadingText.innerHTML = `BUILD: 2.1.1 - HOTFIX`;
     }
 }
 
@@ -106,7 +106,7 @@ function spawnRabbit() {
         frame: 0,
         frameCount: 0,
         state: 'idle',
-        hopCooldown: 0
+        hopCooldown: 60
     });
 }
 
@@ -555,7 +555,7 @@ function bindButton(id, key) {
 
 // ==================== INICIALIZAÇÃO COMPLETA ====================
 window.addEventListener('load', function() {
-    console.log('🚀 Inicializando "Um Pato e um Sonho"...');
+    console.log('🚀 Inicializando "Um Pato e um Sonho" v2.1.1...');
     
     // Botões do menu
     const btnNewGame = document.getElementById('btn-new-game');
@@ -666,7 +666,8 @@ window.addEventListener('load', function() {
             handleAction();
         }
     });
-  window.addEventListener('keyup', (e) => {
+    
+    window.addEventListener('keyup', (e) => {
         if(e.key === 'w' || e.key === 'ArrowUp') game.keys.u = 0;
         if(e.key === 's' || e.key === 'ArrowDown') game.keys.d = 0;
         if(e.key === 'a' || e.key === 'ArrowLeft') game.keys.l = 0;
