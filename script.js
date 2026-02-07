@@ -1,4 +1,6 @@
-// ==================== PATO SURVIVAL - CORE ENGINE ====================
+// ==================== UM PATO E UM SONHO - CORE ENGINE ====================
+console.log('🎮 Script.js carregado!');
+
 // Configuração do Canvas
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
@@ -11,25 +13,19 @@ const assets = {
     isReady: false
 };
 
-// Lista de assets para carregar
 const assetList = {
-    // Pato - Animações
     patoWalk1: 'Walking 001.png',
     patoWalk2: 'Walking 002.png',
     patoIdle1: 'idle_001.png',
     patoIdle2: 'idle_002.png',
-    
-    // Ambiente
     arvore: 'arvore.png',
     rocha: 'rocha.png',
-    
-    // Inimigos
     rabbitSheet: 'rabbit_sheet.png'
 };
 
-// Função de carregamento de assets
 function loadAssets(callback) {
     assets.total = Object.keys(assetList).length;
+    console.log(`📦 Carregando ${assets.total} assets...`);
     
     Object.keys(assetList).forEach(key => {
         const img = new Image();
@@ -38,6 +34,7 @@ function loadAssets(callback) {
         img.onload = () => {
             assets.loaded++;
             updateLoadingScreen();
+            console.log(`✅ ${assetList[key]} carregado (${assets.loaded}/${assets.total})`);
             
             if(assets.loaded === assets.total) {
                 assets.isReady = true;
@@ -64,13 +61,13 @@ function updateLoadingScreen() {
     const percentage = Math.floor((assets.loaded / assets.total) * 100);
     const loadingText = document.getElementById('version-log');
     if(loadingText && !assets.isReady) {
-        loadingText.innerHTML = `⏳ CARREGANDO ASSETS... ${percentage}%`;
+        loadingText.innerHTML = `⏳ CARREGANDO... ${percentage}%`;
     } else if(loadingText && assets.isReady) {
-        loadingText.innerHTML = `BUILD: 2.0.0 - DEFINITIVE`;
+        loadingText.innerHTML = `BUILD: 2.1.0 - THE SPRITE ERA`;
     }
 }
 
-// Estado Global do Jogo
+// ==================== ESTADO GLOBAL DO JOGO ====================
 let game = {
     active: false,
     player: { 
@@ -79,7 +76,7 @@ let game = {
         dir: 1, 
         speed: 3.5, 
         frame: 0,
-        frameCount: 0, // Contador para controlar velocidade de animação
+        frameCount: 0,
         tilt: 0
     },
     cam: { x: 0, y: 0, shake: 0 },
@@ -87,10 +84,10 @@ let game = {
     res: { wood: 0, stone: 0 },
     inv: { bench: 0, axe: false, pick: false, torch: false },
     built: [],
-    enemies: [], // Sistema de inimigos (coelhos)
+    enemies: [],
     mapHP: new Map(),
     selectedSlot: 0,
-    time: 480, // 8:00 AM
+    time: 480,
     day: 1,
     isNearBench: false,
     particles: []
@@ -98,7 +95,6 @@ let game = {
 
 // ==================== SISTEMA DE INIMIGOS ====================
 function spawnRabbit() {
-    // Spawna coelhos aleatoriamente perto do player
     const angle = Math.random() * Math.PI * 2;
     const distance = 300 + Math.random() * 200;
     
@@ -109,7 +105,7 @@ function spawnRabbit() {
         vy: 0,
         frame: 0,
         frameCount: 0,
-        state: 'idle', // idle, hop
+        state: 'idle',
         hopCooldown: 0
     });
 }
@@ -118,7 +114,6 @@ function updateEnemies() {
     game.enemies.forEach(rabbit => {
         rabbit.frameCount++;
         
-        // IA simples: pula em direção aleatória periodicamente
         if(rabbit.state === 'idle') {
             rabbit.hopCooldown--;
             if(rabbit.hopCooldown <= 0) {
@@ -142,13 +137,11 @@ function updateEnemies() {
         }
     });
     
-    // Remove coelhos muito longe do player (otimização)
     game.enemies = game.enemies.filter(rabbit => {
         const dist = Math.hypot(rabbit.x - game.player.x, rabbit.y - game.player.y);
         return dist < 1000;
     });
     
-    // Mantém entre 2-5 coelhos na tela
     if(game.enemies.length < 3 && Math.random() < 0.02) {
         spawnRabbit();
     }
@@ -156,15 +149,18 @@ function updateEnemies() {
 
 // ==================== SISTEMA DE SAVE ====================
 function checkSave() {
-    const saveData = localStorage.getItem('PatoSave_Definitive');
+    const saveData = localStorage.getItem('PatoDreamSave');
     if(saveData) {
         try {
             const data = JSON.parse(saveData);
-            document.getElementById('btn-continue').disabled = false;
-            document.getElementById('btn-continue').innerHTML = `CONTINUAR<br><small style="font-size:10px">DIA ${data.day}</small>`;
+            const btnContinue = document.getElementById('btn-continue');
+            if(btnContinue) {
+                btnContinue.disabled = false;
+                btnContinue.innerHTML = `CONTINUAR<br><small style="font-size:10px">DIA ${data.day}</small>`;
+            }
         } catch(e) {
             console.error('Save corrompido:', e);
-            localStorage.removeItem('PatoSave_Definitive');
+            localStorage.removeItem('PatoDreamSave');
         }
     }
 }
@@ -179,11 +175,12 @@ function saveGame() {
         player: { x: game.player.x, y: game.player.y },
         mapHP: Array.from(game.mapHP.entries())
     };
-    localStorage.setItem('PatoSave_Definitive', JSON.stringify(saveData));
+    localStorage.setItem('PatoDreamSave', JSON.stringify(saveData));
+    console.log('💾 Jogo salvo automaticamente');
 }
 
 function loadGame() {
-    const raw = localStorage.getItem('PatoSave_Definitive');
+    const raw = localStorage.getItem('PatoDreamSave');
     if(!raw) return;
     
     try {
@@ -197,6 +194,7 @@ function loadGame() {
         game.player.y = data.player?.y || 1000;
         game.mapHP = new Map(data.mapHP || []);
         
+        console.log('✅ Save carregado com sucesso!');
         startGame();
     } catch(e) {
         console.error('Erro ao carregar save:', e);
@@ -206,7 +204,8 @@ function loadGame() {
 }
 
 function newGame() {
-    localStorage.removeItem('PatoSave_Definitive');
+    console.log('🆕 Iniciando novo jogo...');
+    localStorage.removeItem('PatoDreamSave');
     game = {
         active: false,
         player: { x: 1000, y: 1000, dir: 1, speed: 3.5, frame: 0, frameCount: 0, tilt: 0 },
@@ -233,36 +232,62 @@ function startGame() {
     }
     
     game.active = true;
-    document.getElementById('menu-screen').classList.add('hidden');
-    document.getElementById('game-ui').classList.remove('hidden');
+    const menuScreen = document.getElementById('menu-screen');
+    const gameUI = document.getElementById('game-ui');
+    
+    if(menuScreen) menuScreen.classList.add('hidden');
+    if(gameUI) gameUI.classList.remove('hidden');
+    
     updateHUD();
     updateInventoryUI();
     
-    // Spawna coelhos iniciais
     for(let i = 0; i < 3; i++) {
         spawnRabbit();
     }
     
+    console.log('🎮 Jogo iniciado!');
     render();
     setInterval(saveGame, 15000);
 }
 
 // ==================== UI E CONFIGURAÇÕES ====================
 function toggleConfig() {
-    document.getElementById('config-modal').classList.toggle('hidden');
+    const modal = document.getElementById('config-modal');
+    if(modal) {
+        modal.classList.toggle('hidden');
+    }
 }
 
 function resetSave() {
     if(confirm("⚠️ Apagar todo o progresso?\n\nEsta ação não pode ser desfeita.")) {
-        localStorage.removeItem('PatoSave_Definitive');
+        localStorage.removeItem('PatoDreamSave');
         alert("✅ Progresso apagado com sucesso!");
         location.reload();
     }
 }
 
+function openPatchNotes() {
+    const modal = document.getElementById('patch-modal');
+    if(modal) {
+        modal.classList.remove('hidden');
+        console.log('📋 Patch Notes aberto');
+    }
+}
+
+function closePatchNotes() {
+    const modal = document.getElementById('patch-modal');
+    if(modal) {
+        modal.classList.add('hidden');
+        console.log('📋 Patch Notes fechado');
+    }
+}
+
 function toggleCraft() {
-    document.getElementById('craft-panel').classList.toggle('hidden');
-    updateCraftAvailability();
+    const panel = document.getElementById('craft-panel');
+    if(panel) {
+        panel.classList.toggle('hidden');
+        updateCraftAvailability();
+    }
 }
 
 function updateCraftAvailability() {
@@ -271,18 +296,24 @@ function updateCraftAvailability() {
     const axeBtn = document.querySelector('[data-craft="axe"]');
     const pickBtn = document.querySelector('[data-craft="pick"]');
     
-    if(game.res.wood >= 10) benchBtn.classList.remove('disabled');
-    else benchBtn.classList.add('disabled');
+    if(benchBtn) {
+        if(game.res.wood >= 10) benchBtn.classList.remove('disabled');
+        else benchBtn.classList.add('disabled');
+    }
     
-    if(game.res.wood >= 5) torchBtn.classList.remove('disabled');
-    else torchBtn.classList.add('disabled');
+    if(torchBtn) {
+        if(game.res.wood >= 5) torchBtn.classList.remove('disabled');
+        else torchBtn.classList.add('disabled');
+    }
     
-    if(game.isNearBench && game.res.wood >= 5 && game.res.stone >= 5) {
-        axeBtn.classList.remove('disabled');
-        pickBtn.classList.remove('disabled');
-    } else {
-        axeBtn.classList.add('disabled');
-        pickBtn.classList.add('disabled');
+    if(axeBtn && pickBtn) {
+        if(game.isNearBench && game.res.wood >= 5 && game.res.stone >= 5) {
+            axeBtn.classList.remove('disabled');
+            pickBtn.classList.remove('disabled');
+        } else {
+            axeBtn.classList.add('disabled');
+            pickBtn.classList.add('disabled');
+        }
     }
 }
 
@@ -322,32 +353,48 @@ function doCraft(item) {
         updateCraftAvailability();
         saveGame();
         createParticle(canvas.width - 100, 100, '✨', '#fbbf24');
+        console.log(`🔨 Craftado: ${item}`);
     }
 }
 
 function updateInventoryUI() {
-    document.getElementById('s1').innerHTML = game.inv.bench > 0 ? `🔨<br>x${game.inv.bench}` : '-';
-    document.getElementById('s2').innerHTML = game.inv.axe ? '🪓<br>Machado' : '-';
-    document.getElementById('s3').innerHTML = game.inv.pick ? '⛏️<br>Picareta' : '-';
-    document.getElementById('s4').innerHTML = game.inv.torch ? '🔥<br>Tocha' : '-';
+    const slots = {
+        s1: game.inv.bench > 0 ? `🔨<br>x${game.inv.bench}` : '-',
+        s2: game.inv.axe ? '🪓<br>Machado' : '-',
+        s3: game.inv.pick ? '⛏️<br>Picareta' : '-',
+        s4: game.inv.torch ? '🔥<br>Tocha' : '-'
+    };
+    
+    Object.keys(slots).forEach(id => {
+        const slot = document.getElementById(id);
+        if(slot) slot.innerHTML = slots[id];
+    });
 }
 
 function updateHUD() {
-    document.getElementById('w-val').innerText = game.res.wood;
-    document.getElementById('s-val').innerText = game.res.stone;
-    document.getElementById('day-val').innerText = game.day;
+    const elements = {
+        'w-val': game.res.wood,
+        's-val': game.res.stone,
+        'day-val': game.day
+    };
+    
+    Object.keys(elements).forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.innerText = elements[id];
+    });
     
     const h = Math.floor(game.time / 60) % 24;
     const m = Math.floor(game.time % 60);
-    document.getElementById('clock-val').innerText = 
-        `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    const clockEl = document.getElementById('clock-val');
+    if(clockEl) {
+        clockEl.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    }
     
     updateCraftAvailability();
 }
 
-// ==================== SISTEMA DE AÇÃO (ATUALIZADO) ====================
+// ==================== SISTEMA DE AÇÃO ====================
 function handleAction() {
-    // Colocar bancada
     if(game.selectedSlot === 1 && game.inv.bench > 0) {
         game.built.push({ x: Math.round(game.player.x), y: Math.round(game.player.y) });
         game.inv.bench--;
@@ -358,7 +405,6 @@ function handleAction() {
         return;
     }
     
-    // Coletar recursos - HITBOXES AJUSTADAS
     const px = Math.floor(game.player.x / 60);
     const py = Math.floor(game.player.y / 60);
     
@@ -372,25 +418,21 @@ function handleAction() {
             const rx = x * 60 + 30;
             const ry = y * 60 + 30;
             
-            // HITBOXES AJUSTADAS POR TIPO
             const isTree = n < 0.1;
             const isRock = n >= 0.1 && n < 0.2;
             
             let hitboxWidth, hitboxHeight, hitboxOffsetY;
             
             if(isTree) {
-                // Hitbox da árvore: apenas o TRONCO
                 hitboxWidth = 30;
                 hitboxHeight = 35;
-                hitboxOffsetY = -15; // Base do tronco
+                hitboxOffsetY = -15;
             } else if(isRock) {
-                // Hitbox da rocha: base da pedra
                 hitboxWidth = 40;
                 hitboxHeight = 25;
                 hitboxOffsetY = -10;
             }
             
-            // Verifica colisão com hitbox retangular
             const distX = Math.abs(game.player.x - rx);
             const distY = Math.abs(game.player.y - (ry + hitboxOffsetY + hitboxHeight / 2));
             
@@ -400,56 +442,6 @@ function handleAction() {
                 }
                 
                 let damage = 1;
-                
-                if(isTree && game.inv.axe && game.selectedSlot === 2) damage = 3;
-                if(isRock && game.inv.pick && game.selectedSlot === 3) damage = 3;
-                
-                const currentHP = game.mapHP.get(id);
-                game.mapHP.set(id, currentHP - damage);
-                
-                game.cam.shake = 6;
-                
-                if(game.mapHP.get(id) <= 0) {
-                    if(isTree) {
-                        game.res.wood += 3;
-                        createParticle(rx, ry, '🪵', '#8b4513');
-                    } else if(isRock) {
-                        game.res.stone += 3;
-                        createParticle(rx, ry, '🪨', '#64748b');
-                    }
-                    game.mapHP.set(id, -1);
-                }
-                
-                updateHUD();
-                return;
-            }
-        }
-    }
-}
-    
-    // Coletar recursos
-    const px = Math.floor(game.player.x / 60);
-    const py = Math.floor(game.player.y / 60);
-    
-    for(let x = px - 1; x <= px + 1; x++) {
-        for(let y = py - 1; y <= py + 1; y++) {
-            const id = `${x},${y}`;
-            const n = Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453123) % 1;
-            
-            if(n > 0.2) continue;
-            
-            const rx = x * 60 + 30;
-            const ry = y * 60 + 30;
-            const dist = Math.hypot(game.player.x - rx, game.player.y - ry);
-            
-            if(dist < 65) {
-                if(!game.mapHP.has(id)) {
-                    game.mapHP.set(id, 6);
-                }
-                
-                let damage = 1;
-                const isTree = n < 0.1;
-                const isRock = n >= 0.1 && n < 0.2;
                 
                 if(isTree && game.inv.axe && game.selectedSlot === 2) damage = 3;
                 if(isRock && game.inv.pick && game.selectedSlot === 3) damage = 3;
@@ -535,6 +527,10 @@ function lerpColor(color1, color2, t) {
 // ==================== SISTEMA DE INPUT ====================
 function bindButton(id, key) {
     const el = document.getElementById(id);
+    if(!el) {
+        console.warn(`⚠️ Elemento ${id} não encontrado`);
+        return;
+    }
     
     el.addEventListener('touchstart', (e) => {
         e.preventDefault();
@@ -557,116 +553,44 @@ function bindButton(id, key) {
     });
 }
 
-bindButton('b-u', 'u');
-bindButton('b-d', 'd');
-bindButton('b-l', 'l');
-bindButton('b-r', 'r');
-
-const actionBtn = document.getElementById('btn-action');
-actionBtn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    game.keys.action = true;
-    handleAction();
-}, { passive: false });
-
-actionBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    game.keys.action = false;
-}, { passive: false });
-
-actionBtn.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    game.keys.action = true;
-    handleAction();
-});
-
-actionBtn.addEventListener('mouseup', (e) => {
-    e.preventDefault();
-    game.keys.action = false;
-});
-
-// Teclado para desktop
-window.addEventListener('keydown', (e) => {
-    if(e.key === 'w' || e.key === 'ArrowUp') game.keys.u = 1;
-    if(e.key === 's' || e.key === 'ArrowDown') game.keys.d = 1;
-    if(e.key === 'a' || e.key === 'ArrowLeft') game.keys.l = 1;
-    if(e.key === 'd' || e.key === 'ArrowRight') game.keys.r = 1;
-    if(e.key === ' ' || e.key === 'e') {
-        game.keys.action = true;
-        handleAction();
-    }
-});
-
-window.addEventListener('keyup', (e) => {
-    if(e.key === 'w' || e.key === 'ArrowUp') game.keys.u = 0;
-    if(e.key === 's' || e.key === 'ArrowDown') game.keys.d = 0;
-    if(e.key === 'a' || e.key === 'ArrowLeft') game.keys.l = 0;
-    if(e.key === 'd' || e.key === 'ArrowRight') game.keys.r = 0;
-    if(e.key === ' ' || e.key === 'e') game.keys.action = false;
-});
-
-// Hotbar
-for(let i = 0; i <= 4; i++) {
-    document.getElementById('s' + i).addEventListener('click', function() {
-        document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-        this.classList.add('selected');
-        game.selectedSlot = i;
-    });
-}
-
-// ==================== EVENT LISTENERS (CORRIGIDOS) ====================
-
-// Aguarda o DOM estar completamente carregado
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎮 DOM Carregado. Inicializando event listeners...');
+// ==================== INICIALIZAÇÃO COMPLETA ====================
+window.addEventListener('load', function() {
+    console.log('🚀 Inicializando "Um Pato e um Sonho"...');
     
-    // ==================== MENU PRINCIPAL ====================
+    // Botões do menu
     const btnNewGame = document.getElementById('btn-new-game');
     const btnContinue = document.getElementById('btn-continue');
     const btnConfig = document.getElementById('btn-config');
     const btnPatchNotes = document.getElementById('btn-patch-notes');
     
     if(btnNewGame) {
-        btnNewGame.addEventListener('click', function() {
-            console.log('✅ Novo jogo iniciado');
-            newGame();
-        });
+        btnNewGame.addEventListener('click', newGame);
+        console.log('✅ Botão "Novo Jogo" vinculado');
     }
     
     if(btnContinue) {
-        btnContinue.addEventListener('click', function() {
-            console.log('✅ Carregando save...');
-            loadGame();
-        });
+        btnContinue.addEventListener('click', loadGame);
+        console.log('✅ Botão "Continuar" vinculado');
     }
     
     if(btnConfig) {
-        btnConfig.addEventListener('click', function() {
-            console.log('⚙️ Abrindo configurações');
-            toggleConfig();
-        });
+        btnConfig.addEventListener('click', toggleConfig);
+        console.log('✅ Botão "Configurações" vinculado');
     }
     
     if(btnPatchNotes) {
-        btnPatchNotes.addEventListener('click', function() {
-            console.log('📋 Abrindo Patch Notes');
-            openPatchNotes();
-        });
+        btnPatchNotes.addEventListener('click', openPatchNotes);
+        console.log('✅ Botão "Novidades" vinculado');
     }
     
-    // ==================== MODAL DE CONFIGURAÇÕES ====================
+    // Modal de configurações
     const btnResetSave = document.getElementById('btn-reset-save');
     const btnCloseConfig = document.getElementById('btn-close-config');
     
-    if(btnResetSave) {
-        btnResetSave.addEventListener('click', resetSave);
-    }
+    if(btnResetSave) btnResetSave.addEventListener('click', resetSave);
+    if(btnCloseConfig) btnCloseConfig.addEventListener('click', toggleConfig);
     
-    if(btnCloseConfig) {
-        btnCloseConfig.addEventListener('click', toggleConfig);
-    }
-    
-    // ==================== MODAL DE PATCH NOTES ====================
+    // Modal de patch notes
     const btnClosePatch = document.getElementById('btn-close-patch');
     const patchModal = document.getElementById('patch-modal');
     
@@ -674,7 +598,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btnClosePatch.addEventListener('click', closePatchNotes);
     }
     
-    // Fechar ao clicar fora do modal
     if(patchModal) {
         patchModal.addEventListener('click', function(e) {
             if(e.target === patchModal) {
@@ -683,48 +606,89 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ==================== INVENTÁRIO E CRAFT ====================
+    // Inventário
     const btnInv = document.getElementById('btn-inv');
     if(btnInv) {
         btnInv.addEventListener('click', toggleCraft);
+        console.log('✅ Botão de inventário vinculado');
     }
     
-    // Botões de craft
+    // Craft items
     document.querySelectorAll('.craft-item').forEach(item => {
         item.addEventListener('click', function() {
             const craftType = this.getAttribute('data-craft');
-            if(craftType) {
-                doCraft(craftType);
-            }
+            if(craftType) doCraft(craftType);
         });
     });
     
-    // ==================== INICIALIZAÇÃO ====================
+    // Controles direcionais
+    bindButton('b-u', 'u');
+    bindButton('b-d', 'd');
+    bindButton('b-l', 'l');
+    bindButton('b-r', 'r');
+    
+    // Botão de ação
+    const actionBtn = document.getElementById('btn-action');
+    if(actionBtn) {
+        actionBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            game.keys.action = true;
+            handleAction();
+        }, { passive: false });
+        
+        actionBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            game.keys.action = false;
+        }, { passive: false });
+        
+        actionBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            game.keys.action = true;
+            handleAction();
+        });
+        
+        actionBtn.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            game.keys.action = false;
+        });
+        
+        console.log('✅ Botão de ação vinculado');
+    }
+    
+    // Teclado
+    window.addEventListener('keydown', (e) => {
+        if(e.key === 'w' || e.key === 'ArrowUp') game.keys.u = 1;
+        if(e.key === 's' || e.key === 'ArrowDown') game.keys.d = 1;
+        if(e.key === 'a' || e.key === 'ArrowLeft') game.keys.l = 1;
+        if(e.key === 'd' || e.key === 'ArrowRight') game.keys.r = 1;
+        if(e.key === ' ' || e.key === 'e') {
+            game.keys.action = true;
+            handleAction();
+        }
+    });
+  window.addEventListener('keyup', (e) => {
+        if(e.key === 'w' || e.key === 'ArrowUp') game.keys.u = 0;
+        if(e.key === 's' || e.key === 'ArrowDown') game.keys.d = 0;
+        if(e.key === 'a' || e.key === 'ArrowLeft') game.keys.l = 0;
+        if(e.key === 'd' || e.key === 'ArrowRight') game.keys.r = 0;
+        if(e.key === ' ' || e.key === 'e') game.keys.action = false;
+    });
+    
+    // Hotbar
+    for(let i = 0; i <= 4; i++) {
+        const slot = document.getElementById('s' + i);
+        if(slot) {
+            slot.addEventListener('click', function() {
+                document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+                this.classList.add('selected');
+                game.selectedSlot = i;
+            });
+        }
+    }
+    
+    // Inicialização final
     checkSave();
     loadAssets(() => {
-        console.log('🎮 Jogo pronto para iniciar!');
+        console.log('✅ Sistema pronto! Clique em "NOVO JOGO" para começar.');
     });
 });
-
-// ==================== FUNÇÕES DE PATCH NOTES ====================
-function openPatchNotes() {
-    const modal = document.getElementById('patch-modal');
-    if(modal) {
-        modal.classList.remove('hidden');
-    }
-}
-
-function closePatchNotes() {
-    const modal = document.getElementById('patch-modal');
-    if(modal) {
-        modal.classList.add('hidden');
-    }
-}
-
-// ==================== FUNÇÃO TOGGLE CONFIG ATUALIZADA ====================
-function toggleConfig() {
-    const modal = document.getElementById('config-modal');
-    if(modal) {
-        modal.classList.toggle('hidden');
-    }
-}
