@@ -1,174 +1,582 @@
+🦆 PATO SURVIVAL - DEFINITIVE EDITION
+Analisando o código fornecido, identifiquei os bugs críticos e implementei uma versão completamente refatorada com melhorias visuais, correções de posição, UI responsiva e sistema de feedback visual aprimorado.
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pato Survival Alpha 1.5.1 - Fixes</title>
+    <title>Pato Survival - Definitive Edition v2.0</title>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; outline: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none; 
+            touch-action: none; 
+            outline: none; 
+            margin: 0;
+            padding: 0;
+        }
+        
+        body, html { 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background: #000; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: fixed;
+        }
+        
+        canvas { 
+            display: block; 
+            width: 100%; 
+            height: 100%; 
+            image-rendering: pixelated; 
+            image-rendering: crisp-edges;
+        }
 
-        /* --- MENU PRINCIPAL OTIMIZADO --- */
+        /* ==================== MENU PRINCIPAL ==================== */
         #menu-screen { 
-            position: absolute; inset: 0; z-index: 100; 
-            background: radial-gradient(circle, #2d3f2d 0%, #0a0f0a 100%);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            /* Borda removida conforme pedido */
-            padding: 20px;
+            position: absolute; 
+            inset: 0; 
+            z-index: 100; 
+            background: radial-gradient(circle at 50% 40%, #2d4a2d 0%, #1a2f1a 50%, #0a0f0a 100%);
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            padding: clamp(10px, 3vw, 30px);
+            animation: fadeIn 0.5s ease;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
         .alpha-title { 
-            color: #fb923c; font-size: 32px; /* Reduzido */
-            text-shadow: 3px 3px #000; text-align: center; margin-bottom: 25px; line-height: 1.1; 
+            color: #fbbf24; 
+            font-size: clamp(24px, 8vw, 42px);
+            text-shadow: 4px 4px 0 #000, 2px 2px 8px rgba(251, 191, 36, 0.4);
+            text-align: center; 
+            margin-bottom: clamp(15px, 4vh, 30px);
+            line-height: 1.1; 
             font-weight: 900;
+            letter-spacing: 2px;
         }
-        .alpha-title small { font-size: 14px; color: #fff; letter-spacing: 3px; display: block; margin-top: 5px;}
         
-        .menu-btns { display: flex; flex-direction: column; gap: 12px; width: 220px; /* Largura reduzida */ }
+        .alpha-title small { 
+            font-size: clamp(10px, 3vw, 14px);
+            color: #94a3b8; 
+            letter-spacing: 3px; 
+            display: block; 
+            margin-top: 8px;
+            font-weight: 400;
+        }
+        
+        .menu-btns { 
+            display: flex; 
+            flex-direction: column; 
+            gap: clamp(8px, 2vh, 14px);
+            width: clamp(200px, 80vw, 280px);
+            max-width: 320px;
+        }
+        
         .btn-alpha { 
-            background: #1e293b; color: white; border: 2px solid #fb923c; padding: 12px; /* Padding reduzido */
-            font-size: 14px; /* Fonte reduzida */
-            cursor: pointer; font-weight: bold; text-transform: uppercase;
-            box-shadow: 4px 4px 0 #000; transition: 0.1s; pointer-events: auto; border-radius: 4px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white; 
+            border: 2px solid #fbbf24;
+            padding: clamp(10px, 2.5vh, 16px);
+            font-size: clamp(12px, 3.5vw, 16px);
+            cursor: pointer; 
+            font-weight: bold; 
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #d97706, 0 6px 12px rgba(0,0,0,0.4);
+            transition: all 0.1s ease;
+            pointer-events: auto; 
+            border-radius: 6px;
+            letter-spacing: 1px;
+            position: relative;
         }
-        .btn-alpha:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
-        .btn-alpha:disabled { opacity: 0.5; border-color: #475569; color: #475569; box-shadow: none; transform: none; }
-
-        #version-log { position: absolute; bottom: 10px; left: 10px; color: #64748b; font-size: 10px; pointer-events: none; opacity: 0.7; }
-
-        /* MODAL DE CONFIGURAÇÕES */
-        #config-modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 260px; background: #1e293b; border: 2px solid #fb923c;
-            padding: 20px; z-index: 110; display: flex; flex-direction: column; gap: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8); color: white; text-align: center;
-        }
-
-        /* --- INTERFACE DO JOGO --- */
-        #game-ui { position: absolute; inset: 0; pointer-events: none; z-index: 50; }
-        #top-hud { position: absolute; top: 10px; width: 100%; display: flex; justify-content: center; }
-        .time-box { background: rgba(0,0,0,0.8); color: #fb923c; padding: 5px 15px; border: 2px solid #fb923c; border-radius: 20px; font-weight: bold; font-size: 12px; }
-
-        #hud { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; }
-        .res-box { background: rgba(0,0,0,0.8); color: #fff; padding: 8px; border-left: 4px solid #fb923c; font-size: 14px; font-weight: bold; }
-
-        #btn-inv { position: absolute; top: 10px; right: 10px; width: 60px; height: 45px; background: #334155; border: 2px solid #fb923c; color: white; display: flex; align-items: center; justify-content: center; pointer-events: auto; font-weight: bold; font-size: 12px; }
         
-        #craft-panel { position: absolute; top: 60px; right: 10px; width: 180px; background: rgba(15,23,42,0.95); border: 2px solid #fb923c; padding: 10px; pointer-events: auto; color: white; }
-        .craft-item { background: #1e293b; border: 1px solid #475569; padding: 8px; margin-bottom: 5px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; }
-        .craft-item:active { background: #fb923c; }
+        .btn-alpha:active { 
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #d97706, 0 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .btn-alpha:disabled { 
+            opacity: 0.4;
+            border-color: #475569;
+            color: #64748b;
+            box-shadow: none;
+            transform: none;
+            cursor: not-allowed;
+        }
 
-        /* HOTBAR */
-        #hotbar { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; background: rgba(0,0,0,0.8); padding: 6px; border: 2px solid #fb923c; pointer-events: auto; border-radius: 8px; }
-        .slot { width: 40px; height: 40px; background: #1e293b; border: 2px solid #475569; display: flex; align-items: center; justify-content: center; color: white; font-size: 8px; font-weight: bold; text-align: center; border-radius: 4px; }
-        .slot.selected { border-color: #fb923c; background: #334155; box-shadow: 0 0 10px #fb923c; }
+        #version-log { 
+            position: absolute; 
+            bottom: clamp(5px, 2vh, 15px);
+            left: clamp(5px, 2vw, 15px);
+            color: #475569;
+            font-size: clamp(9px, 2vw, 11px);
+            pointer-events: none;
+            opacity: 0.8;
+            font-weight: 600;
+        }
 
-        /* CONTROLES */
-        #controls { position: absolute; bottom: 20px; left: 20px; width: 140px; height: 140px; pointer-events: auto; }
-        .d-btn { position: absolute; width: 45px; height: 45px; background: rgba(255,255,255,0.1); border: 2px solid #fff; display: flex; align-items: center; justify-content: center; color: white; border-radius: 8px; font-size: 18px; }
-        #b-u { top: 0; left: 47px; } #b-d { bottom: 0; left: 47px; } #b-l { top: 47px; left: 0; } #b-r { top: 47px; right: 0; }
-        #btn-action { position: absolute; bottom: 25px; right: 25px; width: 80px; height: 80px; background: #fb923c; border: 4px solid #fff; border-radius: 50%; color: white; font-weight: bold; pointer-events: auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(251,146,60,0.5); font-size: 12px; }
+        /* ==================== MODAL DE CONFIGURAÇÕES ==================== */
+        #config-modal {
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            width: clamp(240px, 85vw, 320px);
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 3px solid #fbbf24;
+            padding: clamp(15px, 4vw, 25px);
+            z-index: 110;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9), 0 0 60px rgba(251, 191, 36, 0.2);
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            animation: modalPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes modalPop {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        #config-modal h3 {
+            color: #fbbf24;
+            font-size: clamp(14px, 4vw, 18px);
+            margin-bottom: 5px;
+        }
+
+        /* ==================== INTERFACE DO JOGO ==================== */
+        #game-ui { 
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 50;
+        }
+        
+        #top-hud { 
+            position: absolute;
+            top: clamp(5px, 2vh, 12px);
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .time-box { 
+            background: rgba(15, 23, 42, 0.92);
+            color: #fbbf24;
+            padding: clamp(4px, 1vh, 8px) clamp(10px, 3vw, 20px);
+            border: 2px solid #fbbf24;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: clamp(10px, 2.5vw, 13px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 2px rgba(251, 191, 36, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        #hud { 
+            position: absolute;
+            top: clamp(5px, 2vh, 12px);
+            left: clamp(5px, 2vw, 12px);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(4px, 1vh, 8px);
+        }
+        
+        .res-box { 
+            background: rgba(15, 23, 42, 0.92);
+            color: #fff;
+            padding: clamp(5px, 1.2vh, 9px) clamp(8px, 2vw, 12px);
+            border-left: 3px solid #fbbf24;
+            font-size: clamp(11px, 2.8vw, 14px);
+            font-weight: bold;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            min-width: clamp(50px, 15vw, 70px);
+        }
+
+        #btn-inv { 
+            position: absolute;
+            top: clamp(5px, 2vh, 12px);
+            right: clamp(5px, 2vw, 12px);
+            width: clamp(45px, 12vw, 65px);
+            height: clamp(35px, 9vw, 50px);
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            border: 2px solid #fbbf24;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            font-weight: bold;
+            font-size: clamp(10px, 2.5vw, 13px);
+            border-radius: 6px;
+            box-shadow: 0 3px 0 #d97706, 0 4px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        #btn-inv:active {
+            transform: translateY(3px);
+            box-shadow: 0 0 0 #d97706;
+        }
+        
+        #craft-panel { 
+            position: absolute;
+            top: clamp(50px, 13vh, 70px);
+            right: clamp(5px, 2vw, 12px);
+            width: clamp(160px, 45vw, 200px);
+            max-height: 60vh;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.96);
+            border: 2px solid #fbbf24;
+            padding: clamp(8px, 2vw, 12px);
+            pointer-events: auto;
+            color: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        }
+        
+        .craft-item { 
+            background: #1e293b;
+            border: 1px solid #475569;
+            padding: clamp(6px, 1.5vh, 10px);
+            margin-bottom: 6px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            border-radius: 4px;
+            transition: all 0.15s;
+        }
+        
+        .craft-item:active { 
+            background: #fbbf24;
+            color: #000;
+            transform: scale(0.98);
+        }
+
+        .craft-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ==================== HOTBAR ==================== */
+        #hotbar { 
+            position: absolute;
+            bottom: clamp(8px, 2vh, 15px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: clamp(4px, 1vw, 8px);
+            background: rgba(15, 23, 42, 0.92);
+            padding: clamp(4px, 1vh, 8px);
+            border: 2px solid #fbbf24;
+            pointer-events: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        }
+        
+        .slot { 
+            width: clamp(35px, 10vw, 50px);
+            height: clamp(35px, 10vw, 50px);
+            background: #1e293b;
+            border: 2px solid #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: clamp(7px, 2vw, 9px);
+            font-weight: bold;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1.1;
+            padding: 2px;
+        }
+        
+        .slot.selected { 
+            border-color: #fbbf24;
+            background: #334155;
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.6), inset 0 0 8px rgba(251, 191, 36, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* ==================== CONTROLES MOBILE ==================== */
+        #controls { 
+            position: absolute;
+            bottom: clamp(15px, 4vh, 25px);
+            left: clamp(15px, 4vw, 25px);
+            width: clamp(110px, 28vw, 150px);
+            height: clamp(110px, 28vw, 150px);
+            pointer-events: auto;
+        }
+        
+        .d-btn { 
+            position: absolute;
+            width: clamp(38px, 10vw, 52px);
+            height: clamp(38px, 10vw, 52px);
+            background: rgba(255, 255, 255, 0.12);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 8px;
+            font-size: clamp(14px, 4vw, 20px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .d-btn:active {
+            background: rgba(251, 191, 36, 0.3);
+            border-color: #fbbf24;
+            transform: scale(0.95);
+        }
+        
+        #b-u { top: 0; left: 50%; transform: translateX(-50%); }
+        #b-d { bottom: 0; left: 50%; transform: translateX(-50%); }
+        #b-l { top: 50%; left: 0; transform: translateY(-50%); }
+        #b-r { top: 50%; right: 0; transform: translateY(-50%); }
+
+        #b-d:active { transform: translateX(-50%) scale(0.95); }
+        #b-u:active { transform: translateX(-50%) scale(0.95); }
+        #b-l:active { transform: translateY(-50%) scale(0.95); }
+        #b-r:active { transform: translateY(-50%) scale(0.95); }
+        
+        #btn-action { 
+            position: absolute;
+            bottom: clamp(20px, 5vh, 35px);
+            right: clamp(20px, 5vw, 35px);
+            width: clamp(65px, 18vw, 90px);
+            height: clamp(65px, 18vw, 90px);
+            background: linear-gradient(135deg, #fb923c 0%, #f59e0b 100%);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            color: white;
+            font-weight: 900;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 #d97706, 0 6px 16px rgba(251, 146, 60, 0.5);
+            font-size: clamp(10px, 2.8vw, 13px);
+            cursor: pointer;
+            transition: all 0.1s;
+            letter-spacing: 0.5px;
+        }
+
+        #btn-action:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #d97706, 0 2px 8px rgba(251, 146, 60, 0.4);
+        }
 
         .hidden { display: none !important; }
+
+        /* Shake Animation */
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-2px, 2px); }
+            50% { transform: translate(2px, -2px); }
+            75% { transform: translate(-2px, -2px); }
+        }
+
+        .shake { animation: screenShake 0.2s ease; }
     </style>
 </head>
 <body>
 
+    <!-- ==================== MENU PRINCIPAL ==================== -->
     <div id="menu-screen">
-        <div class="alpha-title">PATO SURVIVAL<br><small>ALPHA 1.5.1</small></div>
+        <div class="alpha-title">🦆 PATO SURVIVAL<br><small>DEFINITIVE EDITION</small></div>
         <div class="menu-btns">
             <button class="btn-alpha" onclick="newGame()">NOVO JOGO</button>
             <button class="btn-alpha" id="btn-continue" onclick="loadGame()" disabled>CONTINUAR</button>
             <button class="btn-alpha" onclick="toggleConfig()">CONFIGURAÇÕES</button>
         </div>
-        <div id="version-log">BUILD: 1.5.1 - UI FIX</div>
+        <div id="version-log">BUILD: 2.0.0 - DEFINITIVE</div>
     </div>
 
+    <!-- ==================== MODAL DE CONFIGURAÇÕES ==================== -->
     <div id="config-modal" class="hidden">
-        <div style="font-weight:bold; color:#fb923c; margin-bottom:10px">CONFIGURAÇÕES</div>
-        <div style="font-size:12px; margin-bottom:15px">Som: Desativado (Alpha)</div>
-        <button class="btn-alpha" onclick="resetSave()">LIMPAR SAVE</button>
+        <h3>⚙️ CONFIGURAÇÕES</h3>
+        <div style="font-size: clamp(11px, 2.8vw, 13px); margin: 8px 0; color: #94a3b8;">
+            Som: Desativado (Alpha)<br>
+            Versão: 2.0 Definitive
+        </div>
+        <button class="btn-alpha" onclick="resetSave()">🗑️ LIMPAR SAVE</button>
         <button class="btn-alpha" onclick="toggleConfig()">FECHAR</button>
     </div>
 
+    <!-- ==================== INTERFACE DO JOGO ==================== -->
     <div id="game-ui" class="hidden">
-        <div id="top-hud"><div class="time-box">DIA <span id="day-val">1</span> - <span id="clock-val">08:00</span></div></div>
+        <div id="top-hud">
+            <div class="time-box">DIA <span id="day-val">1</span> • <span id="clock-val">08:00</span></div>
+        </div>
+        
         <div id="hud">
-            <div class="res-box">M: <span id="w-val">0</span></div>
-            <div class="res-box">P: <span id="s-val">0</span></div>
+            <div class="res-box">🪵 <span id="w-val">0</span></div>
+            <div class="res-box">🪨 <span id="s-val">0</span></div>
         </div>
-        <div id="btn-inv" onclick="toggleCraft()">INV</div>
+        
+        <div id="btn-inv" onclick="toggleCraft()">📦</div>
+        
         <div id="craft-panel" class="hidden">
-            <div class="craft-item" onclick="doCraft('bench')"><span>BANCADA</span><span>10 M</span></div>
-            <div class="craft-item" onclick="doCraft('torch')"><span>TOCHA</span><span>5 M</span></div>
-            <div class="craft-item" onclick="doCraft('axe')"><span>MACHADO</span><span>5M 5P</span></div>
-            <div class="craft-item" onclick="doCraft('pick')"><span>PICARETA</span><span>5M 5P</span></div>
+            <div class="craft-item" onclick="doCraft('bench')" data-craft="bench">
+                <span>🔨 Bancada</span><span>10🪵</span>
+            </div>
+            <div class="craft-item" onclick="doCraft('torch')" data-craft="torch">
+                <span>🔥 Tocha</span><span>5🪵</span>
+            </div>
+            <div class="craft-item" onclick="doCraft('axe')" data-craft="axe">
+                <span>🪓 Machado</span><span>5🪵 5🪨</span>
+            </div>
+            <div class="craft-item" onclick="doCraft('pick')" data-craft="pick">
+                <span>⛏️ Picareta</span><span>5🪵 5🪨</span>
+            </div>
         </div>
+        
         <div id="hotbar">
-            <div class="slot selected" id="s0">Mão</div>
+            <div class="slot selected" id="s0">👋<br>Mão</div>
             <div class="slot" id="s1">-</div>
             <div class="slot" id="s2">-</div>
             <div class="slot" id="s3">-</div>
             <div class="slot" id="s4">-</div>
         </div>
-        <div id="controls"><div class="d-btn" id="b-u">▲</div><div class="d-btn" id="b-d">▼</div><div class="d-btn" id="b-l">◀</div><div class="d-btn" id="b-r">▶</div></div>
+        
+        <div id="controls">
+            <div class="d-btn" id="b-u">▲</div>
+            <div class="d-btn" id="b-d">▼</div>
+            <div class="d-btn" id="b-l">◀</div>
+            <div class="d-btn" id="b-r">▶</div>
+        </div>
+        
         <div id="btn-action">AÇÃO</div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
     <script>
+        // ==================== CONFIGURAÇÃO INICIAL ====================
         const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false });
         
         let game = {
             active: false,
-            player: { x: 1000, y: 1000, dir: 1, speed: 4, frame: 0 },
-            cam: { x: 0, y: 0 },
-            keys: { u:0, d:0, l:0, r:0, action: false },
+            player: { 
+                x: 1000, 
+                y: 1000, 
+                dir: 1, 
+                speed: 3.5, 
+                frame: 0,
+                tilt: 0 // Para animação de inclinação
+            },
+            cam: { x: 0, y: 0, shake: 0 },
+            keys: { u: 0, d: 0, l: 0, r: 0, action: false },
             res: { wood: 0, stone: 0 },
             inv: { bench: 0, axe: false, pick: false, torch: false },
-            built: [], mapHP: new Map(),
-            selectedSlot: 0, time: 480, day: 1, isNearBench: false
+            built: [],
+            mapHP: new Map(),
+            selectedSlot: 0,
+            time: 480, // 8:00 AM
+            day: 1,
+            isNearBench: false,
+            particles: [] // Sistema de partículas
         };
 
-        // --- SISTEMA DE SAVE E MENU ---
+        // ==================== SISTEMA DE SAVE E MENU ====================
         function checkSave() {
-            if(localStorage.getItem('PatoSave_Alpha')) {
-                document.getElementById('btn-continue').disabled = false;
-                document.getElementById('btn-continue').innerText = "CONTINUAR (DIA " + JSON.parse(localStorage.getItem('PatoSave_Alpha')).day + ")";
+            const saveData = localStorage.getItem('PatoSave_Definitive');
+            if(saveData) {
+                try {
+                    const data = JSON.parse(saveData);
+                    document.getElementById('btn-continue').disabled = false;
+                    document.getElementById('btn-continue').innerHTML = `CONTINUAR<br><small style="font-size:10px">DIA ${data.day}</small>`;
+                } catch(e) {
+                    console.error('Save corrompido:', e);
+                    localStorage.removeItem('PatoSave_Definitive');
+                }
             }
         }
 
-        function toggleConfig() { document.getElementById('config-modal').classList.toggle('hidden'); }
+        function toggleConfig() {
+            document.getElementById('config-modal').classList.toggle('hidden');
+        }
         
         function resetSave() {
-            if(confirm("Apagar todo o progresso?")) {
-                localStorage.removeItem('PatoSave_Alpha');
+            if(confirm("⚠️ Apagar todo o progresso?\n\nEsta ação não pode ser desfeita.")) {
+                localStorage.removeItem('PatoSave_Definitive');
+                alert("✅ Progresso apagado com sucesso!");
                 location.reload();
             }
         }
 
         function saveGame() {
             const saveData = {
-                res: game.res, inv: game.inv, built: game.built,
-                time: game.time, day: game.day, player: {x: game.player.x, y: game.player.y},
+                res: game.res,
+                inv: game.inv,
+                built: game.built,
+                time: game.time,
+                day: game.day,
+                player: { x: game.player.x, y: game.player.y },
                 mapHP: Array.from(game.mapHP.entries())
             };
-            localStorage.setItem('PatoSave_Alpha', JSON.stringify(saveData));
+            localStorage.setItem('PatoSave_Definitive', JSON.stringify(saveData));
         }
 
         function loadGame() {
-            const raw = localStorage.getItem('PatoSave_Alpha');
+            const raw = localStorage.getItem('PatoSave_Definitive');
             if(!raw) return;
-            const data = JSON.parse(raw);
-            Object.assign(game, data);
-            game.mapHP = new Map(data.mapHP);
-            startGame();
+            
+            try {
+                const data = JSON.parse(raw);
+                // Garante que player sempre começa em (1000, 1000) se dados estiverem corrompidos
+                game.res = data.res || { wood: 0, stone: 0 };
+                game.inv = data.inv || { bench: 0, axe: false, pick: false, torch: false };
+                game.built = data.built || [];
+                game.time = data.time || 480;
+                game.day = data.day || 1;
+                game.player.x = data.player?.x || 1000;
+                game.player.y = data.player?.y || 1000;
+                game.mapHP = new Map(data.mapHP || []);
+                
+                startGame();
+            } catch(e) {
+                console.error('Erro ao carregar save:', e);
+                alert('❌ Erro ao carregar save. Iniciando novo jogo.');
+                newGame();
+            }
         }
 
         function newGame() {
-            localStorage.removeItem('PatoSave_Alpha');
+            localStorage.removeItem('PatoSave_Definitive');
+            // Reseta todos os valores para o padrão
+            game = {
+                active: false,
+                player: { x: 1000, y: 1000, dir: 1, speed: 3.5, frame: 0, tilt: 0 },
+                cam: { x: 0, y: 0, shake: 0 },
+                keys: { u: 0, d: 0, l: 0,
+                res: { wood: 0, stone: 0 },
+                inv: { bench: 0, axe: false, pick: false, torch: false },
+                built: [],
+                mapHP: new Map(),
+                selectedSlot: 0,
+                time: 480,
+                day: 1,
+                isNearBench: false,
+                particles: []
+            };
             startGame();
         }
 
@@ -177,185 +585,705 @@
             document.getElementById('menu-screen').classList.add('hidden');
             document.getElementById('game-ui').classList.remove('hidden');
             updateHUD();
+            updateInventoryUI();
             render();
-            setInterval(saveGame, 10000);
+            // Auto-save a cada 15 segundos
+            setInterval(saveGame, 15000);
         }
 
-        // --- LÓGICA DE JOGO ---
-        function toggleCraft() { document.getElementById('craft-panel').classList.toggle('hidden'); }
+        // ==================== LÓGICA DE CRAFTING ====================
+        function toggleCraft() {
+            document.getElementById('craft-panel').classList.toggle('hidden');
+            updateCraftAvailability();
+        }
+
+        function updateCraftAvailability() {
+            // Bancada e Tocha sempre disponíveis
+            const benchBtn = document.querySelector('[data-craft="bench"]');
+            const torchBtn = document.querySelector('[data-craft="torch"]');
+            
+            if(game.res.wood >= 10) benchBtn.classList.remove('disabled');
+            else benchBtn.classList.add('disabled');
+            
+            if(game.res.wood >= 5) torchBtn.classList.remove('disabled');
+            else torchBtn.classList.add('disabled');
+            
+            // Machado e Picareta requerem bancada
+            const axeBtn = document.querySelector('[data-craft="axe"]');
+            const pickBtn = document.querySelector('[data-craft="pick"]');
+            
+            if(game.isNearBench && game.res.wood >= 5 && game.res.stone >= 5) {
+                axeBtn.classList.remove('disabled');
+                pickBtn.classList.remove('disabled');
+            } else {
+                axeBtn.classList.add('disabled');
+                pickBtn.classList.add('disabled');
+            }
+        }
 
         function doCraft(item) {
-            if(item === 'bench' && game.res.wood >= 10) { game.res.wood -= 10; game.inv.bench++; document.getElementById('s1').innerText = "Bancada"; }
-            if(item === 'torch' && game.res.wood >= 5) { game.res.wood -= 5; game.inv.torch = true; document.getElementById('s4').innerText = "Tocha"; }
-            if(game.isNearBench && game.res.wood >= 5 && game.res.stone >= 5) {
-                if(item === 'axe') { game.inv.axe = true; document.getElementById('s2').innerText = "Machado"; }
-                if(item === 'pick') { game.inv.pick = true; document.getElementById('s3').innerText = "Picareta"; }
+            let success = false;
+            
+            if(item === 'bench' && game.res.wood >= 10) {
+                game.res.wood -= 10;
+                game.inv.bench++;
+                success = true;
             }
-            updateHUD(); saveGame();
+            
+            if(item === 'torch' && game.res.wood >= 5) {
+                game.res.wood -= 5;
+                game.inv.torch = true;
+                success = true;
+            }
+            
+            if(game.isNearBench && game.res.wood >= 5 && game.res.stone >= 5) {
+                if(item === 'axe' && !game.inv.axe) {
+                    game.res.wood -= 5;
+                    game.res.stone -= 5;
+                    game.inv.axe = true;
+                    success = true;
+                }
+                if(item === 'pick' && !game.inv.pick) {
+                    game.res.wood -= 5;
+                    game.res.stone -= 5;
+                    game.inv.pick = true;
+                    success = true;
+                }
+            }
+            
+            if(success) {
+                updateHUD();
+                updateInventoryUI();
+                updateCraftAvailability();
+                saveGame();
+                createParticle(canvas.width - 100, 100, '✨', '#fbbf24');
+            }
         }
 
+        function updateInventoryUI() {
+            document.getElementById('s1').innerHTML = game.inv.bench > 0 ? `🔨<br>x${game.inv.bench}` : '-';
+            document.getElementById('s2').innerHTML = game.inv.axe ? '🪓<br>Machado' : '-';
+            document.getElementById('s3').innerHTML = game.inv.pick ? '⛏️<br>Picareta' : '-';
+            document.getElementById('s4').innerHTML = game.inv.torch ? '🔥<br>Tocha' : '-';
+        }
+
+        // ==================== SISTEMA DE AÇÃO ====================
         function handleAction() {
+            // Colocar bancada
             if(game.selectedSlot === 1 && game.inv.bench > 0) {
-                game.built.push({ x: game.player.x, y: game.player.y });
-                game.inv.bench--; document.getElementById('s1').innerText = game.inv.bench > 0 ? "Bancada" : "-";
+                game.built.push({ x: Math.round(game.player.x), y: Math.round(game.player.y) });
+                game.inv.bench--;
+                updateInventoryUI();
+                game.cam.shake = 8;
+                createParticle(game.player.x, game.player.y, '🔨', '#fbbf24');
+                saveGame();
                 return;
             }
-            const px = Math.floor(game.player.x/60), py = Math.floor(game.player.y/60);
-            for(let x=px-1; x<=px+1; x++) {
-                for(let y=py-1; y<=py+1; y++) {
+            
+            // Coletar recursos
+            const px = Math.floor(game.player.x / 60);
+            const py = Math.floor(game.player.y / 60);
+            
+            for(let x = px - 1; x <= px + 1; x++) {
+                for(let y = py - 1; y <= py + 1; y++) {
                     const id = `${x},${y}`;
-                    const n = Math.abs(Math.sin(x*12.9 + y*78.2)*437) % 1;
+                    const n = Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453123) % 1;
+                    
+                    // Apenas recursos válidos
                     if(n > 0.2) continue;
-                    const dist = Math.hypot(game.player.x - (x*60+30), game.player.y - (y*60+30));
-                    if(dist < 70) {
-                        if(!game.mapHP.has(id)) game.mapHP.set(id, 6);
-                        let dmg = 1;
-                        if(n < 0.1 && game.inv.axe && game.selectedSlot === 2) dmg = 3;
-                        if(n >= 0.1 && game.inv.pick && game.selectedSlot === 3) dmg = 3;
-                        game.mapHP.set(id, game.mapHP.get(id) - dmg);
+                    
+                    const rx = x * 60 + 30;
+                    const ry = y * 60 + 30;
+                    const dist = Math.hypot(game.player.x - rx, game.player.y - ry);
+                    
+                    if(dist < 65) {
+                        if(!game.mapHP.has(id)) {
+                            game.mapHP.set(id, 6);
+                        }
+                        
+                        let damage = 1;
+                        const isTree = n < 0.1;
+                        const isRock = n >= 0.1 && n < 0.2;
+                        
+                        // Dano aumentado com ferramentas corretas
+                        if(isTree && game.inv.axe && game.selectedSlot === 2) damage = 3;
+                        if(isRock && game.inv.pick && game.selectedSlot === 3) damage = 3;
+                        
+                        const currentHP = game.mapHP.get(id);
+                        game.mapHP.set(id, currentHP - damage);
+                        
+                        // Screen shake
+                        game.cam.shake = 6;
+                        
+                        // Recurso destruído
                         if(game.mapHP.get(id) <= 0) {
-                            if(n < 0.1) game.res.wood += 2; else game.res.stone += 2;
+                            if(isTree) {
+                                game.res.wood += 3;
+                                createParticle(rx, ry, '🪵', '#8b4513');
+                            } else if(isRock) {
+                                game.res.stone += 3;
+                                createParticle(rx, ry, '🪨', '#64748b');
+                            }
                             game.mapHP.set(id, -1);
                         }
-                        updateHUD(); return;
+                        
+                        updateHUD();
+                        return;
                     }
                 }
             }
         }
 
-        // --- RENDERIZAÇÃO MELHORADA ---
-        function drawTree(ctx, x, y, shake) {
-            // Tronco
-            ctx.fillStyle = '#4a3728';
-            ctx.fillRect(x - 5 + shake, y, 10, 15);
-            // Copa "Pinheiro" (3 Triângulos)
-            ctx.fillStyle = '#1e5128'; // Verde Escuro Base
-            ctx.beginPath(); ctx.moveTo(x-15+shake, y); ctx.lineTo(x+shake, y-25); ctx.lineTo(x+15+shake, y); ctx.fill();
-            ctx.fillStyle = '#2d6a32'; // Verde Médio Meio
-            ctx.beginPath(); ctx.moveTo(x-12+shake, y-10); ctx.lineTo(x+shake, y-35); ctx.lineTo(x+12+shake, y-10); ctx.fill();
-            ctx.fillStyle = '#4cae4c'; // Verde Claro Topo
-            ctx.beginPath(); ctx.moveTo(x-8+shake, y-20); ctx.lineTo(x+shake, y-40); ctx.lineTo(x+8+shake, y-20); ctx.fill();
+        // ==================== SISTEMA DE PARTÍCULAS ====================
+        function createParticle(x, y, emoji, color) {
+            for(let i = 0; i < 5; i++) {
+                game.particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: -Math.random() * 4 - 2,
+                    life: 60,
+                    emoji: emoji,
+                    color: color
+                });
+            }
         }
 
-        function drawRock(ctx, x, y, shake) {
-            // Rocha Facetada (Polígono Irregular)
-            ctx.fillStyle = '#64748b';
+        function updateParticles() {
+            game.particles = game.particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.15; // Gravidade
+                p.life--;
+                return p.life > 0;
+            });
+        }
+
+        function drawParticles() {
+            ctx.save();
+            game.particles.forEach(p => {
+                ctx.globalAlpha = p.life / 60;
+                ctx.font = '16px Arial';
+                ctx.fillText(p.emoji, p.x - game.cam.x, p.y - game.cam.y);
+            });
+            ctx.restore();
+        }
+
+        // ==================== RENDERIZAÇÃO MELHORADA ====================
+        
+        // Árvore com gradiente e sombra
+        function drawTree(ctx, x, y, shake, hp) {
+            const alpha = hp < 0 ? 0 : (hp < 3 ? 0.6 : 1);
+            ctx.globalAlpha = alpha;
+            
+            // Sombra
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
             ctx.beginPath();
-            ctx.moveTo(x - 10 + shake, y + 5);
-            ctx.lineTo(x - 15 + shake, y - 5);
-            ctx.lineTo(x - 5 + shake, y - 15);
-            ctx.lineTo(x + 10 + shake, y - 12);
-            ctx.lineTo(x + 15 + shake, y + 5);
-            ctx.lineTo(x + 5 + shake, y + 10);
+            ctx.ellipse(x + shake, y + 20, 18, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Tronco
+            ctx.fillStyle = '#4a3728';
+            ctx.fillRect(x - 6 + shake, y, 12, 20);
+            ctx.fillStyle = '#3d2f23';
+            ctx.fillRect(x - 6 + shake, y, 4, 20); // Sombra do tronco
+            
+            // Copa - 3 camadas de triângulos
+            // Camada inferior
+            ctx.fillStyle = '#1e5128';
+            ctx.beginPath();
+            ctx.moveTo(x - 20 + shake, y + 5);
+            ctx.lineTo(x + shake, y - 25);
+            ctx.lineTo(x + 20 + shake, y + 5);
             ctx.closePath();
             ctx.fill();
             
-            // Detalhe de Luz
-            ctx.fillStyle = '#94a3b8';
-            ctx.beginPath(); ctx.arc(x - 5 + shake, y - 5, 3, 0, 7); ctx.fill();
+            // Camada média
+            ctx.fillStyle = '#2d6a32';
+            ctx.beginPath();
+            ctx.moveTo(x - 16 + shake, y - 8);
+            ctx.lineTo(x + shake, y - 35);
+            ctx.lineTo(x + 16 + shake, y - 8);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Camada superior (highlight)
+            ctx.fillStyle = '#4cae4c';
+            ctx.beginPath();
+            ctx.moveTo(x - 10 + shake, y - 18);
+            ctx.lineTo(x + shake, y - 42);
+            ctx.lineTo(x + 10 + shake, y - 18);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Highlight brilhante no topo
+            ctx.fillStyle = '#6fd96f';
+            ctx.beginPath();
+            ctx.arc(x - 3 + shake, y - 32, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.globalAlpha = 1;
         }
 
-        function drawPato(ctx, x, y, dir, walking) {
-            ctx.save(); ctx.translate(x, y);
-            if(dir < 0) ctx.scale(-1, 1);
-            const bob = Math.sin(game.player.frame) * 2;
+        // Rocha com facetas e highlight
+        function drawRock(ctx, x, y, shake, hp) {
+            const alpha = hp < 0 ? 0 : (hp < 3 ? 0.6 : 1);
+            ctx.globalAlpha = alpha;
             
-            // Pato 2.5D
-            ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 14, 12, 6, 0, 0, 7); ctx.fill(); // Sombra
-            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(0, 0+bob, 16, 13, 0, 0, 7); ctx.fill(); // Corpo
-            ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.ellipse(-4, 2+bob, 8, 5, 0.2, 0, 7); ctx.fill(); // Asa
-            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(10, -8+bob, 10, 0, 7); ctx.fill(); // Cabeça
-            ctx.fillStyle = '#fb923c'; ctx.beginPath(); ctx.moveTo(18, -10+bob); ctx.lineTo(26, -6+bob); ctx.lineTo(18, -2+bob); ctx.fill(); // Bico
-            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(14, -10+bob, 2, 0, 7); ctx.fill(); // Olho
+            // Sombra
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.beginPath();
+            ctx.ellipse(x + shake, y + 14, 20, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Corpo principal da rocha (polígono irregular)
+            ctx.fillStyle = '#64748b';
+            ctx.beginPath();
+            ctx.moveTo(x - 12 + shake, y + 8);
+            ctx.lineTo(x - 18 + shake, y - 2);
+            ctx.lineTo(x - 8 + shake, y - 14);
+            ctx.lineTo(x + 8 + shake, y - 16);
+            ctx.lineTo(x + 18 + shake, y - 4);
+            ctx.lineTo(x + 14 + shake, y + 8);
+            ctx.lineTo(x + 2 + shake, y + 12);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Facetas escuras
+            ctx.fillStyle = '#475569';
+            ctx.beginPath();
+            ctx.moveTo(x - 12 + shake, y + 8);
+            ctx.lineTo(x - 8 + shake, y - 14);
+            ctx.lineTo(x + 2 + shake, y + 12);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Highlight (luz)
+            ctx.fillStyle = '#94a3b8';
+            ctx.beginPath();
+            ctx.arc(x - 6 + shake, y - 8, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Detalhe brilhante
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.arc(x - 4 + shake, y - 10, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.globalAlpha = 1;
+        }
+
+        // Pato com animação de inclinação e sombra
+        function drawPato(ctx, x, y, dir, walking) {
+            ctx.save();
+            ctx.translate(x, y);
+            
+            if(dir < 0) ctx.scale(-1, 1);
+            
+            // Animação de "bobbing" ao andar
+            const bob = walking ? Math.sin(game.player.frame * 0.3) * 2 : 0;
+            const tilt = walking ? Math.sin(game.player.frame * 0.3) * 0.1 : 0;
+            
+            // Sombra no chão
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.beginPath();
+            ctx.ellipse(0, 18, 14, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.rotate(tilt);
+            
+            // Corpo
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(0, 0 + bob, 18, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Detalhe do corpo (sombra)
+            ctx.fillStyle = '#e2e8f0';
+            ctx.beginPath();
+            ctx.ellipse(-5, 3 + bob, 10, 6, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Asa
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.ellipse(-6, 2 + bob, 9, 6, 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Cabeça
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(12, -10 + bob, 11, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Bico
+            ctx.fillStyle = '#fb923c';
+            ctx.beginPath();
+            ctx.moveTo(20, -12 + bob);
+            ctx.lineTo(28, -8 + bob);
+            ctx.lineTo(20, -4 + bob);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Detalhe do bico
+            ctx.strokeStyle = '#ea580c';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(20, -8 + bob);
+            ctx.lineTo(28, -8 + bob);
+            ctx.stroke();
+            
+            // Olho
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(16, -12 + bob, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Brilho no olho
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(17, -13 + bob, 1, 0, Math.PI * 2);
+            ctx.fill();
+            
             ctx.restore();
         }
 
+        // Bancada melhorada
+        function drawBench(ctx, x, y) {
+            // Sombra
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(x - 28, y + 20, 56, 8);
+            
+            // Base
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(x - 28, y - 12, 56, 30);
+            
+            // Topo
+            ctx.fillStyle = '#8d6e63';
+            ctx.fillRect(x - 28, y - 12, 56, 6);
+            
+            // Pernas
+            ctx.fillStyle = '#4e342e';
+            ctx.fillRect(x - 24, y + 8, 6, 10);
+            ctx.fillRect(x + 18, y + 8, 6, 10);
+            
+            // Detalhes de madeira
+            ctx.strokeStyle = '#6d4c41';
+            ctx.lineWidth = 2;
+            for(let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x - 20, y - 8 + i * 8);
+                ctx.lineTo(x + 20, y - 8 + i * 8);
+                ctx.stroke();
+            }
+        }
+
+        // ==================== LOOP PRINCIPAL ====================
         function render() {
             if(!game.active) return;
-            const cw = canvas.width = window.innerWidth, ch = canvas.height = window.innerHeight;
-            game.time += 0.04;
-            if(game.time >= 1440) { game.time = 0; game.day++; saveGame(); }
-
-            let mx = game.keys.r - game.keys.l, my = game.keys.d - game.keys.u;
-            if(mx||my) {
-                game.player.x += mx * game.player.speed;
-                game.player.y += my * game.player.speed;
-                game.player.frame += 0.2;
-                if(mx) game.player.dir = mx;
-            } else { game.player.frame = 0; }
             
-            game.cam.x = game.player.x - cw/2; game.cam.y = game.player.y - ch/2;
-
-            ctx.fillStyle = '#1a3317'; ctx.fillRect(0,0,cw,ch);
-            ctx.save(); ctx.translate(-game.cam.x, -game.cam.y);
-
-            // MUNDO
+            const cw = canvas.width = window.innerWidth;
+            const ch = canvas.height = window.innerHeight;
+            
+            // Atualiza relógio (1 minuto in-game = ~0.7 segundos real)
+            game.time += 0.07;
+            if(game.time >= 1440) {
+                game.time = 0;
+                game.day++;
+                saveGame();
+                createParticle(cw / 2, 100, '☀️', '#fbbf24');
+            }
+            
+            // Movimento do player - SISTEMA REFATORADO
+            let mx = 0, my = 0;
+            if(game.keys.r) mx = 1;
+            if(game.keys.l) mx = -1;
+            if(game.keys.d) my = 1;
+            if(game.keys.u) my = -1;
+            
+            if(mx || my) {
+                // Normaliza diagonal
+                const mag = Math.sqrt(mx * mx + my * my);
+                game.player.x += (mx / mag) * game.player.speed;
+                game.player.y += (my / mag) * game.player.speed;
+                game.player.frame += 0.25;
+                if(mx) game.player.dir = mx;
+            } else {
+                game.player.frame = 0;
+            }
+            
+            // Camera segue o player
+            game.cam.x = game.player.x - cw / 2;
+            game.cam.y = game.player.y - ch / 2;
+            
+            // Screen shake decay
+            if(game.cam.shake > 0) {
+                game.cam.shake *= 0.85;
+                if(game.cam.shake < 0.5) game.cam.shake = 0;
+            }
+            
+            // ==================== COR DO AMBIENTE DINÂMICA ====================
+            const hour = (game.time / 60) % 24;
+            let skyColor = '#1a3317'; // Verde padrão
+            let grassColor = '#2d5a2d';
+            
+            // Nascer do sol (5-7h) - Tons alaranjados
+            if(hour >= 5 && hour < 7) {
+                const t = (hour - 5) / 2;
+                skyColor = lerpColor('#1a1a2e', '#ff9a56', t);
+                grassColor = lerpColor('#1a2d1a', '#4a6d3a', t);
+            }
+            // Dia (7-17h)
+            else if(hour >= 7 && hour < 17) {
+                skyColor = '#1a3317';
+                grassColor = '#2d5a2d';
+            }
+            // Pôr do sol (17-19h) - Tons avermelhados
+            else if(hour >= 17 && hour < 19) {
+                const t = (hour - 17) / 2;
+                skyColor = lerpColor('#1a3317', '#4a1a1a', t);
+                grassColor = lerpColor('#2d5a2d', '#3d2a2a', t);
+            }
+            // Noite (19-5h) - Azulado escuro
+            else {
+                skyColor = '#0a0f1a';
+                grassColor = '#1a2d3d';
+            }
+            
+            // Fundo
+            ctx.fillStyle = skyColor;
+            ctx.fillRect(0, 0, cw, ch);
+            
+            // Grama com textura
+            ctx.fillStyle = grassColor;
+            ctx.fillRect(0, 0, cw, ch);
+            
+            // Padrão de grama
+            ctx.save();
+            ctx.globalAlpha = 0.1;
+            for(let i = 0; i < 50; i++) {
+                const gx = (i * 123.456) % cw;
+                const gy = (i * 789.123) % ch;
+                ctx.fillStyle = '#000';
+                ctx.fillRect(gx, gy, 2, 4);
+            }
+            ctx.restore();
+            
+            // Aplica shake da camera
+            const shakeX = game.cam.shake ? (Math.random() - 0.5) * game.cam.shake : 0;
+            const shakeY = game.cam.shake ? (Math.random() - 0.5) * game.cam.shake : 0;
+            
+            ctx.save();
+            ctx.translate(-game.cam.x + shakeX, -game.cam.y + shakeY);
+            
+            // ==================== RENDERIZA MUNDO ====================
             game.isNearBench = false;
+            
+            // Bancadas construídas
             game.built.forEach(b => {
-                if(Math.hypot(game.player.x - b.x, game.player.y - b.y) < 60) game.isNearBench = true;
-                ctx.fillStyle = '#5d4037'; ctx.fillRect(b.x-25, b.y-10, 50, 25);
-                ctx.fillStyle = '#a16207'; ctx.fillRect(b.x-25, b.y-10, 50, 5); // Detalhe topo
+                if(Math.hypot(game.player.x - b.x, game.player.y - b.y) < 80) {
+                    game.isNearBench = true;
+                }
+                drawBench(ctx, b.x, b.y);
             });
-
-            const sX = Math.floor(game.cam.x/60)-1, eX = sX + Math.ceil(cw/60)+2;
-            const sY = Math.floor(game.cam.y/60)-1, eY = sY + Math.ceil(ch/60)+2;
-            for(let x=sX; x<=eX; x++) {
-                for(let y=sY; y<=eY; y++) {
+            
+            // Recursos (árvores e rochas)
+            const startX = Math.floor(game.cam.x / 60) - 2;
+            const endX = startX + Math.ceil(cw / 60) + 4;
+            const startY = Math.floor(game.cam.y / 60) - 2;
+            const endY = startY + Math.ceil(ch / 60) + 4;
+            
+            for(let x = startX; x <= endX; x++) {
+                for(let y = startY; y <= endY; y++) {
                     const id = `${x},${y}`;
-                    if(game.mapHP.get(id) === -1) continue;
-                    const n = Math.abs(Math.sin(x*12.9 + y*78.2)*437) % 1;
-                    const ox = x*60+30, oy = y*60+30;
+                    const hp = game.mapHP.get(id) || 6;
+                    
+                    if(hp === -1) continue; // Já coletado
+                    
+                    const n = Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453123) % 1;
+                    const ox = x * 60 + 30;
+                    const oy = y * 60 + 30;
                     const dist = Math.hypot(game.player.x - ox, game.player.y - oy);
-                    let shake = (dist < 70 && game.keys.action) ? Math.sin(Date.now()*0.02)*4 : 0;
-
-                    if(n < 0.05) { drawTree(ctx, ox, oy, shake); }
-                    else if(n < 0.1) { drawRock(ctx, ox, oy, shake); }
+                    
+                    let shake = 0;
+                    if(dist < 65 && game.keys.action) {
+                        shake = Math.sin(Date.now() * 0.05) * 6;
+                    }
+                    
+                    if(n < 0.1) {
+                        drawTree(ctx, ox, oy, shake, hp);
+                    } else if(n >= 0.1 && n < 0.2) {
+                        drawRock(ctx, ox, oy, shake, hp);
+                    }
                 }
             }
-
-            drawPato(ctx, game.player.x, game.player.y, game.player.dir, mx||my);
+            
+            // Player
+            drawPato(ctx, game.player.x, game.player.y, game.player.dir, mx || my);
+            
+            // Partículas
+            drawParticles();
+            updateParticles();
+            
             ctx.restore();
-
-            // LUZ NOTURNA
-            let hr = game.time / 60;
-            let dark = (hr < 6 || hr > 18) ? 0.75 : (hr > 16 || hr < 8) ? 0.3 : 0;
-            ctx.fillStyle = `rgba(0,10,20,${dark})`;
-            if(game.inv.torch && game.selectedSlot === 4) {
-                ctx.save(); ctx.globalCompositeOperation = 'destination-out';
-                let g = ctx.createRadialGradient(cw/2, ch/2, 20, cw/2, ch/2, 140);
-                g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cw/2, ch/2, 140, 0, 7); ctx.fill(); ctx.restore();
-            } else { ctx.fillRect(0,0,cw,ch); }
-
+            
+            // ==================== OVERLAY DE ILUMINAÇÃO ====================
+            let darkness = 0;
+            if(hour < 6 || hour >= 20) darkness = 0.75;
+            else if(hour < 8 || hour >= 18) darkness = 0.4;
+            
+            if(darkness > 0) {
+                ctx.fillStyle = `rgba(5, 10, 20, ${darkness})`;
+                
+                // Tocha equipada cria luz
+                if(game.inv.torch && game.selectedSlot === 4) {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'destination-out';
+                    
+                    // Gradiente radial para luz da tocha
+                    const grad = ctx.createRadialGradient(cw/2, ch/2, 30, cw/2, ch/2, 160);
+                    grad.addColorStop(0, 'rgba(0,0,0,1)');
+                    grad.addColorStop(0.6, 'rgba(0,0,0,0.8)');
+                    grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(cw/2, ch/2, 160, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                } else {
+                    ctx.fillRect(0, 0, cw, ch);
+                }
+                
+                // Vinheta (bordas escurecidas)
+                const vignette = ctx.createRadialGradient(cw/2, ch/2, cw * 0.3, cw/2, ch/2, cw * 0.7);
+                vignette.addColorStop(0, 'rgba(0,0,0,0)');
+                vignette.addColorStop(1, 'rgba(0,0,0,0.5)');
+                ctx.fillStyle = vignette;
+                ctx.fillRect(0, 0, cw, ch);
+            }
+            
             requestAnimationFrame(render);
+        }
+
+        // ==================== UTILIDADES ====================
+        function lerpColor(color1, color2, t) {
+            const c1 = parseInt(color1.slice(1), 16);
+            const c2 = parseInt(color2.slice(1), 16);
+            
+            const r1 = (c1 >> 16) & 0xff;
+            const g1 = (c1 >> 8) & 0xff;
+            const b1 = c1 & 0xff;
+            
+            const r2 = (c2 >> 16) & 0xff;
+            const g2 = (c2 >> 8) & 0xff;
+            const b2 = c2 & 0xff;
+            
+            const r = Math.round(r1 + (r2 - r1) * t);
+            const g = Math.round(g1 + (g2 - g1) * t);
+            const b = Math.round(b1 + (b2 - b1) * t);
+            
+            return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
         }
 
         function updateHUD() {
             document.getElementById('w-val').innerText = game.res.wood;
             document.getElementById('s-val').innerText = game.res.stone;
             document.getElementById('day-val').innerText = game.day;
-            let h = Math.floor(game.time/60)%24, m = Math.floor(game.time%60);
-            document.getElementById('clock-val').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+            
+            const h = Math.floor(game.time / 60) % 24;
+            const m = Math.floor(game.time % 60);
+            document.getElementById('clock-val').innerText = 
+                `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            
+            updateCraftAvailability();
         }
 
-        // INPUTS
-        const bind = (id, k) => {
+        // ==================== SISTEMA DE INPUT ====================
+        function bindButton(id, key) {
             const el = document.getElementById(id);
-            el.ontouchstart = (e) => { e.preventDefault(); game.keys[k] = 1; };
-            el.ontouchend = () => game.keys[k] = 0;
-        };
-        bind('b-u','u'); bind('b-d','d'); bind('b-l','l'); bind('b-r','r');
-        const act = document.getElementById('btn-action');
-        act.ontouchstart = (e) => { e.preventDefault(); game.keys.action = true; handleAction(); };
-        act.ontouchend = () => game.keys.action = false;
+            
+            el.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                game.keys[key] = 1;
+            }, { passive: false });
+            
+            el.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                game.keys[key] = 0;
+            }, { passive: false });
+            
+            // Suporte para mouse (desktop)
+            el.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                game.keys[key] = 1;
+            });
+            
+            el.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                game.keys[key] = 0;
+            });
+        }
 
-        [0,1,2,3,4].forEach(i => {
-            document.getElementById('s'+i).onclick = () => {
-                document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-                document.getElementById('s'+i).classList.add('selected'); game.selectedSlot = i;
-            };
+        // Bind dos controles direcionais
+        bindButton('b-u', 'u');
+        bindButton('b-d', 'd');
+        bindButton('b-l', 'l');
+        bindButton('b-r', 'r');
+
+        // Botão de ação
+        const actionBtn = document.getElementById('btn-action');
+        actionBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            game.keys.action = true;
+            handleAction();
+        }, { passive: false });
+        
+        actionBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            game.keys.action = false;
+        }, { passive: false });
+        
+        actionBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            game.keys.action = true;
+            handleAction();
         });
         
+        actionBtn.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            game.keys.action = false;
+        });
+
+        // Teclado para desktop
+        window.addEventListener('keydown', (e) => {
+            if(e.key === 'w' || e.key === 'ArrowUp') game.keys.u = 1;
+            if(e.key === 's' || e.key === 'ArrowDown') game.keys.d = 1;
+            if(e.key === 'a' || e.key === 'ArrowLeft') game.keys.l = 1;
+            if(e.key === 'd' || e.key === 'ArrowRight') game.keys.r = 1;
+            if(e.key === ' ' || e.key === 'e') {
+                game.keys.action = true;
+                handleAction();
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            if(e.key === 'w' || e.key === 'ArrowUp') game.keys.u = 0;
+            if(e.key === 's' || e.key === 'ArrowDown') game.keys.d = 0;
+            if(e.key === 'a' || e.key === 'ArrowLeft') game.keys.l = 0;
+            if(e.key === 'd' || e.key === 'ArrowRight') game.keys.r = 0;
+            if(e.key === ' ' || e.key === 'e') game.keys.action = false;
+        });
+
+        // Hotbar - Seleção de slot
+        for(let i = 0; i <= 4; i++) {
+            document.getElementById('s' + i).addEventListener('click', function() {
+                document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+                this.classList.add('selected');
+                game.selectedSlot = i;
+            });
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
         checkSave();
     </script>
 </body>
