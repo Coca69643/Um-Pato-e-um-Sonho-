@@ -3,6 +3,73 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
 
+// ==================== SISTEMA DE ASSETS ====================
+const assets = {
+    images: {},
+    loaded: 0,
+    total: 0,
+    isReady: false
+};
+
+// Lista de assets para carregar
+const assetList = {
+    // Pato - Animações
+    patoWalk1: 'Walking 001.png',
+    patoWalk2: 'Walking 002.png',
+    patoIdle1: 'idle_001.png',
+    patoIdle2: 'idle_002.png',
+    
+    // Ambiente
+    arvore: 'arvore.png',
+    rocha: 'rocha.png',
+    
+    // Inimigos
+    rabbitSheet: 'rabbit_sheet.png'
+};
+
+// Função de carregamento de assets
+function loadAssets(callback) {
+    assets.total = Object.keys(assetList).length;
+    
+    Object.keys(assetList).forEach(key => {
+        const img = new Image();
+        img.src = assetList[key];
+        
+        img.onload = () => {
+            assets.loaded++;
+            updateLoadingScreen();
+            
+            if(assets.loaded === assets.total) {
+                assets.isReady = true;
+                console.log('✅ Todos os assets carregados!');
+                if(callback) callback();
+            }
+        };
+        
+        img.onerror = () => {
+            console.error(`❌ Erro ao carregar: ${assetList[key]}`);
+            assets.loaded++;
+            
+            if(assets.loaded === assets.total) {
+                assets.isReady = true;
+                if(callback) callback();
+            }
+        };
+        
+        assets.images[key] = img;
+    });
+}
+
+function updateLoadingScreen() {
+    const percentage = Math.floor((assets.loaded / assets.total) * 100);
+    const loadingText = document.getElementById('version-log');
+    if(loadingText && !assets.isReady) {
+        loadingText.innerHTML = `⏳ CARREGANDO ASSETS... ${percentage}%`;
+    } else if(loadingText && assets.isReady) {
+        loadingText.innerHTML = `BUILD: 2.0.0 - DEFINITIVE`;
+    }
+}
+
 // Estado Global do Jogo
 let game = {
     active: false,
@@ -12,6 +79,7 @@ let game = {
         dir: 1, 
         speed: 3.5, 
         frame: 0,
+        frameCount: 0, // Contador para controlar velocidade de animação
         tilt: 0
     },
     cam: { x: 0, y: 0, shake: 0 },
@@ -19,6 +87,7 @@ let game = {
     res: { wood: 0, stone: 0 },
     inv: { bench: 0, axe: false, pick: false, torch: false },
     built: [],
+    enemies: [], // Sistema de inimigos (coelhos)
     mapHP: new Map(),
     selectedSlot: 0,
     time: 480, // 8:00 AM
@@ -26,6 +95,64 @@ let game = {
     isNearBench: false,
     particles: []
 };
+
+// ==================== SISTEMA DE INIMIGOS ====================
+function spawnRabbit() {
+    // Spawna coelhos aleatoriamente perto do player
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 300 + Math.random() * 200;
+    
+    game.enemies.push({
+        x: game.player.x + Math.cos(angle) * distance,
+        y: game.player.y + Math.sin(angle) * distance,
+        vx: 0,
+        vy: 0,
+        frame: 0,
+        frameCount: 0,
+        state: 'idle', // idle, hop
+        hopCooldown: 0
+    });
+}
+
+function updateEnemies() {
+    game.enemies.forEach(rabbit => {
+        rabbit.frameCount++;
+        
+        // IA simples: pula em direção aleatória periodicamente
+        if(rabbit.state === 'idle') {
+            rabbit.hopCooldown--;
+            if(rabbit.hopCooldown <= 0) {
+                rabbit.state = 'hop';
+                const angle = Math.random() * Math.PI * 2;
+                rabbit.vx = Math.cos(angle) * 2;
+                rabbit.vy = Math.sin(angle) * 2;
+                rabbit.hopCooldown = 60 + Math.random() * 60;
+            }
+        } else if(rabbit.state === 'hop') {
+            rabbit.x += rabbit.vx;
+            rabbit.y += rabbit.vy;
+            rabbit.vx *= 0.95;
+            rabbit.vy *= 0.95;
+            
+            if(Math.abs(rabbit.vx) < 0.1 && Math.abs(rabbit.vy) < 0.1) {
+                rabbit.state = 'idle';
+                rabbit.vx = 0;
+                rabbit.vy = 0;
+            }
+        }
+    });
+    
+    // Remove coelhos muito longe do player (otimização)
+    game.enemies = game.enemies.filter(rabbit => {
+        const dist = Math.hypot(rabbit.x - game.player.x, rabbit.y - game.player.y);
+        return dist < 1000;
+    });
+    
+    // Mantém entre 2-5 coelhos na tela
+    if(game.enemies.length < 3 && Math.random() < 0.02) {
+        spawnRabbit();
+    }
+}
 
 // ==================== SISTEMA DE SAVE ====================
 function checkSave() {
@@ -82,12 +209,13 @@ function newGame() {
     localStorage.removeItem('PatoSave_Definitive');
     game = {
         active: false,
-        player: { x: 1000, y: 1000, dir: 1, speed: 3.5, frame: 0, tilt: 0 },
+        player: { x: 1000, y: 1000, dir: 1, speed: 3.5, frame: 0, frameCount: 0, tilt: 0 },
         cam: { x: 0, y: 0, shake: 0 },
         keys: { u: 0, d: 0, l: 0, r: 0, action: false },
         res: { wood: 0, stone: 0 },
         inv: { bench: 0, axe: false, pick: false, torch: false },
         built: [],
+        enemies: [],
         mapHP: new Map(),
         selectedSlot: 0,
         time: 480,
@@ -99,11 +227,22 @@ function newGame() {
 }
 
 function startGame() {
+    if(!assets.isReady) {
+        alert('⚠️ Assets ainda não carregados. Aguarde...');
+        return;
+    }
+    
     game.active = true;
     document.getElementById('menu-screen').classList.add('hidden');
     document.getElementById('game-ui').classList.remove('hidden');
     updateHUD();
     updateInventoryUI();
+    
+    // Spawna coelhos iniciais
+    for(let i = 0; i < 3; i++) {
+        spawnRabbit();
+    }
+    
     render();
     setInterval(saveGame, 15000);
 }
@@ -408,3 +547,6 @@ for(let i = 0; i <= 4; i++) {
 
 // ==================== INICIALIZAÇÃO ====================
 checkSave();
+loadAssets(() => {
+    console.log('🎮 Jogo pronto para iniciar!');
+});

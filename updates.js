@@ -1,167 +1,160 @@
 // ==================== PATO SURVIVAL - RENDERING ENGINE ====================
 
-// ==================== FUNÇÕES DE DESENHO ====================
+// ==================== FUNÇÕES DE DESENHO COM ASSETS ====================
+
 function drawTree(ctx, x, y, shake, hp) {
+    const img = assets.images.arvore;
+    if(!img || !img.complete) return;
+    
     const alpha = hp < 0 ? 0 : (hp < 3 ? 0.6 : 1);
     ctx.globalAlpha = alpha;
     
     // Sombra
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
-    ctx.ellipse(x + shake, y + 20, 18, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + shake, y + 35, 20, 10, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // Tronco
-    ctx.fillStyle = '#4a3728';
-    ctx.fillRect(x - 6 + shake, y, 12, 20);
-    ctx.fillStyle = '#3d2f23';
-    ctx.fillRect(x - 6 + shake, y, 4, 20);
+    // Desenha a árvore mantendo proporção
+    const scale = 0.8;
+    const width = img.width * scale;
+    const height = img.height * scale;
     
-    // Copa - 3 camadas
-    ctx.fillStyle = '#1e5128';
-    ctx.beginPath();
-    ctx.moveTo(x - 20 + shake, y + 5);
-    ctx.lineTo(x + shake, y - 25);
-    ctx.lineTo(x + 20 + shake, y + 5);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.fillStyle = '#2d6a32';
-    ctx.beginPath();
-    ctx.moveTo(x - 16 + shake, y - 8);
-    ctx.lineTo(x + shake, y - 35);
-    ctx.lineTo(x + 16 + shake, y - 8);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.fillStyle = '#4cae4c';
-    ctx.beginPath();
-    ctx.moveTo(x - 10 + shake, y - 18);
-    ctx.lineTo(x + shake, y - 42);
-    ctx.lineTo(x + 10 + shake, y - 18);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.fillStyle = '#6fd96f';
-    ctx.beginPath();
-    ctx.arc(x - 3 + shake, y - 32, 4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.drawImage(
+        img,
+        x + shake - width / 2,
+        y - height + 35,
+        width,
+        height
+    );
     
     ctx.globalAlpha = 1;
 }
 
 function drawRock(ctx, x, y, shake, hp) {
+    const img = assets.images.rocha;
+    if(!img || !img.complete) return;
+    
     const alpha = hp < 0 ? 0 : (hp < 3 ? 0.6 : 1);
     ctx.globalAlpha = alpha;
     
     // Sombra
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.beginPath();
-    ctx.ellipse(x + shake, y + 14, 20, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + shake, y + 20, 22, 10, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // Corpo
-    ctx.fillStyle = '#64748b';
-    ctx.beginPath();
-    ctx.moveTo(x - 12 + shake, y + 8);
-    ctx.lineTo(x - 18 + shake, y - 2);
-    ctx.lineTo(x - 8 + shake, y - 14);
-    ctx.lineTo(x + 8 + shake, y - 16);
-    ctx.lineTo(x + 18 + shake, y - 4);
-    ctx.lineTo(x + 14 + shake, y + 8);
-    ctx.lineTo(x + 2 + shake, y + 12);
-    ctx.closePath();
-    ctx.fill();
+    // Desenha a rocha mantendo proporção
+    const scale = 0.7;
+    const width = img.width * scale;
+    const height = img.height * scale;
     
-    // Facetas
-    ctx.fillStyle = '#475569';
-    ctx.beginPath();
-    ctx.moveTo(x - 12 + shake, y + 8);
-    ctx.lineTo(x - 8 + shake, y - 14);
-    ctx.lineTo(x + 2 + shake, y + 12);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Highlight
-    ctx.fillStyle = '#94a3b8';
-    ctx.beginPath();
-    ctx.arc(x - 6 + shake, y - 8, 5, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.fillStyle = '#cbd5e1';
-    ctx.beginPath();
-    ctx.arc(x - 4 + shake, y - 10, 2, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.drawImage(
+        img,
+        x + shake - width / 2,
+        y - height + 20,
+        width,
+        height
+    );
     
     ctx.globalAlpha = 1;
 }
 
 function drawPato(ctx, x, y, dir, walking) {
+    game.player.frameCount++;
+    
+    // Determina qual frame usar baseado no estado
+    let currentFrame;
+    
+    if(walking) {
+        // Alterna entre Walking 001 e 002 a cada 10 frames
+        const walkFrame = Math.floor(game.player.frameCount / 10) % 2;
+        currentFrame = walkFrame === 0 ? assets.images.patoWalk1 : assets.images.patoWalk2;
+    } else {
+        // Alterna entre Idle 001 e 002 a cada 15 frames (mais lento)
+        const idleFrame = Math.floor(game.player.frameCount / 15) % 2;
+        currentFrame = idleFrame === 0 ? assets.images.patoIdle1 : assets.images.patoIdle2;
+    }
+    
+    if(!currentFrame || !currentFrame.complete) return;
+    
     ctx.save();
     ctx.translate(x, y);
     
-    if(dir < 0) ctx.scale(-1, 1);
+    // Espelha se estiver indo para esquerda
+    if(dir < 0) {
+        ctx.scale(-1, 1);
+    }
     
-    const bob = walking ? Math.sin(game.player.frame * 0.3) * 2 : 0;
-    const tilt = walking ? Math.sin(game.player.frame * 0.3) * 0.1 : 0;
+    // Bobbing sutil ao andar
+    const bob = walking ? Math.sin(game.player.frameCount * 0.15) * 2 : 0;
+    
+    // Sombra no chão
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, 25, 18, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Desenha o pato mantendo proporção original
+    const scale = 1.2; // Ajuste de escala para o pato
+    const width = currentFrame.width * scale;
+    const height = currentFrame.height * scale;
+    
+    ctx.drawImage(
+        currentFrame,
+        -width / 2,
+        -height + 25 + bob, // Ajusta a posição vertical
+        width,
+        height
+    );
+    
+    ctx.restore();
+}
+
+function drawRabbit(ctx, rabbit) {
+    const img = assets.images.rabbitSheet;
+    if(!img || !img.complete) return;
+    
+    rabbit.frameCount++;
+    
+    ctx.save();
+    ctx.translate(rabbit.x - game.cam.x, rabbit.y - game.cam.y);
+    
+    // Espelha baseado na direção do movimento
+    if(rabbit.vx < 0) {
+        ctx.scale(-1, 1);
+    }
     
     // Sombra
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath();
-    ctx.ellipse(0, 18, 14, 7, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 20, 12, 6, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    ctx.rotate(tilt);
+    // Animação do spritesheet
+    // Assumindo que o spritesheet tem frames horizontais
+    const frameWidth = img.width / 4; // Ajuste baseado no número de frames
+    const frameHeight = img.height;
+    const frameIndex = Math.floor(rabbit.frameCount / 8) % 4; // 4 frames de animação
     
-    // Corpo
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.ellipse(0, 0 + bob, 18, 15, 0, 0, Math.PI * 2);
-    ctx.fill();
+    // Bobbing quando está pulando
+    const bob = rabbit.state === 'hop' ? Math.sin(rabbit.frameCount * 0.3) * 5 : 0;
     
-    ctx.fillStyle = '#e2e8f0';
-    ctx.beginPath();
-    ctx.ellipse(-5, 3 + bob, 10, 6, 0.3, 0, Math.PI * 2);
-    ctx.fill();
+    const scale = 0.6;
+    const width = frameWidth * scale;
+    const height = frameHeight * scale;
     
-    // Asa
-    ctx.fillStyle = '#cbd5e1';
-    ctx.beginPath();
-    ctx.ellipse(-6, 2 + bob, 9, 6, 0.4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Cabeça
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(12, -10 + bob, 11, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Bico
-    ctx.fillStyle = '#fb923c';
-    ctx.beginPath();
-    ctx.moveTo(20, -12 + bob);
-    ctx.lineTo(28, -8 + bob);
-    ctx.lineTo(20, -4 + bob);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.strokeStyle = '#ea580c';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(20, -8 + bob);
-    ctx.lineTo(28, -8 + bob);
-    ctx.stroke();
-    
-    // Olho
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.arc(16, -12 + bob, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(17, -13 + bob, 1, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.drawImage(
+        img,
+        frameIndex * frameWidth, // X source
+        0, // Y source
+        frameWidth, // Width source
+        frameHeight, // Height source
+        -width / 2, // X dest
+        -height + 20 + bob, // Y dest
+        width, // Width dest
+        height // Height dest
+    );
     
     ctx.restore();
 }
@@ -218,7 +211,9 @@ function render() {
     if(game.keys.d) my = 1;
     if(game.keys.u) my = -1;
     
-    if(mx || my) {
+    const isWalking = !!(mx || my);
+    
+    if(isWalking) {
         const mag = Math.sqrt(mx * mx + my * my);
         game.player.x += (mx / mag) * game.player.speed;
         game.player.y += (my / mag) * game.player.speed;
@@ -235,6 +230,9 @@ function render() {
         game.cam.shake *= 0.85;
         if(game.cam.shake < 0.5) game.cam.shake = 0;
     }
+    
+    // Atualiza inimigos
+    updateEnemies();
     
     // Cores dinâmicas
     const hour = (game.time / 60) % 24;
@@ -320,8 +318,15 @@ function render() {
         }
     }
     
-    drawPato(ctx, game.player.x, game.player.y, game.player.dir, mx || my);
+    // Inimigos (coelhos)
+    game.enemies.forEach(rabbit => {
+        drawRabbit(ctx, rabbit);
+    });
     
+    // Player
+    drawPato(ctx, game.player.x, game.player.y, game.player.dir, isWalking);
+    
+    // Partículas
     drawParticles();
     updateParticles();
     
