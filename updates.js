@@ -1,7 +1,5 @@
-// ==================== UM PATO E UM SONHO - RENDERING ENGINE v2.1.1 ====================
 console.log('🎨 Updates.js v2.1.1 carregado!');
 
-// ==================== CONFIGURAÇÕES DE ESCALA ====================
 const SCALES = {
     tree: 0.35,
     rock: 0.45,
@@ -10,14 +8,12 @@ const SCALES = {
     bench: 1.0
 };
 
-// Configuração do spritesheet do coelho
 const RABBIT_SPRITE = {
-    frameWidth: 32,  // Largura de cada frame
-    frameHeight: 32, // Altura de cada frame
-    totalFrames: 4   // Total de frames na animação
+    frameWidth: 32,
+    frameHeight: 32,
+    totalFrames: 4
 };
 
-// ==================== FUNÇÕES DE DESENHO ====================
 function drawTree(ctx, x, y, shake, hp) {
     const img = assets.images.arvore;
     if(!img || !img.complete) return;
@@ -28,13 +24,11 @@ function drawTree(ctx, x, y, shake, hp) {
     const width = img.width * SCALES.tree;
     const height = img.height * SCALES.tree;
     
-    // Sombra na base
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
     ctx.ellipse(x + shake, y + 5, width * 0.25, width * 0.12, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // Desenha a árvore
     ctx.drawImage(
         img,
         x + shake - width / 2,
@@ -56,13 +50,11 @@ function drawRock(ctx, x, y, shake, hp) {
     const width = img.width * SCALES.rock;
     const height = img.height * SCALES.rock;
     
-    // Sombra na base
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.beginPath();
     ctx.ellipse(x + shake, y + 5, width * 0.35, width * 0.15, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // Desenha a rocha
     ctx.drawImage(
         img,
         x + shake - width / 2,
@@ -98,7 +90,6 @@ function drawPato(ctx, x, y, dir, walking) {
     
     const bob = walking ? Math.sin(game.player.frameCount * 0.15) * 1.5 : 0;
     
-    // Sombra
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
     ctx.ellipse(0, 18, 14, 7, 0, 0, Math.PI * 2);
@@ -132,13 +123,11 @@ function drawRabbit(ctx, rabbit) {
         ctx.scale(-1, 1);
     }
     
-    // Sombra
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath();
     ctx.ellipse(0, 15, 10, 5, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // CORREÇÃO: Calcula o frame correto do spritesheet
     const frameIndex = Math.floor(rabbit.frameCount / 8) % RABBIT_SPRITE.totalFrames;
     const sourceX = frameIndex * RABBIT_SPRITE.frameWidth;
     const sourceY = 0;
@@ -149,41 +138,35 @@ function drawRabbit(ctx, rabbit) {
     const width = RABBIT_SPRITE.frameWidth * scale;
     const height = RABBIT_SPRITE.frameHeight * scale;
     
-    // CORREÇÃO: Usa drawImage com 9 parâmetros para recortar apenas 1 frame
     ctx.drawImage(
         img,
-        sourceX,                    // X source (onde começa o recorte)
-        sourceY,                    // Y source
-        RABBIT_SPRITE.frameWidth,   // Largura do recorte
-        RABBIT_SPRITE.frameHeight,  // Altura do recorte
-        -width / 2,                 // X destino
-        -height + 15 + bob,         // Y destino
-        width,                      // Largura no canvas
-        height                      // Altura no canvas
+        sourceX,
+        sourceY,
+        RABBIT_SPRITE.frameWidth,
+        RABBIT_SPRITE.frameHeight,
+        -width / 2,
+        -height + 15 + bob,
+        width,
+        height
     );
     
     ctx.restore();
 }
 
 function drawBench(ctx, x, y) {
-    // Sombra
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.fillRect(x - 28, y + 8, 56, 6);
     
-    // Base
     ctx.fillStyle = '#5d4037';
     ctx.fillRect(x - 28, y - 20, 56, 30);
     
-    // Topo
     ctx.fillStyle = '#8d6e63';
     ctx.fillRect(x - 28, y - 20, 56, 6);
     
-    // Pernas
     ctx.fillStyle = '#4e342e';
     ctx.fillRect(x - 24, y, 6, 10);
     ctx.fillRect(x + 18, y, 6, 10);
     
-    // Detalhes
     ctx.strokeStyle = '#6d4c41';
     ctx.lineWidth = 2;
     for(let i = 0; i < 3; i++) {
@@ -194,12 +177,10 @@ function drawBench(ctx, x, y) {
     }
 }
 
-// ==================== SISTEMA DE Z-INDEX ====================
 function sortByDepth(entities) {
     return entities.sort((a, b) => a.y - b.y);
 }
 
-// ==================== LOOP PRINCIPAL ====================
 function render() {
     if(!game.active) return;
     
@@ -233,7 +214,6 @@ function render() {
         game.player.frame = 0;
     }
     
-    // CORREÇÃO: Camera segue o player corretamente
     game.cam.x = game.player.x - cw / 2;
     game.cam.y = game.player.y - ch / 2;
     
@@ -244,7 +224,6 @@ function render() {
     
     updateEnemies();
     
-    // Cores dinâmicas do ambiente
     const hour = (game.time / 60) % 24;
     let skyColor = '#1a3317';
     let grassColor = '#2d5a2d';
@@ -265,14 +244,12 @@ function render() {
         grassColor = '#1a2d3d';
     }
     
-    // Fundo
     ctx.fillStyle = skyColor;
     ctx.fillRect(0, 0, cw, ch);
     
     ctx.fillStyle = grassColor;
     ctx.fillRect(0, 0, cw, ch);
     
-    // Textura de grama
     ctx.save();
     ctx.globalAlpha = 0.1;
     for(let i = 0; i < 50; i++) {
@@ -283,18 +260,14 @@ function render() {
     }
     ctx.restore();
     
-    // CORREÇÃO: Screen shake aplicado corretamente
     const shakeX = game.cam.shake ? (Math.random() - 0.5) * game.cam.shake : 0;
     const shakeY = game.cam.shake ? (Math.random() - 0.5) * game.cam.shake : 0;
     
-    // CORREÇÃO: Traduz o contexto para renderizar em relação à câmera
     ctx.save();
     ctx.translate(-game.cam.x + shakeX, -game.cam.y + shakeY);
     
-    // ==================== COLETA DE ENTIDADES PARA Z-SORTING ====================
     const entities = [];
     
-    // Bancadas
     game.isNearBench = false;
     game.built.forEach(b => {
         if(Math.hypot(game.player.x - b.x, game.player.y - b.y) < 80) {
@@ -303,7 +276,6 @@ function render() {
         entities.push({ type: 'bench', x: b.x, y: b.y });
     });
     
-    // Recursos (árvores e rochas) - CORREÇÃO: Renderiza em posição do mundo
     const startX = Math.floor(game.cam.x / 60) - 2;
     const endX = startX + Math.ceil(cw / 60) + 4;
     const startY = Math.floor(game.cam.y / 60) - 2;
@@ -334,15 +306,12 @@ function render() {
         }
     }
     
-    // Inimigos (coelhos)
     game.enemies.forEach(rabbit => {
         entities.push({ type: 'rabbit', x: rabbit.x, y: rabbit.y, data: rabbit });
     });
     
-    // Player
     entities.push({ type: 'player', x: game.player.x, y: game.player.y });
     
-    // ==================== RENDERIZA COM Z-SORTING ====================
     const sorted = sortByDepth(entities);
     
     sorted.forEach(entity => {
@@ -365,28 +334,24 @@ function render() {
         }
     });
     
-    // Partículas sempre por cima
     drawParticles();
     updateParticles();
     
     ctx.restore();
     
-    // ==================== SISTEMA DE ILUMINAÇÃO CORRIGIDO ====================
     let darkness = 0;
     if(hour < 6 || hour >= 20) darkness = 0.75;
     else if(hour < 8 || hour >= 18) darkness = 0.4;
     
     if(darkness > 0) {
-        // CORREÇÃO: Aplica camada escura primeiro
+       
         ctx.fillStyle = `rgba(5, 10, 20, ${darkness})`;
         ctx.fillRect(0, 0, cw, ch);
         
-        // CORREÇÃO: Tocha "limpa" a escuridão
         if(game.inv.torch && game.selectedSlot === 4) {
             ctx.save();
             ctx.globalCompositeOperation = 'destination-out';
             
-            // Gradiente radial para a luz da tocha
             const grad = ctx.createRadialGradient(cw/2, ch/2, 20, cw/2, ch/2, 150);
             grad.addColorStop(0, 'rgba(5, 10, 20, 1)');
             grad.addColorStop(0.5, 'rgba(5, 10, 20, 0.6)');
@@ -399,7 +364,6 @@ function render() {
             ctx.restore();
         }
         
-        // Vinheta para imersão
         const vignette = ctx.createRadialGradient(cw/2, ch/2, cw * 0.3, cw/2, ch/2, cw * 0.7);
         vignette.addColorStop(0, 'rgba(0,0,0,0)');
         vignette.addColorStop(1, 'rgba(0,0,0,0.4)');

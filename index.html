@@ -7,20 +7,16 @@
     <meta name="description" content="Um Pato e um Sonho - Jogo de sobrevivência em HTML5">
     <title>Um Pato e um Sonho v2.1 - The Sprite Era</title>
     
-    <!-- Fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     
-    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     
-    <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- ==================== MENU PRINCIPAL ==================== -->
     <div id="menu-screen">
         <div class="alpha-title">🦆 UM PATO E UM SONHO<br><small>THE SPRITE ERA</small></div>
         
@@ -30,7 +26,6 @@
             <button class="btn-alpha" id="btn-config">CONFIGURAÇÕES</button>
         </div>
         
-        <!-- Botão de Patch Notes -->
         <button class="btn-patch-notes" id="btn-patch-notes">
             <span class="patch-badge">v2.1</span>
             NOVIDADES
@@ -38,13 +33,11 @@
         
         <div id="version-log">BUILD: 2.1.0 - THE SPRITE ERA</div>
         
-        <!-- Copyright -->
         <div class="copyright">
             © 2026 Duck Dream Studios. Todos os direitos reservados.
         </div>
     </div>
 
-    <!-- ==================== MODAL DE PATCH NOTES ==================== -->
     <div id="patch-modal" class="hidden">
         <div class="patch-content">
             <div class="patch-header">
@@ -101,7 +94,6 @@
         </div>
     </div>
 
-    <!-- ==================== MODAL DE CONFIGURAÇÕES ==================== -->
     <div id="config-modal" class="hidden">
         <h3>⚙️ CONFIGURAÇÕES</h3>
         <div style="font-size: clamp(11px, 2.8vw, 13px); margin: 8px 0; color: #94a3b8;">
@@ -112,7 +104,6 @@
         <button class="btn-alpha" id="btn-close-config">FECHAR</button>
     </div>
 
-    <!-- ==================== INTERFACE DO JOGO ==================== -->
     <div id="game-ui" class="hidden">
         <div id="top-hud">
             <div class="time-box">DIA <span id="day-val">1</span> • <span id="clock-val">08:00</span></div>
@@ -159,8 +150,7 @@
     </div>
 
     <canvas id="gameCanvas"></canvas>
-
-    <!-- Scripts - ORDEM CRÍTICA -->
+    
     <script src="script.js"></script>
     <script src="updates.js"></script>
 </body>

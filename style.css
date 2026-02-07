@@ -1,4 +1,3 @@
-/* ==================== RESET E BASE ==================== */
 * { 
     box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent; 
@@ -26,7 +25,6 @@ canvas {
     image-rendering: crisp-edges;
 }
 
-/* ==================== ANIMAÇÕES ==================== */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -44,7 +42,6 @@ canvas {
     75% { transform: translate(-2px, -2px); }
 }
 
-/* ==================== MENU PRINCIPAL ==================== */
 #menu-screen { 
     position: absolute; 
     inset: 0; 
@@ -134,7 +131,6 @@ canvas {
     font-weight: 600;
 }
 
-/* ==================== BOTÃO DE PATCH NOTES ==================== */
 .btn-patch-notes {
     position: absolute;
     top: clamp(15px, 3vh, 25px);
@@ -177,7 +173,6 @@ canvas {
     letter-spacing: 0.5px;
 }
 
-/* ==================== MODAL DE PATCH NOTES ==================== */
 #patch-modal {
     position: fixed;
     inset: 0;
@@ -312,7 +307,6 @@ canvas {
     align-items: center;
 }
 
-/* ==================== MODAL DE CONFIGURAÇÕES ==================== */
 #config-modal {
     position: absolute; 
     top: 50%; 
@@ -339,7 +333,6 @@ canvas {
     margin-bottom: 5px;
 }
 
-/* ==================== COPYRIGHT ==================== */
 .copyright {
     font-family: 'Montserrat', sans-serif;
     font-size: clamp(10px, 2.5vw, 12px);
@@ -359,7 +352,6 @@ canvas {
     width: 90%;
 }
 
-/* ==================== INTERFACE DO JOGO ==================== */
 #game-ui { 
     position: absolute;
     inset: 0;
@@ -474,7 +466,6 @@ canvas {
     cursor: not-allowed;
 }
 
-/* ==================== HOTBAR ==================== */
 #hotbar { 
     position: absolute;
     bottom: clamp(8px, 2vh, 15px);
@@ -516,7 +507,6 @@ canvas {
     transform: scale(1.1);
 }
 
-/* ==================== CONTROLES MOBILE ==================== */
 #controls { 
     position: absolute;
     bottom: clamp(15px, 4vh, 25px);
@@ -586,7 +576,6 @@ canvas {
     box-shadow: 0 0 0 #d97706, 0 2px 8px rgba(251, 146, 60, 0.4);
 }
 
-/* ==================== UTILIDADES ==================== */
 .hidden { 
     display: none !important; 
 }
@@ -595,7 +584,6 @@ canvas {
     animation: screenShake 0.2s ease; 
 }
 
-/* ==================== AJUSTES DE RESPONSIVIDADE ==================== */
 @media (max-height: 600px) {
     .patch-content {
         max-height: 90vh;

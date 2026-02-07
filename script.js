@@ -1,11 +1,8 @@
-================== UM PATO E UM SONHO - CORE ENGINE v2.1.1 ====================
 console.log('🎮 Script.js v2.1.1 carregado!');
 
-// Configuração do Canvas
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
 
-// ==================== SISTEMA DE ASSETS ====================
 const assets = {
     images: {},
     loaded: 0,
@@ -67,7 +64,6 @@ function updateLoadingScreen() {
     }
 }
 
-// ==================== ESTADO GLOBAL DO JOGO ====================
 let game = {
     active: false,
     player: { 
@@ -93,7 +89,6 @@ let game = {
     particles: []
 };
 
-// ==================== SISTEMA DE INIMIGOS ====================
 function spawnRabbit() {
     const angle = Math.random() * Math.PI * 2;
     const distance = 300 + Math.random() * 200;
@@ -147,7 +142,6 @@ function updateEnemies() {
     }
 }
 
-// ==================== SISTEMA DE SAVE ====================
 function checkSave() {
     const saveData = localStorage.getItem('PatoDreamSave');
     if(saveData) {
@@ -250,7 +244,6 @@ function startGame() {
     setInterval(saveGame, 15000);
 }
 
-// ==================== UI E CONFIGURAÇÕES ====================
 function toggleConfig() {
     const modal = document.getElementById('config-modal');
     if(modal) {
@@ -393,7 +386,6 @@ function updateHUD() {
     updateCraftAvailability();
 }
 
-// ==================== SISTEMA DE AÇÃO ====================
 function handleAction() {
     if(game.selectedSlot === 1 && game.inv.bench > 0) {
         game.built.push({ x: Math.round(game.player.x), y: Math.round(game.player.y) });
@@ -469,7 +461,6 @@ function handleAction() {
     }
 }
 
-// ==================== SISTEMA DE PARTÍCULAS ====================
 function createParticle(x, y, emoji, color) {
     for(let i = 0; i < 5; i++) {
         game.particles.push({
@@ -504,7 +495,6 @@ function drawParticles() {
     ctx.restore();
 }
 
-// ==================== UTILIDADES ====================
 function lerpColor(color1, color2, t) {
     const c1 = parseInt(color1.slice(1), 16);
     const c2 = parseInt(color2.slice(1), 16);
@@ -524,7 +514,6 @@ function lerpColor(color1, color2, t) {
     return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
 
-// ==================== SISTEMA DE INPUT ====================
 function bindButton(id, key) {
     const el = document.getElementById(id);
     if(!el) {
@@ -553,11 +542,9 @@ function bindButton(id, key) {
     });
 }
 
-// ==================== INICIALIZAÇÃO COMPLETA ====================
 window.addEventListener('load', function() {
     console.log('🚀 Inicializando "Um Pato e um Sonho" v2.1.1...');
     
-    // Botões do menu
     const btnNewGame = document.getElementById('btn-new-game');
     const btnContinue = document.getElementById('btn-continue');
     const btnConfig = document.getElementById('btn-config');
@@ -583,14 +570,12 @@ window.addEventListener('load', function() {
         console.log('✅ Botão "Novidades" vinculado');
     }
     
-    // Modal de configurações
     const btnResetSave = document.getElementById('btn-reset-save');
     const btnCloseConfig = document.getElementById('btn-close-config');
     
     if(btnResetSave) btnResetSave.addEventListener('click', resetSave);
     if(btnCloseConfig) btnCloseConfig.addEventListener('click', toggleConfig);
     
-    // Modal de patch notes
     const btnClosePatch = document.getElementById('btn-close-patch');
     const patchModal = document.getElementById('patch-modal');
     
@@ -606,14 +591,12 @@ window.addEventListener('load', function() {
         });
     }
     
-    // Inventário
     const btnInv = document.getElementById('btn-inv');
     if(btnInv) {
         btnInv.addEventListener('click', toggleCraft);
         console.log('✅ Botão de inventário vinculado');
     }
     
-    // Craft items
     document.querySelectorAll('.craft-item').forEach(item => {
         item.addEventListener('click', function() {
             const craftType = this.getAttribute('data-craft');
@@ -621,13 +604,11 @@ window.addEventListener('load', function() {
         });
     });
     
-    // Controles direcionais
     bindButton('b-u', 'u');
     bindButton('b-d', 'd');
     bindButton('b-l', 'l');
     bindButton('b-r', 'r');
     
-    // Botão de ação
     const actionBtn = document.getElementById('btn-action');
     if(actionBtn) {
         actionBtn.addEventListener('touchstart', (e) => {
@@ -655,7 +636,6 @@ window.addEventListener('load', function() {
         console.log('✅ Botão de ação vinculado');
     }
     
-    // Teclado
     window.addEventListener('keydown', (e) => {
         if(e.key === 'w' || e.key === 'ArrowUp') game.keys.u = 1;
         if(e.key === 's' || e.key === 'ArrowDown') game.keys.d = 1;
@@ -675,7 +655,6 @@ window.addEventListener('load', function() {
         if(e.key === ' ' || e.key === 'e') game.keys.action = false;
     });
     
-    // Hotbar
     for(let i = 0; i <= 4; i++) {
         const slot = document.getElementById('s' + i);
         if(slot) {
@@ -687,7 +666,6 @@ window.addEventListener('load', function() {
         }
     }
     
-    // Inicialização final
     checkSave();
     loadAssets(() => {
         console.log('✅ Sistema pronto! Clique em "NOVO JOGO" para começar.');
