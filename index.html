@@ -3,69 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pato Survival Alpha 1.5.0 - Tocha & HP</title>
+    <title>Pato Survival Alpha 1.5.0 - Pro</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; outline: none; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', Courier, monospace; }
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
-        .layer { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; align-items: center; z-index: 10; }
-        .interactive { pointer-events: auto; }
-        .hidden { display: none !important; }
+        /* UI SUPERIOR (RELÓGIO E DIA) */
+        #top-hud { position: absolute; top: 10px; width: 100%; display: flex; justify-content: center; pointer-events: none; z-index: 55; }
+        .time-box { background: rgba(0,0,0,0.8); color: #fb923c; padding: 5px 20px; border: 2px solid #fb923c; border-radius: 20px; font-weight: bold; font-size: 14px; text-shadow: 1px 1px #000; }
 
-        /* MENU PRINCIPAL */
-        #menu-screen { background: rgba(10, 20, 10, 0.98); z-index: 100; justify-content: center; border: 6px double #fb923c; }
-        .alpha-title { color: #fb923c; font-size: 40px; text-shadow: 4px 4px #000; text-align: center; margin-bottom: 20px; }
-        #version-log { position: absolute; bottom: 10px; left: 10px; color: #555; font-size: 10px; line-height: 1.2; }
-        .btn-alpha { background: #334155; color: white; border: 3px solid #fb923c; padding: 12px 35px; font-size: 18px; cursor: pointer; margin: 5px; box-shadow: 4px 4px 0 #000; }
-
-        /* HUD E HOTBAR */
+        /* RECURSOS E INV */
         #hud { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; z-index: 50; }
         .res-box { background: rgba(0,0,0,0.8); color: #fff; padding: 8px; border-left: 4px solid #fb923c; font-size: 14px; }
+        #btn-inv { position: absolute; top: 10px; right: 10px; width: 60px; height: 45px; background: #475569; border: 2px solid #fb923c; color: white; z-index: 60; display: flex; align-items: center; justify-content: center; pointer-events: auto; font-weight: bold; }
+        
+        #craft-panel { position: absolute; top: 65px; right: 10px; width: 200px; background: rgba(20,30,40,0.95); border: 2px solid #fb923c; padding: 10px; z-index: 60; pointer-events: auto; color: white; }
+        .craft-item { background: #1e293b; border: 1px solid #475569; padding: 8px; margin-bottom: 5px; font-size: 11px; cursor: pointer; }
 
+        /* HOTBAR */
         #hotbar { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; background: rgba(0,0,0,0.7); padding: 5px; border: 2px solid #fb923c; z-index: 50; }
         .slot { width: 45px; height: 45px; background: #1e293b; border: 2px solid #475569; display: flex; align-items: center; justify-content: center; color: white; font-size: 8px; text-align: center; font-weight: bold; }
         .slot.selected { border-color: #fb923c; background: #334155; box-shadow: 0 0 10px #fb923c; }
-
-        /* CRAFTING */
-        #btn-inv { position: absolute; top: 10px; right: 10px; width: 60px; height: 45px; background: #475569; border: 2px solid #fb923c; color: white; z-index: 60; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
-        #craft-panel { position: absolute; top: 65px; right: 10px; width: 200px; background: rgba(20,30,40,0.95); border: 2px solid #fb923c; padding: 10px; z-index: 60; pointer-events: auto; color: white; }
-        .craft-item { background: #1e293b; border: 1px solid #475569; padding: 8px; margin-bottom: 5px; font-size: 11px; }
-        .craft-item.ready { border-color: #fb923c; color: #fb923c; }
 
         /* CONTROLES */
         #controls { position: absolute; bottom: 20px; left: 20px; width: 140px; height: 140px; z-index: 50; pointer-events: auto; }
         .d-btn { position: absolute; width: 45px; height: 45px; background: rgba(255,255,255,0.1); border: 1px solid #fff; display: flex; align-items: center; justify-content: center; color: white; border-radius: 4px; }
         #b-u { top: 0; left: 47px; } #b-d { bottom: 0; left: 47px; } #b-l { top: 47px; left: 0; } #b-r { top: 47px; right: 0; }
         #btn-action { position: absolute; bottom: 20px; right: 20px; width: 90px; height: 90px; background: #fb923c; border: 4px solid #fff; border-radius: 50%; color: white; font-weight: bold; z-index: 50; pointer-events: auto; display: flex; align-items: center; justify-content: center; }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="menu-screen" class="layer interactive">
-        <div class="alpha-title">PATO SURVIVAL<br><small style="font-size:18px">ALPHA 1.5.0</small></div>
-        <button class="btn-alpha" onclick="startGame()">INICIAR JOGO</button>
-        <button class="btn-alpha">CONFIGURAÇÕES</button>
-        <div id="version-log">
-            BUILD: 2026.02.07<br>
-            - NEW: Sistema de Vida nos Recursos<br>
-            - NEW: Tocha e Iluminação Noturna<br>
-            - FIX: Crafting Dinâmico
-        </div>
+    <div id="top-hud">
+        <div class="time-box">DIA <span id="day-val">1</span> - <span id="clock-val">08:00</span></div>
     </div>
 
-    <div id="game-ui" class="hidden">
+    <div id="game-ui">
         <div id="hud">
             <div class="res-box">W: <span id="w-val">0</span></div>
             <div class="res-box">S: <span id="s-val">0</span></div>
         </div>
-        <div id="btn-inv" class="interactive" onclick="toggleCraft()">INV</div>
+        <div id="btn-inv" onclick="toggleCraft()">INV</div>
         <div id="craft-panel" class="hidden">
-            <div style="font-size:12px; color:#fb923c; margin-bottom:8px">CRAFTING</div>
-            <div class="craft-item ready" onclick="doCraft('bench')">BANCADA (10 Mad.)</div>
-            <div class="craft-item ready" onclick="doCraft('torch')">TOCHA (5 Mad.)</div>
-            <div id="axe-recipe" class="craft-item ready">MACHADO (Bancada)</div>
-            <div id="pick-recipe" class="craft-item ready">PICARETA (Bancada)</div>
+            <div class="craft-item" onclick="doCraft('bench')">BANCADA (10 W)</div>
+            <div class="craft-item" onclick="doCraft('torch')">TOCHA (5 W)</div>
+            <div class="craft-item" onclick="doCraft('axe')">MACHADO (Bench)</div>
+            <div class="craft-item" onclick="doCraft('pick')">PICARETA (Bench)</div>
         </div>
         <div id="hotbar">
             <div class="slot selected" id="s0">Mão</div>
@@ -84,45 +70,33 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const game = {
-            active: false, player: { x: 1000, y: 1000, dir: 1, speed: 4 }, cam: { x: 0, y: 0 },
+            active: true, player: { x: 1000, y: 1000, dir: 1, speed: 4 }, cam: { x: 0, y: 0 },
             keys: { u:0, d:0, l:0, r:0, action: false },
             res: { wood: 0, stone: 0 }, inv: { bench: 0, axe: false, pick: false, torch: false },
-            built: [], mapHP: new Map(), selectedSlot: 0, time: 0, isNearBench: false,
-            dayCycle: 0 // Controle de luz
+            built: [], mapHP: new Map(), selectedSlot: 0, 
+            time: 480, day: 1, // Começa as 08:00 (480 minutos)
+            isNearBench: false
         };
-
-        function startGame() {
-            game.active = true;
-            document.getElementById('menu-screen').classList.add('hidden');
-            document.getElementById('game-ui').classList.remove('hidden');
-            render();
-        }
 
         function toggleCraft() { document.getElementById('craft-panel').classList.toggle('hidden'); }
 
         function doCraft(item) {
-            if(item === 'bench' && game.res.wood >= 10) {
-                game.res.wood -= 10; game.inv.bench++;
-                document.getElementById('s1').innerText = "Bancada ("+game.inv.bench+")";
-            } else if(item === 'torch' && game.res.wood >= 5) {
-                game.res.wood -= 5; game.inv.torch = true;
-                document.getElementById('s4').innerText = "Tocha";
-            } else if(game.isNearBench && game.res.wood >= 5 && game.res.stone >= 5) {
-                if(item === 'axe') { game.res.wood -= 5; game.res.stone -= 5; game.inv.axe = true; document.getElementById('s2').innerText = "Machado"; }
-                if(item === 'pick') { game.res.wood -= 5; game.res.stone -= 5; game.inv.pick = true; document.getElementById('s3').innerText = "Picareta"; }
+            if(item === 'bench' && game.res.wood >= 10) { game.res.wood -= 10; game.inv.bench++; document.getElementById('s1').innerText = "Bancada"; }
+            if(item === 'torch' && game.res.wood >= 5) { game.res.wood -= 5; game.inv.torch = true; document.getElementById('s4').innerText = "Tocha"; }
+            if(game.isNearBench && game.res.wood >= 5 && game.res.stone >= 5) {
+                if(item === 'axe') { game.inv.axe = true; document.getElementById('s2').innerText = "Machado"; }
+                if(item === 'pick') { game.inv.pick = true; document.getElementById('s3').innerText = "Picareta"; }
             }
-            updateUI();
+            updateHUD();
         }
 
-        function updateUI() {
+        function updateHUD() {
             document.getElementById('w-val').innerText = game.res.wood;
             document.getElementById('s-val').innerText = game.res.stone;
-            const axeRec = document.getElementById('axe-recipe');
-            const pickRec = document.getElementById('pick-recipe');
-            axeRec.style.opacity = game.isNearBench ? "1" : "0.5";
-            pickRec.style.opacity = game.isNearBench ? "1" : "0.5";
-            axeRec.onclick = game.isNearBench ? () => doCraft('axe') : null;
-            pickRec.onclick = game.isNearBench ? () => doCraft('pick') : null;
+            document.getElementById('day-val').innerText = game.day;
+            let hrs = Math.floor(game.time / 60) % 24;
+            let mins = Math.floor(game.time % 60);
+            document.getElementById('clock-val').innerText = `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}`;
         }
 
         [0,1,2,3,4].forEach(i => {
@@ -139,8 +113,7 @@
         function handleAction() {
             if(game.selectedSlot === 1 && game.inv.bench > 0) {
                 game.built.push({ x: game.player.x, y: game.player.y });
-                game.inv.bench--;
-                document.getElementById('s1').innerText = game.inv.bench > 0 ? "Bancada ("+game.inv.bench+")" : "-";
+                game.inv.bench--; document.getElementById('s1').innerText = game.inv.bench > 0 ? "Bancada" : "-";
                 return;
             }
             const px = Math.floor(game.player.x/60), py = Math.floor(game.player.y/60);
@@ -148,20 +121,19 @@
                 for(let y=py-1; y<=py+1; y++) {
                     const id = `${x},${y}`;
                     const n = Math.abs(Math.sin(x*12.9 + y*78.2)*437) % 1;
-                    if(n > 0.15) continue;
+                    if(n > 0.2) continue;
                     const dist = Math.hypot(game.player.x - (x*60+30), game.player.y - (y*60+30));
                     if(dist < 70) {
-                        if(!game.mapHP.has(id)) game.mapHP.set(id, 5); // 5 de vida inicial
-                        let damage = 1;
-                        if(n < 0.07 && game.inv.axe && game.selectedSlot === 2) damage = 3;
-                        if(n >= 0.07 && game.inv.pick && game.selectedSlot === 3) damage = 3;
-                        
-                        game.mapHP.set(id, game.mapHP.get(id) - damage);
+                        if(!game.mapHP.has(id)) game.mapHP.set(id, 6);
+                        let dmg = 1;
+                        if(n < 0.1 && game.inv.axe && game.selectedSlot === 2) dmg = 3;
+                        if(n >= 0.1 && game.inv.pick && game.selectedSlot === 3) dmg = 3;
+                        game.mapHP.set(id, game.mapHP.get(id) - dmg);
                         if(game.mapHP.get(id) <= 0) {
-                            if(n < 0.07) game.res.wood += damage; else game.res.stone += damage;
-                            game.mapHP.set(id, -1); // Marca como destruído
+                            if(n < 0.1) game.res.wood += 2; else game.res.stone += 2;
+                            game.mapHP.set(id, -1);
                         }
-                        updateUI(); return;
+                        updateHUD(); return;
                     }
                 }
             }
@@ -173,24 +145,38 @@
         };
         bind('b-u','u'); bind('b-d','d'); bind('b-l','l'); bind('b-r','r');
 
+        function drawRock(ctx, x, y, size, shake) {
+            ctx.fillStyle = '#475569';
+            ctx.beginPath();
+            ctx.moveTo(x + shake + size, y);
+            for(let i=0; i<6; i++) {
+                let angle = (i/6) * Math.PI * 2;
+                ctx.lineTo(x + shake + Math.cos(angle)*size, y + Math.sin(angle)*size);
+            }
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#64748b'; ctx.beginPath(); ctx.arc(x+shake-4, y-4, size/3, 0, 7); ctx.fill();
+        }
+
         function render() {
-            if(!game.active) return;
             const cw = canvas.width = window.innerWidth, ch = canvas.height = window.innerHeight;
-            game.time += 0.05;
-            game.dayCycle = Math.sin(game.time * 0.05) * 0.5 + 0.5; // Oscila entre 0 e 1 (noite e dia)
+            game.time += 0.05; // Velocidade do tempo
+            if(game.time >= 1440) { game.time = 0; game.day++; }
 
             let mx = game.keys.r - game.keys.l, my = game.keys.d - game.keys.u;
-            if(mx||my) { game.player.x += mx * game.player.speed; game.player.y += my * game.player.speed; if(mx) game.player.dir = mx; }
+            game.player.x += mx * game.player.speed; game.player.y += my * game.player.speed;
+            if(mx) game.player.dir = mx;
             game.cam.x = game.player.x - cw/2; game.cam.y = game.player.y - ch/2;
 
+            // Grama
             ctx.fillStyle = '#1a3317'; ctx.fillRect(0,0,cw,ch);
             ctx.save(); ctx.translate(-game.cam.x, -game.cam.y);
 
             game.isNearBench = false;
             game.built.forEach(b => {
                 if(Math.hypot(game.player.x - b.x, game.player.y - b.y) < 60) game.isNearBench = true;
-                ctx.fillStyle = '#5d4037'; ctx.fillRect(b.x-22, b.y+10, 8, 10); ctx.fillRect(b.x+14, b.y+10, 8, 10);
-                ctx.fillStyle = '#fb923c'; ctx.fillRect(b.x-25, b.y-15, 50, 25);
+                ctx.fillStyle = '#3e2723'; ctx.fillRect(b.x-20, b.y+5, 5, 15); ctx.fillRect(b.x+15, b.y+5, 5, 15);
+                ctx.fillStyle = '#fb923c'; ctx.fillRect(b.x-25, b.y-10, 50, 20);
+                ctx.strokeStyle = '#000'; ctx.strokeRect(b.x-25, b.y-10, 50, 20);
             });
 
             const sX = Math.floor(game.cam.x/60)-1, eX = sX + Math.ceil(cw/60)+2;
@@ -200,22 +186,19 @@
                     const id = `${x},${y}`;
                     if(game.mapHP.get(id) === -1) continue;
                     const n = Math.abs(Math.sin(x*12.9 + y*78.2)*437) % 1;
-                    if(n > 0.15) continue;
                     const ox = x*60+30, oy = y*60+30;
                     const dist = Math.hypot(game.player.x - ox, game.player.y - oy);
-                    
-                    // Shake baseado no HP e Ação
-                    let shake = 0;
-                    if(dist < 70 && game.keys.action) {
-                        const hp = game.mapHP.get(id) || 5;
-                        shake = Math.sin(game.time * (20 + (5-hp)*5)) * (2 + (5-hp));
-                    }
+                    let shake = (dist < 70 && game.keys.action) ? Math.sin(game.time * 20) * 5 : 0;
 
-                    if(n < 0.07) {
-                        ctx.fillStyle = '#3e2723'; ctx.fillRect(ox-4+shake, oy, 8, 12);
-                        ctx.fillStyle = '#064e3b'; ctx.beginPath(); ctx.arc(ox+shake, oy-8, 16, 0, 7); ctx.fill();
-                    } else {
-                        ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.arc(ox+shake, oy+10, 12, 0, 7); ctx.fill();
+                    if(n < 0.05) { // Árvore Detalhada
+                        ctx.fillStyle = '#3e2723'; ctx.fillRect(ox-5+shake, oy, 10, 15);
+                        ctx.fillStyle = '#064e3b'; ctx.beginPath(); ctx.arc(ox+shake, oy-10, 20, 0, 7); ctx.fill();
+                        ctx.fillStyle = '#065f46'; ctx.beginPath(); ctx.arc(ox+shake, oy-20, 15, 0, 7); ctx.fill();
+                    } else if(n < 0.1) { // Rocha Facetada
+                        drawRock(ctx, ox, oy, 15, shake);
+                    } else if(n < 0.15) { // Gravetos/Pedrinhas
+                        ctx.fillStyle = (n < 0.12) ? '#5d4037' : '#94a3b8';
+                        ctx.fillRect(ox+n*10, oy+n*10, 8, 3);
                     }
                 }
             }
@@ -224,27 +207,27 @@
             ctx.fillStyle = '#fb923c'; ctx.fillRect(game.player.x + (game.player.dir > 0 ? 10 : -20), game.player.y-4, 10, 8);
             ctx.restore();
 
-            // CAMADA DE ESCURIDÃO (SISTEMA DE LUZ)
-            const darkness = Math.min(0.8, game.dayCycle);
-            ctx.fillStyle = `rgba(0,0,0,${darkness})`;
-            
+            // LUZ E HORÁRIO
+            let hour = game.time / 60;
+            let luminosity = 0;
+            if(hour < 6 || hour > 18) luminosity = 0.8; // Noite
+            else if(hour >= 6 && hour < 8) luminosity = 0.4; // Amanhecer
+            else if(hour >= 16 && hour <= 18) luminosity = 0.3; // Entardecer
+
+            ctx.fillStyle = `rgba(0,0,10,${luminosity})`;
             if(game.inv.torch && game.selectedSlot === 4) {
-                // Efeito de luz da tocha
                 ctx.save();
                 ctx.globalCompositeOperation = 'destination-out';
-                const grad = ctx.createRadialGradient(cw/2, ch/2, 20, cw/2, ch/2, 120);
-                grad.addColorStop(0, 'rgba(0,0,0,1)');
-                grad.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = grad;
-                ctx.beginPath(); ctx.arc(cw/2, ch/2, 120, 0, Math.PI*2); ctx.fill();
+                let g = ctx.createRadialGradient(cw/2, ch/2, 20, cw/2, ch/2, 130);
+                g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cw/2, ch/2, 130, 0, 7); ctx.fill();
                 ctx.restore();
-            } else {
-                ctx.fillRect(0,0,cw,ch);
-            }
+            } else { ctx.fillRect(0,0,cw,ch); }
 
-            updateUI();
+            updateHUD();
             requestAnimationFrame(render);
         }
+        render();
     </script>
 </body>
 </html>
