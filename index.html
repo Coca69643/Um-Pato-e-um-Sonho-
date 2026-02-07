@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pato Survival Alpha 1.5.0 - Final</title>
+    <title>Pato Survival Alpha 1.5.0 - Tocha & HP</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; outline: none; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', Courier, monospace; }
@@ -24,14 +24,13 @@
         .res-box { background: rgba(0,0,0,0.8); color: #fff; padding: 8px; border-left: 4px solid #fb923c; font-size: 14px; }
 
         #hotbar { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; background: rgba(0,0,0,0.7); padding: 5px; border: 2px solid #fb923c; z-index: 50; }
-        .slot { width: 45px; height: 45px; background: #1e293b; border: 2px solid #475569; display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; text-align: center; font-weight: bold; }
+        .slot { width: 45px; height: 45px; background: #1e293b; border: 2px solid #475569; display: flex; align-items: center; justify-content: center; color: white; font-size: 8px; text-align: center; font-weight: bold; }
         .slot.selected { border-color: #fb923c; background: #334155; box-shadow: 0 0 10px #fb923c; }
 
-        /* INVENTÁRIO */
+        /* CRAFTING */
         #btn-inv { position: absolute; top: 10px; right: 10px; width: 60px; height: 45px; background: #475569; border: 2px solid #fb923c; color: white; z-index: 60; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
         #craft-panel { position: absolute; top: 65px; right: 10px; width: 200px; background: rgba(20,30,40,0.95); border: 2px solid #fb923c; padding: 10px; z-index: 60; pointer-events: auto; color: white; }
         .craft-item { background: #1e293b; border: 1px solid #475569; padding: 8px; margin-bottom: 5px; font-size: 11px; }
-        .craft-item.locked { opacity: 0.5; color: #888; }
         .craft-item.ready { border-color: #fb923c; color: #fb923c; }
 
         /* CONTROLES */
@@ -48,10 +47,10 @@
         <button class="btn-alpha" onclick="startGame()">INICIAR JOGO</button>
         <button class="btn-alpha">CONFIGURAÇÕES</button>
         <div id="version-log">
-            BUILD: 2026.02.06<br>
-            - FIX: Tremor apenas no clique<br>
-            - FIX: Bancada Geométrica<br>
-            - FIX: Crafting só na Bancada
+            BUILD: 2026.02.07<br>
+            - NEW: Sistema de Vida nos Recursos<br>
+            - NEW: Tocha e Iluminação Noturna<br>
+            - FIX: Crafting Dinâmico
         </div>
     </div>
 
@@ -64,14 +63,16 @@
         <div id="craft-panel" class="hidden">
             <div style="font-size:12px; color:#fb923c; margin-bottom:8px">CRAFTING</div>
             <div class="craft-item ready" onclick="doCraft('bench')">BANCADA (10 Mad.)</div>
-            <div id="axe-recipe" class="craft-item locked">MACHADO (Perto da Bancada)</div>
-            <div id="pick-recipe" class="craft-item locked">PICARETA (Perto da Bancada)</div>
+            <div class="craft-item ready" onclick="doCraft('torch')">TOCHA (5 Mad.)</div>
+            <div id="axe-recipe" class="craft-item ready">MACHADO (Bancada)</div>
+            <div id="pick-recipe" class="craft-item ready">PICARETA (Bancada)</div>
         </div>
         <div id="hotbar">
             <div class="slot selected" id="s0">Mão</div>
             <div class="slot" id="s1">-</div>
             <div class="slot" id="s2">-</div>
             <div class="slot" id="s3">-</div>
+            <div class="slot" id="s4">-</div>
         </div>
         <div id="controls"><div class="d-btn" id="b-u">▲</div><div class="d-btn" id="b-d">▼</div><div class="d-btn" id="b-l">◀</div><div class="d-btn" id="b-r">▶</div></div>
         <div id="btn-action">AÇÃO</div>
@@ -85,8 +86,9 @@
         const game = {
             active: false, player: { x: 1000, y: 1000, dir: 1, speed: 4 }, cam: { x: 0, y: 0 },
             keys: { u:0, d:0, l:0, r:0, action: false },
-            res: { wood: 0, stone: 0 }, inv: { bench: 0, axe: false, pick: false },
-            built: [], map: new Set(), selectedSlot: 0, time: 0, isNearBench: false
+            res: { wood: 0, stone: 0 }, inv: { bench: 0, axe: false, pick: false, torch: false },
+            built: [], mapHP: new Map(), selectedSlot: 0, time: 0, isNearBench: false,
+            dayCycle: 0 // Controle de luz
         };
 
         function startGame() {
@@ -102,6 +104,9 @@
             if(item === 'bench' && game.res.wood >= 10) {
                 game.res.wood -= 10; game.inv.bench++;
                 document.getElementById('s1').innerText = "Bancada ("+game.inv.bench+")";
+            } else if(item === 'torch' && game.res.wood >= 5) {
+                game.res.wood -= 5; game.inv.torch = true;
+                document.getElementById('s4').innerText = "Tocha";
             } else if(game.isNearBench && game.res.wood >= 5 && game.res.stone >= 5) {
                 if(item === 'axe') { game.res.wood -= 5; game.res.stone -= 5; game.inv.axe = true; document.getElementById('s2').innerText = "Machado"; }
                 if(item === 'pick') { game.res.wood -= 5; game.res.stone -= 5; game.inv.pick = true; document.getElementById('s3').innerText = "Picareta"; }
@@ -114,16 +119,13 @@
             document.getElementById('s-val').innerText = game.res.stone;
             const axeRec = document.getElementById('axe-recipe');
             const pickRec = document.getElementById('pick-recipe');
-            if(game.isNearBench) {
-                axeRec.classList.replace('locked', 'ready'); axeRec.innerText = "CRAFT MACHADO"; axeRec.onclick = () => doCraft('axe');
-                pickRec.classList.replace('locked', 'ready'); pickRec.innerText = "CRAFT PICARETA"; pickRec.onclick = () => doCraft('pick');
-            } else {
-                axeRec.classList.replace('ready', 'locked'); axeRec.innerText = "USE A BANCADA"; axeRec.onclick = null;
-                pickRec.classList.replace('ready', 'locked'); pickRec.innerText = "USE A BANCADA"; pickRec.onclick = null;
-            }
+            axeRec.style.opacity = game.isNearBench ? "1" : "0.5";
+            pickRec.style.opacity = game.isNearBench ? "1" : "0.5";
+            axeRec.onclick = game.isNearBench ? () => doCraft('axe') : null;
+            pickRec.onclick = game.isNearBench ? () => doCraft('pick') : null;
         }
 
-        [0,1,2,3].forEach(i => {
+        [0,1,2,3,4].forEach(i => {
             document.getElementById('s'+i).onclick = () => {
                 document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
                 document.getElementById('s'+i).classList.add('selected'); game.selectedSlot = i;
@@ -145,14 +147,21 @@
             for(let x=px-1; x<=px+1; x++) {
                 for(let y=py-1; y<=py+1; y++) {
                     const id = `${x},${y}`;
-                    if(game.map.has(id)) continue;
                     const n = Math.abs(Math.sin(x*12.9 + y*78.2)*437) % 1;
                     if(n > 0.15) continue;
                     const dist = Math.hypot(game.player.x - (x*60+30), game.player.y - (y*60+30));
                     if(dist < 70) {
-                        if(n < 0.07) game.res.wood += (game.inv.axe && game.selectedSlot === 2) ? 3 : 1;
-                        else game.res.stone += (game.inv.pick && game.selectedSlot === 3) ? 3 : 1;
-                        game.map.add(id); updateUI(); return;
+                        if(!game.mapHP.has(id)) game.mapHP.set(id, 5); // 5 de vida inicial
+                        let damage = 1;
+                        if(n < 0.07 && game.inv.axe && game.selectedSlot === 2) damage = 3;
+                        if(n >= 0.07 && game.inv.pick && game.selectedSlot === 3) damage = 3;
+                        
+                        game.mapHP.set(id, game.mapHP.get(id) - damage);
+                        if(game.mapHP.get(id) <= 0) {
+                            if(n < 0.07) game.res.wood += damage; else game.res.stone += damage;
+                            game.mapHP.set(id, -1); // Marca como destruído
+                        }
+                        updateUI(); return;
                     }
                 }
             }
@@ -168,6 +177,7 @@
             if(!game.active) return;
             const cw = canvas.width = window.innerWidth, ch = canvas.height = window.innerHeight;
             game.time += 0.05;
+            game.dayCycle = Math.sin(game.time * 0.05) * 0.5 + 0.5; // Oscila entre 0 e 1 (noite e dia)
 
             let mx = game.keys.r - game.keys.l, my = game.keys.d - game.keys.u;
             if(mx||my) { game.player.x += mx * game.player.speed; game.player.y += my * game.player.speed; if(mx) game.player.dir = mx; }
@@ -176,27 +186,31 @@
             ctx.fillStyle = '#1a3317'; ctx.fillRect(0,0,cw,ch);
             ctx.save(); ctx.translate(-game.cam.x, -game.cam.y);
 
-            // BANCADAS GEOMÉTRICAS
             game.isNearBench = false;
             game.built.forEach(b => {
-                const d = Math.hypot(game.player.x - b.x, game.player.y - b.y);
-                if(d < 60) game.isNearBench = true;
-                ctx.fillStyle = '#5d4037'; ctx.fillRect(b.x-22, b.y+10, 8, 10); ctx.fillRect(b.x+14, b.y+10, 8, 10); // Pernas
-                ctx.fillStyle = '#fb923c'; ctx.fillRect(b.x-25, b.y-15, 50, 25); // Tampo
-                ctx.strokeStyle = '#3e2723'; ctx.lineWidth = 2; ctx.strokeRect(b.x-25, b.y-15, 50, 25);
+                if(Math.hypot(game.player.x - b.x, game.player.y - b.y) < 60) game.isNearBench = true;
+                ctx.fillStyle = '#5d4037'; ctx.fillRect(b.x-22, b.y+10, 8, 10); ctx.fillRect(b.x+14, b.y+10, 8, 10);
+                ctx.fillStyle = '#fb923c'; ctx.fillRect(b.x-25, b.y-15, 50, 25);
             });
 
-            // MUNDO
             const sX = Math.floor(game.cam.x/60)-1, eX = sX + Math.ceil(cw/60)+2;
             const sY = Math.floor(game.cam.y/60)-1, eY = sY + Math.ceil(ch/60)+2;
             for(let x=sX; x<=eX; x++) {
                 for(let y=sY; y<=eY; y++) {
-                    if(game.map.has(`${x},${y}`)) continue;
+                    const id = `${x},${y}`;
+                    if(game.mapHP.get(id) === -1) continue;
                     const n = Math.abs(Math.sin(x*12.9 + y*78.2)*437) % 1;
                     if(n > 0.15) continue;
                     const ox = x*60+30, oy = y*60+30;
                     const dist = Math.hypot(game.player.x - ox, game.player.y - oy);
-                    let shake = (dist < 70 && game.keys.action) ? Math.sin(game.time * 20) * 5 : 0;
+                    
+                    // Shake baseado no HP e Ação
+                    let shake = 0;
+                    if(dist < 70 && game.keys.action) {
+                        const hp = game.mapHP.get(id) || 5;
+                        shake = Math.sin(game.time * (20 + (5-hp)*5)) * (2 + (5-hp));
+                    }
+
                     if(n < 0.07) {
                         ctx.fillStyle = '#3e2723'; ctx.fillRect(ox-4+shake, oy, 8, 12);
                         ctx.fillStyle = '#064e3b'; ctx.beginPath(); ctx.arc(ox+shake, oy-8, 16, 0, 7); ctx.fill();
@@ -206,11 +220,29 @@
                 }
             }
 
-            // PATO
             ctx.fillStyle = 'white'; ctx.fillRect(game.player.x-15, game.player.y-15, 30, 30);
             ctx.fillStyle = '#fb923c'; ctx.fillRect(game.player.x + (game.player.dir > 0 ? 10 : -20), game.player.y-4, 10, 8);
+            ctx.restore();
 
-            ctx.restore(); updateUI();
+            // CAMADA DE ESCURIDÃO (SISTEMA DE LUZ)
+            const darkness = Math.min(0.8, game.dayCycle);
+            ctx.fillStyle = `rgba(0,0,0,${darkness})`;
+            
+            if(game.inv.torch && game.selectedSlot === 4) {
+                // Efeito de luz da tocha
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-out';
+                const grad = ctx.createRadialGradient(cw/2, ch/2, 20, cw/2, ch/2, 120);
+                grad.addColorStop(0, 'rgba(0,0,0,1)');
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(cw/2, ch/2, 120, 0, Math.PI*2); ctx.fill();
+                ctx.restore();
+            } else {
+                ctx.fillRect(0,0,cw,ch);
+            }
+
+            updateUI();
             requestAnimationFrame(render);
         }
     </script>
