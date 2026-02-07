@@ -5,7 +5,7 @@
    🛠️ Como eu faço (0% mentiras):
 No Celular, eu Programo tudo pelo Acode com a ajuda do Gemini (IA), que me ajuda a resolver os bugs e criar as lógicas.
    
-   👍🏻 Sem enrolação: Eu subo o código aqui e o jogo atualiza sozinho para vocês graças ao Web2App. Você não precisa baixar de novo toda vez que eu mudar algo!
+   👍🏻 Sem enrolação: Eu subo o código aqui e o jogo atualiza sozinho para vocês graças ao Web Into App. Você não precisa baixar de novo toda vez que eu mudar algo!
    
  👀 Onde ver o progresso:
 
