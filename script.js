@@ -20,13 +20,14 @@ const assetList = {
 
 let game = {
     active: false,
-    player: { x: 1000, y: 1000, dir: 1, speed: 3.5, frame: 0, frameCount: 0, tilt: 0 },
+    player: { x: 3000, y: 2400, dir: 1, speed: 3.5, frame: 0, frameCount: 0, tilt: 0 },
     cam: { x: 0, y: 0, shake: 0 },
     keys: { u: 0, d: 0, l: 0, r: 0, action: false },
     res: { wood: 0, stone: 0 },
     inv: { bench: 0, axe: false, pick: false, torch: false },
     built: [],
     enemies: [],
+    world: {},
     mapHP: new Map(),
     selectedSlot: 0,
     time: 480,
@@ -37,25 +38,39 @@ let game = {
 
 function loadAssets(callback) {
     assets.total = Object.keys(assetList).length;
+    let loadedCount = 0;
+    
     Object.keys(assetList).forEach(key => {
         const img = new Image();
-        img.src = assetList[key];
+        
         img.onload = () => {
-            assets.loaded++;
+            loadedCount++;
+            assets.loaded = loadedCount;
             updateLoadingScreen();
-            if(assets.loaded === assets.total) {
+            
+            if(loadedCount === assets.total) {
                 assets.isReady = true;
-                if(callback) callback();
+                console.log('✅ Todos os assets carregados!');
+                setTimeout(() => {
+                    if(callback) callback();
+                }, 100);
             }
         };
+        
         img.onerror = () => {
-            assets.loaded++;
-            if(assets.loaded === assets.total) {
+            console.error(`❌ Erro ao carregar: ${assetList[key]}`);
+            loadedCount++;
+            assets.loaded = loadedCount;
+            
+            if(loadedCount === assets.total) {
+                alert(`⚠️ Alguns assets falharam ao carregar. Verifique os arquivos PNG.`);
                 assets.isReady = true;
                 if(callback) callback();
             }
         };
+        
         assets.images[key] = img;
+        img.src = assetList[key];
     });
 }
 
@@ -65,8 +80,87 @@ function updateLoadingScreen() {
     if(loadingText && !assets.isReady) {
         loadingText.innerHTML = `⏳ CARREGANDO... ${percentage}%`;
     } else if(loadingText && assets.isReady) {
-        loadingText.innerHTML = `BUILD: 2.1.1 - HOTFIX`;
+        loadingText.innerHTML = `BUILD: 2.2.0 - PROCEDURAL WORLD`;
     }
+}
+
+function noise(x, y) {
+    return Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453123) % 1;
+}
+
+function generateWorld() {
+    console.log('🌍 Gerando mundo procedural...');
+    const TILE_SIZE = 60;
+    const CHUNK_SIZE = 16;
+    const WORLD_WIDTH_CHUNKS = 12;
+    const WORLD_HEIGHT_CHUNKS = 8;
+    
+    game.world = {};
+    
+    for(let cx = 0; cx < WORLD_WIDTH_CHUNKS; cx++) {
+        for(let cy = 0; cy < WORLD_HEIGHT_CHUNKS; cy++) {
+            const chunkKey = `${cx},${cy}`;
+            game.world[chunkKey] = [];
+            
+            for(let lx = 0; lx < CHUNK_SIZE; lx++) {
+                for(let ly = 0; ly < CHUNK_SIZE; ly++) {
+                    const wx = cx * CHUNK_SIZE + lx;
+                    const wy = cy * CHUNK_SIZE + ly;
+                    
+                    const n = noise(wx * 0.1, wy * 0.1);
+                    const surfaceNoise = noise(wx * 0.05, 0);
+                    const surfaceHeight = Math.floor(40 + surfaceNoise * 8);
+                    
+                    if(wy === surfaceHeight) {
+                        game.world[chunkKey].push({
+                            x: wx * TILE_SIZE,
+                            y: wy * TILE_SIZE,
+                            type: 'grass',
+                            destroyed: false
+                        });
+                        
+                        if(n < 0.08) {
+                            game.world[chunkKey].push({
+                                x: wx * TILE_SIZE,
+                                y: (wy - 1) * TILE_SIZE,
+                                type: 'tree',
+                                destroyed: false
+                            });
+                        } else if(n >= 0.08 && n < 0.14) {
+                            game.world[chunkKey].push({
+                                x: wx * TILE_SIZE,
+                                y: (wy - 1) * TILE_SIZE,
+                                type: 'rock',
+                                destroyed: false
+                            });
+                        }
+                    } else if(wy > surfaceHeight && wy < surfaceHeight + 4) {
+                        game.world[chunkKey].push({
+                            x: wx * TILE_SIZE,
+                            y: wy * TILE_SIZE,
+                            type: 'dirt',
+                            destroyed: false
+                        });
+                    } else if(wy >= surfaceHeight + 4 && wy < surfaceHeight + 20) {
+                        game.world[chunkKey].push({
+                            x: wx * TILE_SIZE,
+                            y: wy * TILE_SIZE,
+                            type: 'stone',
+                            destroyed: false
+                        });
+                    }
+                }
+            }
+        }
+    }
+    
+    const totalChunks = Object.keys(game.world).length;
+    let totalTiles = 0;
+    Object.values(game.world).forEach(chunk => {
+        totalTiles += chunk.length;
+    });
+    
+    console.log(`✅ Mundo gerado: ${totalChunks} chunks, ${totalTiles} tiles`);
 }
 
 function spawnRabbit() {
@@ -156,8 +250,8 @@ function loadGame() {
         game.built = data.built || [];
         game.time = data.time || 480;
         game.day = data.day || 1;
-        game.player.x = data.player?.x || 1000;
-        game.player.y = data.player?.y || 1000;
+        game.player.x = data.player?.x || 3000;
+        game.player.y = data.player?.y || 2400;
         game.mapHP = new Map(data.mapHP || []);
         startGame();
     } catch(e) {
@@ -170,13 +264,14 @@ function newGame() {
     localStorage.removeItem('PatoDreamSave');
     game = {
         active: false,
-        player: { x: 1000, y: 1000, dir: 1, speed: 3.5, frame: 0, frameCount: 0, tilt: 0 },
+        player: { x: 3000, y: 2400, dir: 1, speed: 3.5, frame: 0, frameCount: 0, tilt: 0 },
         cam: { x: 0, y: 0, shake: 0 },
         keys: { u: 0, d: 0, l: 0, r: 0, action: false },
         res: { wood: 0, stone: 0 },
         inv: { bench: 0, axe: false, pick: false, torch: false },
         built: [],
         enemies: [],
+        world: {},
         mapHP: new Map(),
         selectedSlot: 0,
         time: 480,
@@ -192,16 +287,25 @@ function startGame() {
         alert('⚠️ Assets ainda não carregados. Aguarde...');
         return;
     }
+    
+    console.log('🎮 Iniciando jogo...');
+    
     game.active = true;
     const menuScreen = document.getElementById('menu-screen');
     const gameUI = document.getElementById('game-ui');
     if(menuScreen) menuScreen.classList.add('hidden');
     if(gameUI) gameUI.classList.remove('hidden');
+    
+    generateWorld();
+    
     updateHUD();
     updateInventoryUI();
+    
     for(let i = 0; i < 3; i++) {
         spawnRabbit();
     }
+    
+    console.log('✅ Jogo iniciado! Loop de renderização começando...');
     render();
     setInterval(saveGame, 15000);
 }
@@ -344,54 +448,56 @@ function handleAction() {
         saveGame();
         return;
     }
-    const px = Math.floor(game.player.x / 60);
-    const py = Math.floor(game.player.y / 60);
-    for(let x = px - 1; x <= px + 1; x++) {
-        for(let y = py - 1; y <= py + 1; y++) {
-            const id = `${x},${y}`;
-            const n = Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453123) % 1;
-            if(n > 0.2) continue;
-            const rx = x * 60 + 30;
-            const ry = y * 60 + 30;
-            const isTree = n < 0.1;
-            const isRock = n >= 0.1 && n < 0.2;
-            let hitboxWidth, hitboxHeight, hitboxOffsetY;
-            if(isTree) {
-                hitboxWidth = 30;
-                hitboxHeight = 35;
-                hitboxOffsetY = -15;
-            } else if(isRock) {
-                hitboxWidth = 40;
-                hitboxHeight = 25;
-                hitboxOffsetY = -10;
-            }
-            const distX = Math.abs(game.player.x - rx);
-            const distY = Math.abs(game.player.y - (ry + hitboxOffsetY + hitboxHeight / 2));
-            if(distX < (hitboxWidth / 2 + 15) && distY < (hitboxHeight / 2 + 15)) {
-                if(!game.mapHP.has(id)) {
-                    game.mapHP.set(id, 6);
+    
+    const TILE_SIZE = 60;
+    const CHUNK_SIZE = 16;
+    
+    let foundResource = false;
+    
+    Object.keys(game.world).forEach(chunkKey => {
+        const chunk = game.world[chunkKey];
+        
+        chunk.forEach(tile => {
+            if(foundResource) return;
+            if(tile.destroyed) return;
+            if(tile.type !== 'tree' && tile.type !== 'rock') return;
+            
+            const dist = Math.hypot(game.player.x - tile.x, game.player.y - tile.y);
+            
+            if(dist < 70) {
+                const tileKey = `${Math.floor(tile.x / TILE_SIZE)},${Math.floor(tile.y / TILE_SIZE)}`;
+                
+                if(!game.mapHP.has(tileKey)) {
+                    game.mapHP.set(tileKey, 6);
                 }
+                
                 let damage = 1;
-                if(isTree && game.inv.axe && game.selectedSlot === 2) damage = 3;
-                if(isRock && game.inv.pick && game.selectedSlot === 3) damage = 3;
-                const currentHP = game.mapHP.get(id);
-                game.mapHP.set(id, currentHP - damage);
+                if(tile.type === 'tree' && game.inv.axe && game.selectedSlot === 2) damage = 3;
+                if(tile.type === 'rock' && game.inv.pick && game.selectedSlot === 3) damage = 3;
+                
+                const currentHP = game.mapHP.get(tileKey);
+                game.mapHP.set(tileKey, currentHP - damage);
+                
                 game.cam.shake = 6;
-                if(game.mapHP.get(id) <= 0) {
-                    if(isTree) {
+                
+                if(game.mapHP.get(tileKey) <= 0) {
+                    if(tile.type === 'tree') {
                         game.res.wood += 3;
-                        createParticle(rx, ry, '🪵', '#8b4513');
-                    } else if(isRock) {
+                        createParticle(tile.x, tile.y, '🪵', '#8b4513');
+                    } else if(tile.type === 'rock') {
                         game.res.stone += 3;
-                        createParticle(rx, ry, '🪨', '#64748b');
+                        createParticle(tile.x, tile.y, '🪨', '#64748b');
                     }
-                    game.mapHP.set(id, -1);
+                    
+                    tile.destroyed = true;
+                    game.mapHP.set(tileKey, -1);
                 }
+                
                 updateHUD();
-                return;
+                foundResource = true;
             }
-        }
-    }
+        });
+    });
 }
 
 function createParticle(x, y, emoji, color) {
@@ -465,6 +571,8 @@ function bindButton(id, key) {
 }
 
 window.addEventListener('load', function() {
+    console.log('🚀 Duck Dream Studios - Um Pato e um Sonho v2.2.0');
+    
     const btnNewGame = document.getElementById('btn-new-game');
     const btnContinue = document.getElementById('btn-continue');
     const btnConfig = document.getElementById('btn-config');
@@ -508,11 +616,6 @@ window.addEventListener('load', function() {
             e.preventDefault();
             game.keys.action = false;
         }, { passive: false });
-        actionBtn.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            game.keys.action = true;
-            handleAction();
-        });
         actionBtn.addEventListener('mouseup', (e) => {
             e.preventDefault();
             game.keys.action = false;
@@ -547,6 +650,5 @@ window.addEventListener('load', function() {
     }
     checkSave();
     loadAssets(() => {
-        console.log('✅ Sistema pronto!');
+        console.log('✅ Assets prontos! O jogo pode iniciar.');
     });
-});
